@@ -4,8 +4,7 @@
     <i>—— 参考26年4月业内生产级Agent源码：Claude Code，OpenCode，OpenClaw和Hermess</i>
   </div>
 </div>
-
-<span style="color: red; font-weight: bold;">如果有用，麻烦点个小星星，并且分享给大家下，多谢</span>
+<h3 style="color: red; font-weight: bold;">如果有用，麻烦点个小星星，并且分享给大家下，多谢</h3>
 
 **目录：**
 
