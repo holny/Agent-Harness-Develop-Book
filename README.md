@@ -470,7 +470,7 @@
 
 ### Claude Code架构图
 
-![Claude Code架构.png](./ref/Claude Code架构.png)
+![Claude Code架构.png](/ref/Claude%20Code架构.png)
 
 
 
