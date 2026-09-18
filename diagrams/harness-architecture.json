@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Agent Harness 四层架构",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "用户",
+      "sublabel": "自然语言指令",
+      "pos": [
+        500,
+        20
+      ],
+      "size": [
+        160,
+        50
+      ]
+    },
+    {
+      "id": "layer1",
+      "type": "backend",
+      "label": "1 · 推理与编排层",
+      "sublabel": "Agent Loop (TAOR) · SubAgent · Checkpoint",
+      "pos": [
+        280,
+        110
+      ],
+      "size": [
+        600,
+        70
+      ]
+    },
+    {
+      "id": "layer2",
+      "type": "backend",
+      "label": "2 · 上下文与记忆层",
+      "sublabel": "Context 组装·压缩 · Memory System",
+      "pos": [
+        280,
+        230
+      ],
+      "size": [
+        600,
+        70
+      ]
+    },
+    {
+      "id": "layer3",
+      "type": "security",
+      "label": "3 · 工具与安全执行层",
+      "sublabel": "Tool System · 权限 · MCP · Skill · 沙箱",
+      "pos": [
+        280,
+        350
+      ],
+      "size": [
+        600,
+        70
+      ]
+    },
+    {
+      "id": "layer4",
+      "type": "cloud",
+      "label": "4 · 支撑与基础架构层",
+      "sublabel": "Session · Provider · Config · 可观测性",
+      "pos": [
+        280,
+        470
+      ],
+      "size": [
+        600,
+        70
+      ]
+    },
+    {
+      "id": "external",
+      "type": "external",
+      "label": "外部世界",
+      "sublabel": "文件系统 · Shell · API",
+      "pos": [
+        980,
+        350
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "memory",
+      "type": "database",
+      "label": "长期记忆",
+      "sublabel": "MEMORY.md / FTS5",
+      "pos": [
+        40,
+        230
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "obs",
+      "type": "messagebus",
+      "label": "事件总线",
+      "sublabel": "Trace / Span",
+      "pos": [
+        980,
+        470
+      ],
+      "size": [
+        160,
+        60
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "user",
+      "to": "layer1",
+      "label": "指令",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        580,
+        90
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "layer1",
+      "to": "layer2",
+      "label": "组装上下文",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        580,
+        205
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "layer2",
+      "to": "layer3",
+      "label": "工具调用",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        580,
+        325
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "layer3",
+      "to": "layer4",
+      "label": "依赖运行时",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        580,
+        445
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "layer3",
+      "to": "external",
+      "label": "执行",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "c6",
+      "from": "layer2",
+      "to": "memory",
+      "label": "读写",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "c7",
+      "from": "layer4",
+      "to": "obs",
+      "label": "遥测",
+      "fromSide": "right",
+      "toSide": "left"
+    }
+  ]
+}

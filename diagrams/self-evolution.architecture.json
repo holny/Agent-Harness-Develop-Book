@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Agent 自进化：三层路径全景",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1360,
+      800
+    ],
+    "output": "diagrams/self-evolution.architecture.html"
+  },
+  "components": [
+    {
+      "id": "rsi",
+      "type": "backend",
+      "label": "RSI 递归自我改进",
+      "sublabel": "先从 Harness 开始，不必改写权重",
+      "pos": [
+        490,
+        40
+      ],
+      "size": [
+        380,
+        70
+      ]
+    },
+    {
+      "id": "l1",
+      "type": "backend",
+      "label": "第一层 · Context Engineering",
+      "sublabel": "上下文即操作手册",
+      "pos": [
+        90,
+        200
+      ],
+      "size": [
+        340,
+        80
+      ],
+      "tag": "prompt → context"
+    },
+    {
+      "id": "ace",
+      "type": "backend",
+      "label": "ACE",
+      "sublabel": "Generator / Reflector / Curator",
+      "pos": [
+        110,
+        340
+      ],
+      "size": [
+        300,
+        70
+      ]
+    },
+    {
+      "id": "mce",
+      "type": "backend",
+      "label": "MCE",
+      "sublabel": "连管理技能本身也进化",
+      "pos": [
+        110,
+        450
+      ],
+      "size": [
+        300,
+        70
+      ]
+    },
+    {
+      "id": "l2",
+      "type": "messagebus",
+      "label": "第二层 · Workflow Design",
+      "sublabel": "模型设计干活流程",
+      "pos": [
+        510,
+        200
+      ],
+      "size": [
+        340,
+        80
+      ],
+      "tag": "workflow"
+    },
+    {
+      "id": "adas",
+      "type": "backend",
+      "label": "ADAS",
+      "sublabel": "元智能体搜索工作流",
+      "pos": [
+        530,
+        340
+      ],
+      "size": [
+        300,
+        70
+      ]
+    },
+    {
+      "id": "aflow",
+      "type": "backend",
+      "label": "AFlow",
+      "sublabel": "MCTS 搜索图结构",
+      "pos": [
+        530,
+        450
+      ],
+      "size": [
+        300,
+        70
+      ]
+    },
+    {
+      "id": "l3",
+      "type": "cloud",
+      "label": "第三层 · Self-Improving Harness",
+      "sublabel": "修改 Harness 代码本身",
+      "pos": [
+        930,
+        200
+      ],
+      "size": [
+        340,
+        80
+      ],
+      "tag": "harness code"
+    },
+    {
+      "id": "sharness",
+      "type": "backend",
+      "label": "Self-Harness 循环",
+      "sublabel": "弱点挖掘 → 提案 → 验证",
+      "pos": [
+        950,
+        340
+      ],
+      "size": [
+        300,
+        70
+      ]
+    },
+    {
+      "id": "dgm",
+      "type": "database",
+      "label": "DGM 进化搜索",
+      "sublabel": "SWE-bench 20% → 50%",
+      "pos": [
+        950,
+        450
+      ],
+      "size": [
+        300,
+        70
+      ]
+    },
+    {
+      "id": "risk",
+      "type": "security",
+      "label": "循环之外：权限与安全层",
+      "sublabel": "评估器 / reward hacking / 多样性",
+      "pos": [
+        340,
+        640
+      ],
+      "size": [
+        680,
+        80
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "非参数化（可逆 · 即时）",
+      "wraps": [
+        "l1",
+        "ace",
+        "mce",
+        "l2",
+        "adas",
+        "aflow",
+        "l3",
+        "sharness",
+        "dgm"
+      ],
+      "pad": 18
+    }
+  ],
+  "connections": [
+    {
+      "id": "rsi-l1",
+      "from": "rsi",
+      "to": "l1",
+      "label": "优化上下文",
+      "fromSide": "left",
+      "toSide": "top"
+    },
+    {
+      "id": "rsi-l2",
+      "from": "rsi",
+      "to": "l2",
+      "label": "优化工作流",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 45
+    },
+    {
+      "id": "rsi-l3",
+      "from": "rsi",
+      "to": "l3",
+      "label": "优化 Harness",
+      "fromSide": "right",
+      "toSide": "top"
+    },
+    {
+      "id": "l1-ace",
+      "from": "l1",
+      "to": "ace",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "ace-mce",
+      "from": "ace",
+      "to": "mce",
+      "label": "再进一步",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 42
+    },
+    {
+      "id": "l2-adas",
+      "from": "l2",
+      "to": "adas",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "adas-aflow",
+      "from": "adas",
+      "to": "aflow",
+      "label": "图搜索",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 42
+    },
+    {
+      "id": "l3-sh",
+      "from": "l3",
+      "to": "sharness",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "sh-dgm",
+      "from": "sharness",
+      "to": "dgm",
+      "label": "种群搜索",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 42
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "递进链条",
+      "items": [
+        "prompt → structured context → workflow → harness code → optimizer code",
+        "模型越强，可优化对象越抽象、越通用"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "生产现状 vs 前沿",
+      "items": [
+        "生产项目集中在 Skill / prompt 层自进化（L1~L2）",
+        "Self-Harness / DGM 尚无生产落地——评估器成熟前，不做比做错安全"
+      ]
+    }
+  ]
+}

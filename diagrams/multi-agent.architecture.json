@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Multi-Agent 编排与通信架构",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1360,
+      780
+    ],
+    "output": "diagrams/multi-agent.architecture.html"
+  },
+  "components": [
+    {
+      "id": "parent",
+      "type": "backend",
+      "label": "父 Agent",
+      "sublabel": "拆解任务 · 汇总结论",
+      "pos": [
+        560,
+        40
+      ],
+      "size": [
+        260,
+        70
+      ]
+    },
+    {
+      "id": "spawn",
+      "type": "messagebus",
+      "label": "委派入口",
+      "sublabel": "Task / Actor / subagent",
+      "pos": [
+        580,
+        180
+      ],
+      "size": [
+        220,
+        70
+      ]
+    },
+    {
+      "id": "subA",
+      "type": "backend",
+      "label": "独立子代理",
+      "sublabel": "独立 context window · 从零开始",
+      "pos": [
+        160,
+        330
+      ],
+      "size": [
+        230,
+        90
+      ]
+    },
+    {
+      "id": "subB",
+      "type": "backend",
+      "label": "fork 子代理",
+      "sublabel": "复制父上下文继续跑",
+      "pos": [
+        585,
+        330
+      ],
+      "size": [
+        220,
+        90
+      ]
+    },
+    {
+      "id": "subC",
+      "type": "backend",
+      "label": "可续子代理",
+      "sublabel": "startContinuable 持久会话",
+      "pos": [
+        1010,
+        330
+      ],
+      "size": [
+        230,
+        90
+      ]
+    },
+    {
+      "id": "verify",
+      "type": "security",
+      "label": "对抗验证器",
+      "sublabel": "maxTurns:1 独立质检",
+      "pos": [
+        170,
+        490
+      ],
+      "size": [
+        230,
+        80
+      ]
+    },
+    {
+      "id": "inbox",
+      "type": "database",
+      "label": "Inbox 收件箱",
+      "sublabel": "异步消息中转 · 解耦收发",
+      "pos": [
+        1020,
+        490
+      ],
+      "size": [
+        230,
+        80
+      ]
+    },
+    {
+      "id": "report",
+      "type": "backend",
+      "label": "结构化报告",
+      "sublabel": "一份最终报告回父级",
+      "pos": [
+        560,
+        640
+      ],
+      "size": [
+        260,
+        70
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "子代理执行区",
+      "wraps": [
+        "subA",
+        "subB",
+        "subC"
+      ],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "id": "parent-spawn",
+      "from": "parent",
+      "to": "spawn",
+      "label": "委派任务",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "variant": "emphasis",
+      "labelDy": 20
+    },
+    {
+      "id": "spawn-a",
+      "from": "spawn",
+      "to": "subA",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "spawn-b",
+      "from": "spawn",
+      "to": "subB",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "spawn-c",
+      "from": "spawn",
+      "to": "subC",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "a-verify",
+      "from": "subA",
+      "to": "verify",
+      "label": "结果送验",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-inbox",
+      "from": "subC",
+      "to": "inbox",
+      "label": "send_message",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "variant": "dashed"
+    },
+    {
+      "id": "verify-report",
+      "from": "verify",
+      "to": "report",
+      "label": "验证结论",
+      "fromSide": "right",
+      "toSide": "left",
+      "variant": "security"
+    },
+    {
+      "id": "b-report",
+      "from": "subB",
+      "to": "report",
+      "label": "最终报告",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "variant": "emphasis"
+    },
+    {
+      "id": "inbox-report",
+      "from": "inbox",
+      "to": "report",
+      "label": "异步送达",
+      "fromSide": "left",
+      "toSide": "right",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "三种寿命模式",
+      "items": [
+        "fork：复制父上下文，one-shot 跑完即弃",
+        "独立子代理：干净上下文，只回传一份报告",
+        "startContinuable：持久可续，parent 任意时刻追加消息"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "通信两范式",
+      "items": [
+        "结构化报告：父子单向汇报，父看不到子过程",
+        "Inbox 消息：异步中转解耦收发，发完即走"
+      ]
+    }
+  ]
+}

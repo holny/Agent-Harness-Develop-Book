@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Codex 两阶段记忆管线（数据流）",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": "diagrams/codex-memory.dataflow.html",
+    "viewBox": [
+      1075,
+      560
+    ]
+  },
+  "stages": [
+    {
+      "label": "会话源"
+    },
+    {
+      "label": "Phase 1 · 抽取"
+    },
+    {
+      "label": "State DB"
+    },
+    {
+      "label": "Phase 2 · 固化"
+    },
+    {
+      "label": "记忆工件"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "root",
+      "type": "backend",
+      "label": "根会话启动",
+      "sublabel": "异步执行",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "guard",
+      "type": "security",
+      "label": "触发四条件",
+      "sublabel": "全满足才运行",
+      "stage": 0,
+      "row": 2,
+      "tag": "门控"
+    },
+    {
+      "id": "claim",
+      "type": "backend",
+      "label": "认领 + 过滤",
+      "sublabel": "有界 rollout 作业",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "extract",
+      "type": "messagebus",
+      "label": "并行模型抽取",
+      "sublabel": "固定并发上限",
+      "stage": 1,
+      "row": 2,
+      "tag": "raw_memory"
+    },
+    {
+      "id": "secret",
+      "type": "security",
+      "label": "secret 红action",
+      "sublabel": "脱敏后才落盘",
+      "stage": 2,
+      "row": 0,
+      "tag": "安全"
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "state DB",
+      "sublabel": "stage1_outputs 表",
+      "stage": 2,
+      "row": 2,
+      "tag": "中转"
+    },
+    {
+      "id": "lock",
+      "type": "security",
+      "label": "全局单锁",
+      "sublabel": "Phase 2 串行",
+      "stage": 3,
+      "row": 0,
+      "tag": "互斥"
+    },
+    {
+      "id": "select",
+      "type": "backend",
+      "label": "top-N 选取",
+      "sublabel": "last_usage · usage_count",
+      "stage": 3,
+      "row": 1
+    },
+    {
+      "id": "sync",
+      "type": "backend",
+      "label": "同步 + 剪枝",
+      "sublabel": "过期 summaries 清理",
+      "stage": 3,
+      "row": 2
+    },
+    {
+      "id": "rootmd",
+      "type": "database",
+      "label": "memories root",
+      "sublabel": "raw_memories.md + summaries/",
+      "stage": 4,
+      "row": 1,
+      "tag": "固化",
+      "width": 150
+    },
+    {
+      "id": "diff",
+      "type": "backend",
+      "label": "workspace diff",
+      "sublabel": "有变更才调固化子代理",
+      "stage": 4,
+      "row": 2,
+      "width": 150
+    }
+  ],
+  "flows": [
+    {
+      "id": "root-guard",
+      "from": "root",
+      "to": "guard",
+      "variant": "default",
+      "label": "启动",
+      "labelDy": 42
+    },
+    {
+      "id": "guard-claim",
+      "from": "guard",
+      "to": "claim",
+      "label": "异步后台",
+      "variant": "emphasis"
+    },
+    {
+      "id": "claim-extract",
+      "from": "claim",
+      "to": "extract",
+      "variant": "default",
+      "label": "过滤项",
+      "labelDy": 42
+    },
+    {
+      "id": "extract-secret",
+      "from": "extract",
+      "to": "secret",
+      "label": "raw_memory + summary",
+      "variant": "security"
+    },
+    {
+      "id": "secret-db",
+      "from": "secret",
+      "to": "db",
+      "variant": "emphasis",
+      "label": "写回",
+      "labelDy": 42
+    },
+    {
+      "id": "db-lock",
+      "from": "db",
+      "to": "lock",
+      "label": "认领",
+      "variant": "default"
+    },
+    {
+      "id": "lock-select",
+      "from": "lock",
+      "to": "select",
+      "variant": "emphasis",
+      "label": "串行",
+      "labelDy": 42
+    },
+    {
+      "id": "select-sync",
+      "from": "select",
+      "to": "sync",
+      "variant": "default",
+      "label": "选入",
+      "labelDy": 42
+    },
+    {
+      "id": "sync-rootmd",
+      "from": "sync",
+      "to": "rootmd",
+      "label": "工件同步",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "四触发条件",
+      "items": [
+        "非 ephemeral 会话 · memory feature 已启用",
+        "非子代理会话 · state DB 可用"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "两阶段并发纪律",
+      "items": [
+        "Phase 1 并行抽取，可扩展到多个 rollout",
+        "Phase 2 串行单锁——记忆固化永不并发"
+      ]
+    }
+  ]
+}

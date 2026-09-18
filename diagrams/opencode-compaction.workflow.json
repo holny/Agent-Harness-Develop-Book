@@ -1,0 +1,191 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "OpenCode 压缩机制全流程",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": "diagrams/opencode-compaction.workflow.html"
+  },
+  "lanes": [
+    {
+      "id": "trigger",
+      "label": "触发源"
+    },
+    {
+      "id": "threshold",
+      "label": "阈值判定",
+      "variant": "exception"
+    },
+    {
+      "id": "compact",
+      "label": "压缩执行"
+    },
+    {
+      "id": "output",
+      "label": "重组输出"
+    }
+  ],
+  "phases": [
+    {
+      "id": "detect",
+      "label": "触发",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "judge",
+      "label": "判定",
+      "fromCol": 2,
+      "toCol": 2,
+      "variant": "emphasis"
+    },
+    {
+      "id": "rebuild",
+      "label": "压缩与重组",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "finishStep",
+    "threshold",
+    "summarize",
+    "rebuild",
+    "resend"
+  ],
+  "nodes": [
+    {
+      "id": "finishStep",
+      "lane": "trigger",
+      "col": 0,
+      "type": "external",
+      "label": "finish-step",
+      "sublabel": "每个 LLM step 流结束",
+      "width": 128
+    },
+    {
+      "id": "providerError",
+      "lane": "trigger",
+      "col": 1,
+      "type": "security",
+      "label": "Provider 溢出",
+      "sublabel": "19 条正则 / HTTP 413",
+      "width": 128,
+      "yOffset": 0
+    },
+    {
+      "id": "threshold",
+      "lane": "threshold",
+      "col": 2,
+      "type": "security",
+      "label": "count ≥ usable ?",
+      "sublabel": "usable = input − reserved",
+      "tag": "例：118K − 36K = 82K",
+      "width": 165
+    },
+    {
+      "id": "summarize",
+      "lane": "compact",
+      "col": 3,
+      "type": "backend",
+      "label": "生成摘要",
+      "sublabel": "剥媒体 · 截 2000 字符 · 不带 tools",
+      "width": 165
+    },
+    {
+      "id": "rebuild",
+      "lane": "compact",
+      "col": 4,
+      "type": "backend",
+      "label": "重组新上下文",
+      "sublabel": "摘要 2K + verbatim 41K ≈ 43K",
+      "tag": "verbatim = usable × 50%",
+      "width": 170
+    },
+    {
+      "id": "resend",
+      "lane": "output",
+      "col": 5,
+      "type": "frontend",
+      "label": "压缩后重发",
+      "sublabel": "水位重置",
+      "width": 122
+    },
+    {
+      "id": "splitTurn",
+      "lane": "compact",
+      "col": 5,
+      "type": "security",
+      "label": "兜底",
+      "sublabel": "splitTurn / 纯摘要兜底",
+      "width": 158
+    }
+  ],
+  "edges": [
+    {
+      "id": "fs-th",
+      "from": "finishStep",
+      "to": "threshold",
+      "label": "count = input+output+cache",
+      "variant": "emphasis"
+    },
+    {
+      "id": "pe-th",
+      "from": "providerError",
+      "to": "threshold",
+      "label": "ContextOverflowError",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "th-sum",
+      "from": "threshold",
+      "to": "summarize",
+      "label": "触发",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sum-re",
+      "from": "summarize",
+      "to": "rebuild",
+      "label": "只总结 tail 之前老历史",
+      "variant": "default"
+    },
+    {
+      "id": "re-res",
+      "from": "rebuild",
+      "to": "resend",
+      "label": "新消息拼接",
+      "variant": "emphasis"
+    },
+    {
+      "id": "re-split",
+      "from": "rebuild",
+      "to": "splitTurn",
+      "label": "仍装不下",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "阈值两条铁律",
+      "items": [
+        "input 定上限：input 是 provider 对 prompt 的真实拒绝线",
+        "reserved 定提前量：预留检测后增量 Δ（工具结果 / 新用户消息），默认 min(20K, maxOutput)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "兜底与终止",
+      "items": [
+        "回退分支：input 未配置 → usable = context − maxOutputTokens（reserved 不参与）",
+        "压缩自身溢出 → MAX_AUTO_COMPACT 终止对话不循环",
+        "finish_reason=length 是输出截断告警，与压缩无关"
+      ]
+    }
+  ]
+}

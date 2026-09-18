@@ -1,0 +1,63 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Agent Loop 主循环流水线",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": "diagrams/agent-loop.workflow.html"
+  },
+  "lanes": [
+    { "id": "ui", "label": "会话入口" },
+    { "id": "agent", "label": "Agent 运行时" },
+    { "id": "control", "label": "循环控制与恢复", "variant": "exception" },
+    { "id": "tools", "label": "工具执行" }
+  ],
+  "phases": [
+    { "id": "intake", "label": "输入", "fromCol": 0, "toCol": 1 },
+    { "id": "reasoning", "label": "推理与路由", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "execute", "label": "执行与回注", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["user", "assemble", "llm", "parse", "gate", "exec", "inject", "final"],
+  "nodes": [
+    { "id": "user", "lane": "ui", "col": 0, "type": "external", "label": "用户消息", "sublabel": "任务输入", "width": 132 },
+    { "id": "assemble", "lane": "agent", "col": 1, "type": "backend", "label": "组装上下文", "sublabel": "System Prompt · 记忆 · 历史", "width": 150 },
+    { "id": "llm", "lane": "agent", "col": 2, "type": "backend", "label": "LLM 流式推理", "sublabel": "streamText 边生成边行动", "tag": "每轮重新组装", "width": 150 },
+    { "id": "parse", "lane": "agent", "col": 3, "type": "backend", "label": "解析响应", "sublabel": "文本 / tool_use", "width": 132 },
+    { "id": "gate", "lane": "control", "col": 3, "type": "security", "label": "循环守卫", "sublabel": "权限 · doom_loop 检测", "tag": "3 次相同调用触发", "width": 150 },
+    { "id": "exec", "lane": "tools", "col": 4, "type": "messagebus", "label": "并行工具执行", "sublabel": "并发安全组内重叠", "width": 150 },
+    { "id": "inject", "lane": "agent", "col": 5, "type": "backend", "label": "结果回注", "sublabel": "tool_result", "width": 132 },
+    { "id": "compact", "lane": "control", "col": 2, "type": "database", "label": "上下文压缩", "sublabel": "阈值触发 · 溢出补救", "width": 150 },
+    { "id": "final", "lane": "ui", "col": 5, "type": "frontend", "label": "最终回复", "sublabel": "无 tool_use 即终止", "width": 132 }
+  ],
+  "edges": [
+    { "id": "user-assemble", "from": "user", "to": "assemble", "variant": "default" },
+    { "id": "assemble-llm", "from": "assemble", "to": "llm", "label": "组装 prompt", "variant": "emphasis" },
+    { "id": "llm-parse", "from": "llm", "to": "parse", "label": "流式 delta 聚合", "variant": "default" },
+    { "id": "parse-gate", "from": "parse", "to": "gate", "label": "工具调用", "variant": "security" },
+    { "id": "gate-exec", "from": "gate", "to": "exec", "label": "allow", "variant": "emphasis" },
+    { "id": "exec-inject", "from": "exec", "to": "inject", "label": "结构化结果", "variant": "default" },
+    { "id": "inject-assemble", "from": "inject", "to": "assemble", "label": "继续循环", "variant": "dashed", "role": "return", "width": 1.2 },
+    { "id": "inject-final", "from": "inject", "to": "final", "label": "任务完成", "variant": "emphasis" },
+    { "id": "llm-compact", "from": "llm", "to": "compact", "label": "上下文溢出", "variant": "security", "role": "error" },
+    { "id": "compact-assemble", "from": "compact", "to": "assemble", "label": "压缩后重发", "variant": "dashed", "role": "branch" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "循环不变量",
+      "items": [
+        "tool_use 与 tool_result 严格配对，绝不在工具结果处截断",
+        "每轮上下文重新组装：摘要 + 近期对话 verbatim + 新消息"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "循环退出与恢复",
+      "items": [
+        "正常终止：无 tool_use / 达到步数上限 / 用户中断",
+        "doom_loop 权限拒绝即打断死循环；溢出走压缩后重发"
+      ]
+    }
+  ]
+}

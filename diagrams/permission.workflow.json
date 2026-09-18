@@ -1,0 +1,205 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "工具权限决策流水线（Claude Code 四层 + DSH 守卫）",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": "diagrams/permission.workflow.html"
+  },
+  "lanes": [
+    {
+      "id": "call",
+      "label": "工具调用"
+    },
+    {
+      "id": "policy",
+      "label": "决策层",
+      "variant": "exception"
+    },
+    {
+      "id": "result",
+      "label": "结果"
+    }
+  ],
+  "phases": [
+    {
+      "id": "static",
+      "label": "静态规则",
+      "fromCol": 0,
+      "toCol": 2,
+      "variant": "emphasis"
+    },
+    {
+      "id": "dynamic",
+      "label": "模型裁决",
+      "fromCol": 3,
+      "toCol": 4
+    },
+    {
+      "id": "execute",
+      "label": "执行",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "call",
+    "rules",
+    "acceptEdits",
+    "readonly",
+    "classifier",
+    "exec"
+  ],
+  "nodes": [
+    {
+      "id": "call",
+      "lane": "call",
+      "col": 0,
+      "type": "external",
+      "label": "工具调用",
+      "sublabel": "Bash / Edit / Web",
+      "width": 140
+    },
+    {
+      "id": "rules",
+      "lane": "policy",
+      "col": 1,
+      "type": "security",
+      "label": "① 权限规则",
+      "sublabel": "deny → ask → allow",
+      "width": 150
+    },
+    {
+      "id": "acceptEdits",
+      "lane": "policy",
+      "col": 2,
+      "type": "security",
+      "label": "② acceptEdits",
+      "sublabel": "项目目录内写编辑",
+      "width": 150
+    },
+    {
+      "id": "readonly",
+      "lane": "policy",
+      "col": 3,
+      "type": "security",
+      "label": "③ 只读白名单",
+      "sublabel": "安全工具直接放行",
+      "width": 150
+    },
+    {
+      "id": "classifier",
+      "lane": "policy",
+      "col": 4,
+      "type": "messagebus",
+      "label": "④ ML 分类器",
+      "sublabel": "Sonnet 4.6 转录审核",
+      "tag": "AutoMode",
+      "width": 150
+    },
+    {
+      "id": "ask",
+      "lane": "policy",
+      "col": 5,
+      "type": "frontend",
+      "label": "询问用户",
+      "sublabel": "边界情况 · 降级确认",
+      "width": 120
+    },
+    {
+      "id": "exec",
+      "lane": "result",
+      "col": 5,
+      "type": "cloud",
+      "label": "放行并执行",
+      "sublabel": "沙箱内运行",
+      "width": 150
+    }
+  ],
+  "edges": [
+    {
+      "id": "call-rules",
+      "from": "call",
+      "to": "rules",
+      "label": "进入决策",
+      "variant": "default"
+    },
+    {
+      "id": "rules-ae",
+      "from": "rules",
+      "to": "acceptEdits",
+      "label": "未命中",
+      "variant": "default"
+    },
+    {
+      "id": "ae-ro",
+      "from": "acceptEdits",
+      "to": "readonly",
+      "label": "不适用",
+      "variant": "default"
+    },
+    {
+      "id": "ae-allow",
+      "from": "acceptEdits",
+      "to": "exec",
+      "label": "编辑放行",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ro-clf",
+      "from": "readonly",
+      "to": "classifier",
+      "label": "未命中",
+      "variant": "default"
+    },
+    {
+      "id": "ro-allow",
+      "from": "readonly",
+      "to": "exec",
+      "label": "只读放行",
+      "variant": "emphasis"
+    },
+    {
+      "id": "clf-allow",
+      "from": "classifier",
+      "to": "exec",
+      "label": "判定安全",
+      "variant": "emphasis"
+    },
+    {
+      "id": "clf-ask",
+      "from": "classifier",
+      "to": "ask",
+      "label": "边界情况",
+      "variant": "security"
+    },
+    {
+      "id": "ask-allow",
+      "from": "ask",
+      "to": "exec",
+      "label": "用户批准",
+      "variant": "dashed",
+      "role": "branch"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "四层决策原则",
+      "items": [
+        "只有前三层都无法判断才调用分类器（省算力）",
+        "fail-closed：无规则匹配默认 ask，绝默认 allow"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "对照：DSH 单调守卫",
+      "items": [
+        "deny 命中即拦——静态规则层直接阻止，不进后续层",
+        "DSH ToolGuard 只有 deny 权——拒绝不可翻回放行"
+      ]
+    }
+  ]
+}

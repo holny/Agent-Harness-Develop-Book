@@ -1,0 +1,224 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "上下文压缩决策流水线",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": "diagrams/compaction.workflow.html"
+  },
+  "lanes": [
+    {
+      "id": "ui",
+      "label": "会话"
+    },
+    {
+      "id": "agent",
+      "label": "压缩执行"
+    },
+    {
+      "id": "control",
+      "label": "触发与规则",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "monitor",
+      "label": "监测",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "compact",
+      "label": "压缩",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "rebuild",
+      "label": "重组",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "start",
+    "check",
+    "pre",
+    "summary",
+    "cut",
+    "rebuild",
+    "resume",
+    "final"
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "lane": "ui",
+      "col": 0,
+      "type": "external",
+      "label": "每轮请求",
+      "width": 140
+    },
+    {
+      "id": "check",
+      "lane": "control",
+      "col": 1,
+      "type": "security",
+      "label": "阈值检查",
+      "sublabel": "窗口−13K / 90% / usable",
+      "tag": "六项目阈值各异",
+      "width": 150
+    },
+    {
+      "id": "pre",
+      "lane": "agent",
+      "col": 2,
+      "type": "backend",
+      "label": "预压缩",
+      "sublabel": "contextCollapse · 记忆刷写",
+      "width": 170
+    },
+    {
+      "id": "overflow",
+      "lane": "control",
+      "col": 2,
+      "type": "security",
+      "label": "事后补救",
+      "sublabel": "ContextOverflowError",
+      "width": 140
+    },
+    {
+      "id": "summary",
+      "lane": "agent",
+      "col": 3,
+      "type": "backend",
+      "label": "摘要生成",
+      "sublabel": "fork 子代理 · 分段模板",
+      "width": 150
+    },
+    {
+      "id": "cut",
+      "lane": "control",
+      "col": 3,
+      "type": "database",
+      "label": "切点选择",
+      "sublabel": "绝不在 toolResult 处切",
+      "width": 150
+    },
+    {
+      "id": "rebuild",
+      "lane": "agent",
+      "col": 4,
+      "type": "backend",
+      "label": "重组上下文",
+      "sublabel": "摘要 + 近期 verbatim",
+      "width": 160
+    },
+    {
+      "id": "resume",
+      "lane": "agent",
+      "col": 5,
+      "type": "backend",
+      "label": "压缩后重发",
+      "sublabel": "Lite 模式仅摘要",
+      "width": 140
+    },
+    {
+      "id": "final",
+      "lane": "ui",
+      "col": 5,
+      "type": "frontend",
+      "label": "恢复执行",
+      "width": 140
+    }
+  ],
+  "edges": [
+    {
+      "id": "start-check",
+      "from": "start",
+      "to": "check",
+      "label": "每轮进入",
+      "variant": "default"
+    },
+    {
+      "id": "check-pre",
+      "from": "check",
+      "to": "pre",
+      "label": "达到阈值",
+      "variant": "emphasis"
+    },
+    {
+      "id": "check-overflow",
+      "from": "check",
+      "to": "overflow",
+      "label": "Provider 溢出",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "overflow-summary",
+      "from": "overflow",
+      "to": "summary",
+      "label": "压缩后重试",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "pre-summary",
+      "from": "pre",
+      "to": "summary",
+      "label": "保留细粒度上下文",
+      "variant": "default"
+    },
+    {
+      "id": "summary-cut",
+      "from": "summary",
+      "to": "cut",
+      "label": "定切点",
+      "variant": "dashed"
+    },
+    {
+      "id": "cut-rebuild",
+      "from": "cut",
+      "to": "rebuild",
+      "label": "应用切点",
+      "variant": "dashed"
+    },
+    {
+      "id": "rebuild-resume",
+      "from": "rebuild",
+      "to": "resume",
+      "label": "新上下文",
+      "variant": "emphasis"
+    },
+    {
+      "id": "resume-final",
+      "from": "resume",
+      "to": "final",
+      "label": "继续 turn",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "切点纪律",
+      "items": [
+        "绝不在 toolResult 处切——保证 tool_use / tool_result 配对完整",
+        "近期对话 verbatim 保留：OpenCode 取 usable×50%（上限 32K）"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "六项目触发阈值",
+      "items": [
+        "Claude Code 窗口−13K · Codex 窗口×90% 双 scope · Pi 窗口−16384",
+        "OpenCode count≥usable · DSH pressure+overflow 双触发 · Hermes 输入预算×50%"
+      ]
+    }
+  ]
+}
