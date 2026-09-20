@@ -2,8 +2,8 @@
   "schema_version": 1,
   "diagram_type": "dataflow",
   "meta": {
-    "title": "Codex 两阶段记忆管线（数据流）",
-    "locale": "zh-CN",
+    "title": "Codex two-stage memory pipeline (dataflow)",
+    "locale": "en",
     "quality_profile": "showcase",
     "output": "diagrams/codex-memory.dataflow.html",
     "viewBox": [
@@ -13,52 +13,52 @@
   },
   "stages": [
     {
-      "label": "会话源"
+      "label": "Session source"
     },
     {
-      "label": "Phase 1 · 抽取"
+      "label": "Phase 1 · Extraction"
     },
     {
       "label": "State DB"
     },
     {
-      "label": "Phase 2 · 固化"
+      "label": "Phase 2 · Consolidation"
     },
     {
-      "label": "记忆工件"
+      "label": "Memory artifacts"
     }
   ],
   "nodes": [
     {
       "id": "root",
       "type": "backend",
-      "label": "根会话启动",
-      "sublabel": "异步执行",
+      "label": "Root session starts",
+      "sublabel": "Runs async",
       "stage": 0,
       "row": 1
     },
     {
       "id": "guard",
       "type": "security",
-      "label": "触发四条件",
-      "sublabel": "全满足才运行",
+      "label": "Trigger gate",
+      "sublabel": "All four must hold",
       "stage": 0,
       "row": 2,
-      "tag": "门控"
+      "tag": "Gate"
     },
     {
       "id": "claim",
       "type": "backend",
-      "label": "认领 + 过滤",
-      "sublabel": "有界 rollout 作业",
+      "label": "Claim + filter",
+      "sublabel": "Bounded rollout jobs",
       "stage": 1,
       "row": 0
     },
     {
       "id": "extract",
       "type": "messagebus",
-      "label": "并行模型抽取",
-      "sublabel": "固定并发上限",
+      "label": "Model extraction",
+      "sublabel": "Fixed concurrency cap",
       "stage": 1,
       "row": 2,
       "tag": "raw_memory"
@@ -66,34 +66,34 @@
     {
       "id": "secret",
       "type": "security",
-      "label": "secret 红action",
-      "sublabel": "脱敏后才落盘",
+      "label": "Secret redaction",
+      "sublabel": "Redacted before disk",
       "stage": 2,
       "row": 0,
-      "tag": "安全"
+      "tag": "Safety"
     },
     {
       "id": "db",
       "type": "database",
       "label": "state DB",
-      "sublabel": "stage1_outputs 表",
+      "sublabel": "stage1_outputs table",
       "stage": 2,
       "row": 2,
-      "tag": "中转"
+      "tag": "Relay"
     },
     {
       "id": "lock",
       "type": "security",
-      "label": "全局单锁",
-      "sublabel": "Phase 2 串行",
+      "label": "Global single lock",
+      "sublabel": "Phase 2 serial",
       "stage": 3,
       "row": 0,
-      "tag": "互斥"
+      "tag": "Mutex"
     },
     {
       "id": "select",
       "type": "backend",
-      "label": "top-N 选取",
+      "label": "Top-N selection",
       "sublabel": "last_usage · usage_count",
       "stage": 3,
       "row": 1
@@ -101,8 +101,8 @@
     {
       "id": "sync",
       "type": "backend",
-      "label": "同步 + 剪枝",
-      "sublabel": "过期 summaries 清理",
+      "label": "Sync + pruning",
+      "sublabel": "Stale summary cleanup",
       "stage": 3,
       "row": 2
     },
@@ -113,14 +113,14 @@
       "sublabel": "raw_memories.md + summaries/",
       "stage": 4,
       "row": 1,
-      "tag": "固化",
+      "tag": "Consolidate",
       "width": 150
     },
     {
       "id": "diff",
       "type": "backend",
       "label": "workspace diff",
-      "sublabel": "有变更才调固化子代理",
+      "sublabel": "Subagent only on change",
       "stage": 4,
       "row": 2,
       "width": 150
@@ -132,14 +132,14 @@
       "from": "root",
       "to": "guard",
       "variant": "default",
-      "label": "启动",
+      "label": "Start",
       "labelDy": 42
     },
     {
       "id": "guard-claim",
       "from": "guard",
       "to": "claim",
-      "label": "异步后台",
+      "label": "Async background",
       "variant": "emphasis"
     },
     {
@@ -147,7 +147,7 @@
       "from": "claim",
       "to": "extract",
       "variant": "default",
-      "label": "过滤项",
+      "label": "Filtered items",
       "labelDy": 42
     },
     {
@@ -162,14 +162,14 @@
       "from": "secret",
       "to": "db",
       "variant": "emphasis",
-      "label": "写回",
+      "label": "Write back",
       "labelDy": 42
     },
     {
       "id": "db-lock",
       "from": "db",
       "to": "lock",
-      "label": "认领",
+      "label": "Claim",
       "variant": "default"
     },
     {
@@ -177,7 +177,7 @@
       "from": "lock",
       "to": "select",
       "variant": "emphasis",
-      "label": "串行",
+      "label": "Serial",
       "labelDy": 42
     },
     {
@@ -185,32 +185,32 @@
       "from": "select",
       "to": "sync",
       "variant": "default",
-      "label": "选入",
+      "label": "Selected",
       "labelDy": 42
     },
     {
       "id": "sync-rootmd",
       "from": "sync",
       "to": "rootmd",
-      "label": "工件同步",
+      "label": "Artifact sync",
       "variant": "emphasis"
     }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "四触发条件",
+      "title": "Four trigger conditions",
       "items": [
-        "非 ephemeral 会话 · memory feature 已启用",
-        "非子代理会话 · state DB 可用"
+        "Non-ephemeral session · memory feature enabled",
+        "Non-subagent session · state DB available"
       ]
     },
     {
       "dot": "rose",
-      "title": "两阶段并发纪律",
+      "title": "Two-stage concurrency discipline",
       "items": [
-        "Phase 1 并行抽取，可扩展到多个 rollout",
-        "Phase 2 串行单锁——记忆固化永不并发"
+        "Phase 1 extracts in parallel, scalable across rollouts",
+        "Phase 2 serial under a single lock — consolidation never runs concurrently"
       ]
     }
   ]

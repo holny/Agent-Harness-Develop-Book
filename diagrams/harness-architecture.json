@@ -2,15 +2,16 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Agent Harness 四层架构",
+    "title": "Agent Harness Four-Layer Architecture",
+    "locale": "en",
     "quality_profile": "showcase"
   },
   "components": [
     {
       "id": "user",
       "type": "external",
-      "label": "用户",
-      "sublabel": "自然语言指令",
+      "label": "User",
+      "sublabel": "Natural language input",
       "pos": [
         500,
         20
@@ -23,7 +24,7 @@
     {
       "id": "layer1",
       "type": "backend",
-      "label": "1 · 推理与编排层",
+      "label": "1 · Reasoning & Orchestration Layer",
       "sublabel": "Agent Loop (TAOR) · SubAgent · Checkpoint",
       "pos": [
         280,
@@ -37,8 +38,8 @@
     {
       "id": "layer2",
       "type": "backend",
-      "label": "2 · 上下文与记忆层",
-      "sublabel": "Context 组装·压缩 · Memory System",
+      "label": "2 · Context & Memory Layer",
+      "sublabel": "Context assembly · compaction · Memory System",
       "pos": [
         280,
         230
@@ -51,8 +52,8 @@
     {
       "id": "layer3",
       "type": "security",
-      "label": "3 · 工具与安全执行层",
-      "sublabel": "Tool System · 权限 · MCP · Skill · 沙箱",
+      "label": "3 · Tool & Secure Execution Layer",
+      "sublabel": "Tool System · permissions · MCP · Skill · sandbox",
       "pos": [
         280,
         350
@@ -65,8 +66,8 @@
     {
       "id": "layer4",
       "type": "cloud",
-      "label": "4 · 支撑与基础架构层",
-      "sublabel": "Session · Provider · Config · 可观测性",
+      "label": "4 · Support & Infrastructure Layer",
+      "sublabel": "Session · Provider · Config · observability",
       "pos": [
         280,
         470
@@ -79,8 +80,8 @@
     {
       "id": "external",
       "type": "external",
-      "label": "外部世界",
-      "sublabel": "文件系统 · Shell · API",
+      "label": "External world",
+      "sublabel": "Filesystem · Shell · API",
       "pos": [
         980,
         350
@@ -93,7 +94,7 @@
     {
       "id": "memory",
       "type": "database",
-      "label": "长期记忆",
+      "label": "Long-term memory",
       "sublabel": "MEMORY.md / FTS5",
       "pos": [
         40,
@@ -107,7 +108,7 @@
     {
       "id": "obs",
       "type": "messagebus",
-      "label": "事件总线",
+      "label": "Event bus",
       "sublabel": "Trace / Span",
       "pos": [
         980,
@@ -124,7 +125,7 @@
       "id": "c1",
       "from": "user",
       "to": "layer1",
-      "label": "指令",
+      "label": "Instruction",
       "fromSide": "bottom",
       "toSide": "top",
       "labelAt": [
@@ -136,7 +137,7 @@
       "id": "c2",
       "from": "layer1",
       "to": "layer2",
-      "label": "组装上下文",
+      "label": "Assemble context",
       "fromSide": "bottom",
       "toSide": "top",
       "labelAt": [
@@ -148,7 +149,7 @@
       "id": "c3",
       "from": "layer2",
       "to": "layer3",
-      "label": "工具调用",
+      "label": "Tool call",
       "fromSide": "bottom",
       "toSide": "top",
       "labelAt": [
@@ -160,7 +161,7 @@
       "id": "c4",
       "from": "layer3",
       "to": "layer4",
-      "label": "依赖运行时",
+      "label": "Runtime deps",
       "fromSide": "bottom",
       "toSide": "top",
       "labelAt": [
@@ -172,7 +173,7 @@
       "id": "c5",
       "from": "layer3",
       "to": "external",
-      "label": "执行",
+      "label": "Execute",
       "fromSide": "right",
       "toSide": "left"
     },
@@ -180,17 +181,25 @@
       "id": "c6",
       "from": "layer2",
       "to": "memory",
-      "label": "读写",
+      "label": "Read/write",
       "fromSide": "left",
-      "toSide": "right"
+      "toSide": "right",
+      "labelAt": [
+        240,
+        266
+      ]
     },
     {
       "id": "c7",
       "from": "layer4",
       "to": "obs",
-      "label": "遥测",
+      "label": "Telemetry",
       "fromSide": "right",
-      "toSide": "left"
+      "toSide": "left",
+      "labelAt": [
+        930,
+        512
+      ]
     }
   ]
 }

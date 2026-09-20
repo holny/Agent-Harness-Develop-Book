@@ -2,43 +2,43 @@
   "schema_version": 2,
   "diagram_type": "workflow",
   "meta": {
-    "title": "上下文压缩决策流水线",
-    "locale": "zh-CN",
+    "title": "Context Compaction Decision Pipeline",
+    "locale": "en",
     "quality_profile": "showcase",
     "output": "diagrams/compaction.workflow.html"
   },
   "lanes": [
     {
       "id": "ui",
-      "label": "会话"
+      "label": "Session"
     },
     {
       "id": "agent",
-      "label": "压缩执行"
+      "label": "Compaction"
     },
     {
       "id": "control",
-      "label": "触发与规则",
+      "label": "Triggers & Rules",
       "variant": "exception"
     }
   ],
   "phases": [
     {
       "id": "monitor",
-      "label": "监测",
+      "label": "Monitor",
       "fromCol": 0,
       "toCol": 1
     },
     {
       "id": "compact",
-      "label": "压缩",
+      "label": "Compact",
       "fromCol": 2,
       "toCol": 3,
       "variant": "emphasis"
     },
     {
       "id": "rebuild",
-      "label": "重组",
+      "label": "Rebuild",
       "fromCol": 4,
       "toCol": 5,
       "variant": "dashed"
@@ -60,7 +60,7 @@
       "lane": "ui",
       "col": 0,
       "type": "external",
-      "label": "每轮请求",
+      "label": "Per-turn request",
       "width": 140
     },
     {
@@ -68,9 +68,9 @@
       "lane": "control",
       "col": 1,
       "type": "security",
-      "label": "阈值检查",
-      "sublabel": "窗口−13K / 90% / usable",
-      "tag": "六项目阈值各异",
+      "label": "Threshold check",
+      "sublabel": "window−13K / 90% / usable",
+      "tag": "Thresholds vary across the six projects",
       "width": 150
     },
     {
@@ -78,8 +78,8 @@
       "lane": "agent",
       "col": 2,
       "type": "backend",
-      "label": "预压缩",
-      "sublabel": "contextCollapse · 记忆刷写",
+      "label": "Pre-compaction",
+      "sublabel": "contextCollapse · memory flush",
       "width": 170
     },
     {
@@ -87,7 +87,7 @@
       "lane": "control",
       "col": 2,
       "type": "security",
-      "label": "事后补救",
+      "label": "Reactive recovery",
       "sublabel": "ContextOverflowError",
       "width": 140
     },
@@ -96,8 +96,8 @@
       "lane": "agent",
       "col": 3,
       "type": "backend",
-      "label": "摘要生成",
-      "sublabel": "fork 子代理 · 分段模板",
+      "label": "Summary generation",
+      "sublabel": "fork subagent · templates",
       "width": 150
     },
     {
@@ -105,8 +105,8 @@
       "lane": "control",
       "col": 3,
       "type": "database",
-      "label": "切点选择",
-      "sublabel": "绝不在 toolResult 处切",
+      "label": "Cut-point selection",
+      "sublabel": "Never cut at a toolResult",
       "width": 150
     },
     {
@@ -114,8 +114,8 @@
       "lane": "agent",
       "col": 4,
       "type": "backend",
-      "label": "重组上下文",
-      "sublabel": "摘要 + 近期 verbatim",
+      "label": "Rebuild context",
+      "sublabel": "Summary + recent verbatim",
       "width": 160
     },
     {
@@ -123,16 +123,16 @@
       "lane": "agent",
       "col": 5,
       "type": "backend",
-      "label": "压缩后重发",
-      "sublabel": "Lite 模式仅摘要",
-      "width": 140
+      "label": "Resend after compaction",
+      "sublabel": "Lite mode: summary only",
+      "width": 172
     },
     {
       "id": "final",
       "lane": "ui",
       "col": 5,
       "type": "frontend",
-      "label": "恢复执行",
+      "label": "Resume execution",
       "width": 140
     }
   ],
@@ -141,21 +141,21 @@
       "id": "start-check",
       "from": "start",
       "to": "check",
-      "label": "每轮进入",
+      "label": "Enter each turn",
       "variant": "default"
     },
     {
       "id": "check-pre",
       "from": "check",
       "to": "pre",
-      "label": "达到阈值",
+      "label": "Threshold reached",
       "variant": "emphasis"
     },
     {
       "id": "check-overflow",
       "from": "check",
       "to": "overflow",
-      "label": "Provider 溢出",
+      "label": "Provider overflow",
       "variant": "security",
       "role": "error"
     },
@@ -163,7 +163,7 @@
       "id": "overflow-summary",
       "from": "overflow",
       "to": "summary",
-      "label": "压缩后重试",
+      "label": "Retry after compaction",
       "variant": "dashed",
       "role": "branch"
     },
@@ -171,53 +171,53 @@
       "id": "pre-summary",
       "from": "pre",
       "to": "summary",
-      "label": "保留细粒度上下文",
+      "label": "Preserve fine-grained context",
       "variant": "default"
     },
     {
       "id": "summary-cut",
       "from": "summary",
       "to": "cut",
-      "label": "定切点",
+      "label": "Fix cut point",
       "variant": "dashed"
     },
     {
       "id": "cut-rebuild",
       "from": "cut",
       "to": "rebuild",
-      "label": "应用切点",
+      "label": "Apply cut point",
       "variant": "dashed"
     },
     {
       "id": "rebuild-resume",
       "from": "rebuild",
       "to": "resume",
-      "label": "新上下文",
+      "label": "New context",
       "variant": "emphasis"
     },
     {
       "id": "resume-final",
       "from": "resume",
       "to": "final",
-      "label": "继续 turn",
+      "label": "Continue turn",
       "variant": "default"
     }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "切点纪律",
+      "title": "Cut-point discipline",
       "items": [
-        "绝不在 toolResult 处切——保证 tool_use / tool_result 配对完整",
-        "近期对话 verbatim 保留：OpenCode 取 usable×50%（上限 32K）"
+        "Never cut at a toolResult — keep tool_use / tool_result pairs intact",
+        "Recent dialogue kept verbatim: OpenCode takes usable×50% (cap 32K)"
       ]
     },
     {
       "dot": "rose",
-      "title": "六项目触发阈值",
+      "title": "Trigger thresholds across the six projects",
       "items": [
-        "Claude Code 窗口−13K · Codex 窗口×90% 双 scope · Pi 窗口−16384",
-        "OpenCode count≥usable · DSH pressure+overflow 双触发 · Hermes 输入预算×50%"
+        "Claude Code window−13K · Codex window×90% dual scope · Pi window−16384",
+        "OpenCode count≥usable · DSH pressure+overflow dual trigger · Hermes input budget×50%"
       ]
     }
   ]

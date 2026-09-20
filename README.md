@@ -1,515 +1,572 @@
 <div style="display: flex; flex-direction: column; align-items: center;">
-  <h1>Agent Harness Dev Book(Agent Harness开发指导手册)</h1>
+  <h1>Agent Harness Dev Book</h1>
   <div style="width: 100%; text-align: right;">
-    <i>—— 参考业内生产级Agent源码：Claude Code，OpenCode，OpenClaw，Hermes，DeepSeek Harness，Codex 和 Pi</i>
+    <i>—— Based on production-grade agent source code: Claude Code, OpenCode, OpenClaw, Hermes, DeepSeek Harness, Codex, and Pi</i>
   </div>
 </div>
-<h3 style="color: red; font-weight: bold;">如果有用，麻烦点个小星星，并且分享给大家下，多谢</h3>
+<h3 style="color: red; font-weight: bold;">If you find this useful, please give it a star and share it with others — thank you!</h3>
 
-> **2026-09 更新日志**（基于 20 篇工程文章 + 7 个项目源码深度阅读）：
+English | [中文](README.zh-CN.md)
 
-| # | 新增/更新内容 | 要点 |
+> **2026-09 changelog** (based on 20 engineering articles + deep source-code reading of 7 projects):
+
+| # | Added / updated | Highlights |
 |---|---|---|
-| 1 | **DSH（DeepSeek Harness）源码补充**（已折叠进 §1/§2/§3/§4/§5/§6 对应章） | Cordis 插件内核、事件溯源日志、六态 TurnEndReason、两级压缩+Spill、Skill 三段渐进、SubAgent 6 provider、Code Mode `run_code`、守卫流水线（repeat-tool-reminder + timeout-policy 源码级） |
-| 2 | **Codex（Rust）源码补充**（已折叠进 §1/§3/§4/§5/§6） | Thread/Turn/Item 三层、Approval+Sandbox 两层独立、两阶段记忆管线（stage1 抽取→stage2 固化+git 基线+子代理）、90% 阈值双 scope 压缩 |
-| 3 | **Pi（极简主义）源码补充**（已折叠进 §1/§2/§4） | 4 工具 + <1000 token 系统提示、25+ hook 点、切点压缩算法、无权限系统 |
-| 4 | **§1 末尾六项目横向对比总表** | 语言/架构/Loop/工具数/系统提示/压缩/记忆/自进化/权限/沙箱/多 Agent/独特点 |
-| 5 | **§4 Context 三大约束** | Lost in the Middle（75→35% U 型）、Context Rot、Attention Budget O(n²) + 各自工程对策 + 核心公式 |
-| 6 | **§3 Multi-Agent 四大协作模式** | Workflow/Supervisor/Hierarchical/Swarm 决策矩阵 + 通信两范式 + 五项目对比 + 误用信号 |
-| 7 | **§7 Agent 自进化（新章）** | 翁荔《Harness Engineering for Self-Improvement》框架：RSI 从 Harness 开始 + 递进链条 + ACE/MCE + Self-Harness/DGM + Skill/记忆/RL 三路径 + 六项目对比 + RSI 七瓶颈 |
-| 8 | **§8 Loop Engineering** | Inner/Outer Loop 概念层级 + 控制论三角色映射 + 三种循环结局 + 分阶段放权 L1/L2/L3 |
-| 9 | **§2 确定性 Harness** | 高风险场景四件套（编排/留痕/短路/网关）+ 分级置信度 L1/L2/L3 |
-| 10 | **§4/§5 OpenCode压缩与记忆** | 源码级：触发路径/阈值计算/8 段摘要模板/FTS5 BM25 记忆架构/与 Claude Code 对比 |
-| 11 | **结构重组** | 项目专章按主题折叠为各章末"项目对比"小节；OpenCode 内容并入 §4/§5；确定性 Harness 并入 §2；新增 §7 自进化章 |
+| 1 | **DSH (DeepSeek Harness) source-code supplement** (folded into §1/§2/§3/§4/§5/§6) | Cordis plugin kernel, event-sourcing log, six-state TurnEndReason, two-level compaction + Spill, three-stage progressive Skills, SubAgent 6 providers, Code Mode `run_code`, guard pipeline (repeat-tool-reminder + timeout-policy at source level) |
+| 2 | **Codex (Rust) source-code supplement** (folded into §1/§3/§4/§5/§6) | Thread/Turn/Item three layers, independent Approval + Sandbox layers, two-stage memory pipeline (stage-1 extraction → stage-2 consolidation + git baseline + subagents), 90%-threshold dual-scope compaction |
+| 3 | **Pi (minimalism) source-code supplement** (folded into §1/§2/§4) | 4 tools + <1000-token system prompt, 25+ hook points, cut-point compaction algorithm, no permission system |
+| 4 | **Master comparison table of the six projects at the end of §1** | language / architecture / loop / tool count / system prompt / compaction / memory / self-evolution / permissions / sandbox / multi-agent / distinctives |
+| 5 | **§4 three major context constraints** | Lost in the Middle (75→35% U-shape), Context Rot, attention budget O(n²) + engineering countermeasures + core formulas |
+| 6 | **§3 four multi-agent collaboration patterns** | Workflow/Supervisor/Hierarchical/Swarm decision matrix + two communication paradigms + five-project comparison + misuse signals |
+| 7 | **§7 Agent self-evolution (new chapter)** | Lilian Weng's "Harness Engineering for Self-Improvement" framework: RSI starts from the harness + progressive chain + ACE/MCE + Self-Harness/DGM + Skill/memory/RL paths + six-project comparison + seven RSI bottlenecks |
+| 8 | **§8 Loop Engineering** | Inner/Outer loop conceptual hierarchy + cybernetic three-role mapping + three loop outcomes + phased delegation of authority L1/L2/L3 |
+| 9 | **§2 deterministic harness** | high-risk scenario four essentials (orchestration / audit trail / short-circuit / gateway) + graded confidence L1/L2/L3 |
+| 10 | **§4/§5 OpenCode compaction and memory** | source-level: trigger paths / threshold calculation / 8-segment summary template / FTS5 BM25 memory architecture / comparison with Claude Code |
+| 11 | **Structure reorganization** | project-specific chapters folded into per-chapter "project comparison" sections; OpenCode content merged into §4/§5; deterministic harness merged into §2; new §7 self-evolution chapter |
 
-**目录：**
+**Table of Contents:**
 
-- [Agent定义](#agent--)
-  * [**1.经典定义-四要素公式(2023~2025)**](#--1-----------2023-2025---)
-  * [**2.最新定义-Harness Engineering(2026~)**](#--2-----harness-engineering-2026----)
-    + [最新公式](#----)
-    + [Harness核心公式](#harness----)
-    + [四要素公式和Harness关系](#------harness--)
+- [Agent definitions](#agent-definitions)
+  * [**1. Classic definition - four-element formula (2023~2025)**](#1-classic-definition---four-element-formula-20232025)
+  * [**2. Latest definition - Harness Engineering (2026~)**](#2-latest-definition---harness-engineering-2026)
+    + [Latest formula](#latest-formula)
+    + [Core Harness formula](#core-harness-formula)
+    + [Relationship between the four-element formula and Harness](#relationship-between-the-four-element-formula-and-harness)
     + [Harness  Engineering](#harness--engineering)
-- [如何构建Agent（Harness）](#----agent-harness-)
-  * [**1.Agent Harness架构**](#--1agent-harness----)
-    + [四层架构](#----)
-    + [生产级Harness架构核心模块&技术](#---harness---------)
-    + [Claude Code架构图](#claude-code---)
-    + [DSH Cordis 元框架：五个核心概念（插件化微内核）](#dsh-cordis-------------------)
-    + [DSH 没有的（同样重要）](#dsh----------)
-    + [Codex 架构：Thread / Turn / Item 三层](#codex----thread---turn---item---)
-    + [Pi 设计哲学：极简主义](#pi----------)
-    + [六项目横向对比总表](#---------)
-  * [**2. Agent Loop（ReAct/TAOR）**](#--2-agent-loop-react-taor---)
+- [How to Build an Agent (Harness)](#how-to-build-an-agent-harness)
+  * [**1. Agent Harness architecture**](#1-agent-harness-architecture)
+    + [Four-layer architecture](#four-layer-architecture)
+    + [Core modules & technologies of the production-grade Harness architecture](#core-modules--technologies-of-the-production-grade-harness-architecture)
+    + [Claude Code architecture diagram](#claude-code-architecture-diagram)
+    + [DSH Cordis meta-framework: five core concepts (plugin-based microkernel)](#dsh-cordis-meta-framework-five-core-concepts-plugin-based-microkernel)
+    + [What DSH does not have (equally important)](#what-dsh-does-not-have-equally-important)
+    + [Codex architecture: the Thread / Turn / Item three layers](#codex-architecture-the-thread--turn--item-three-layers)
+      - [Codex key differentiators](#codex-key-differentiators)
+    + [Pi design philosophy: minimalism](#pi-design-philosophy-minimalism)
+      - [Pi key differentiators](#pi-key-differentiators)
+    + [Master comparison table of the six projects](#master-comparison-table-of-the-six-projects)
+  * [**2. Agent Loop (ReAct/TAOR)**](#2-agent-loop-reacttaor)
+    + [The real Agent Loop implementation](#the-real-agent-loop-implementation)
+    + [The five-layer compaction pipeline](#the-five-layer-compaction-pipeline)
+    + [Error recovery chain](#error-recovery-chain)
+    + [Termination conditions (10 kinds)](#termination-conditions-10-kinds)
+    + [Key mechanisms at a glance](#key-mechanisms-at-a-glance)
     + [Agent Loop](#agent-loop)
-    + [循环状态机](#-----)
-    + [工具调用并行（异步）执行](#------------)
-    + [流式处理：边生成边行动](#-----------)
-    + [退出条件：何时终止循环](#-----------)
-    + [重试与退避 + 中断与恢复](#-------------)
-    + [Agent Loop伪代码](#agent-loop---)
-    + [DSH 事件溯源日志："Model-visible ⟺ logged" 硬不变量](#dsh---------model-visible---logged------)
-    + [DSH Agent Loop：ReactLoopAgent + 六态 TurnEndReason](#dsh-agent-loop-reactloopagent------turnendreason)
-    + [Pi Agent Loop：扁平双层循环 + 25+ TypeScript Hook 点](#pi-agent-loop----------25--typescript-hook--)
-    + [确定性 Harness：高风险场景的四件套](#----harness----------)
-  * [**3. Multi-Agent（多Agent编排）**](#--3-multi-agent--agent-----)
-    + [工程实现核心要点](#--------)
-    + [任务委派的工程实现](#---------)
-      - [将SubAgent封装为标准工具（Task Tool）](#-subagent--------task-tool-)
-      - [SubAgent的独立生命周期](#subagent-------)
-      - [上下文隔离](#-----)
-    + [Agent通信机制](#agent----)
-      - [父子通信：请求-响应式](#-----------)
-      - [对等通信：消息总线](#---------)
-    + [并行与串行编排](#-------)
-    + [状态追踪与恢复](#-------)
-    + [错误处理与降级策略](#---------)
-    + [DSH SubAgent：一等 seam + 跨产品互操作](#dsh-subagent----seam---------)
-    + [Multi-Agent 四大协作模式（Workflow / Supervisor / Hierarchical / Swarm）](#multi-agent--------workflow---supervisor---hierarchical---swarm-)
-  * [**4. Context System（上下文系统）**](#--4-context-system---------)
-    + [System Prompt 的结构化组装](#system-prompt-------)
-      - [为什么需要结构化：静态区和动态区](#----------------)
-      - [缓存工作原理](#------)
-      - [工程实现要点](#------)
-    + [动态上下文注入](#-------)
-      - [项目级上下文（CLAUDE.md / AGENTS.md）](#-------claudemd---agentsmd-)
-      - [对话历史注入](#------)
-      - [工具输出截断与持久化](#----------)
-    + [上下文压缩](#-----)
-      - [折叠](#--)
-      - [会话剪枝（Pruning）](#-----pruning-)
-      - [LLM 智能摘要（Compaction）](#llm------compaction-)
-      - [压缩技术对比总结](#--------)
-    + [缓存优化：减少重复 Token 消耗](#----------token---)
-    + [DSH 压缩：两级 + Spill 第三条路](#dsh---------spill-----)
-    + [Codex 压缩机制：90% 阈值 + 双 scope](#codex------90---------scope)
-    + [Pi 压缩：切点算法](#pi--------)
-     + [OpenCode 压缩实现（源码级）](#opencode-----------)
-    + [Context 三大约束与工程对策](#context----------)
-      - [System Prompt 缓存](#system-prompt---)
-      - [工具 Schema 缓存](#---schema---)
-      - [项目级上下文缓存](#--------)
-      - [最佳实践](#----)
-  * [**5. Memory System（记忆系统）**](#--5-memory-system--------)
-    + [介绍](#--)
-      - [记忆系统的地位](#-------)
-      - [与Context System关系](#-context-system--)
-    + [记忆生命周期分层：短期、中期、长期](#-----------------)
-      - [短期记忆：会话内的消息历史](#-------------)
-      - [中期记忆：项目级记忆](#----------)
-      - [长期记忆：全局用户偏好](#-----------)
-    + [生产级Agent在记忆工程上的实现](#---agent---------)
-      - [OpenCode记忆](#opencode--)
-      - [Claude Code记忆：半自动记忆](#claude-code--------)
-      - [OpenClaw记忆实践：以文件为“源”，向量为“索”的记忆系统](#openclaw------------------------)
-      - [Hermes：自我进化的闭环学习系统](#hermes------------)
-      - [总结工程实践原则](#--------)
-    + [自动学习与进化](#-------)
-      - [地位和作用](#-----)
-      - [理论基础](#----)
-      - [自动学习、记忆保鲜、更新与遗忘的关系](#------------------)
-      - [Claude Code：Auto Memory & Auto Dream](#claude-code-auto-memory---auto-dream)
-        * [自动学习：Auto Memory](#-----auto-memory)
-        * [记忆保鲜：Auto Dream](#-----auto-dream)
-        * [更新与遗忘](#-----)
+    + [Loop state machine](#loop-state-machine)
+    + [Parallel (async) tool call execution](#parallel-async-tool-call-execution)
+    + [Streaming: act while generating](#streaming-act-while-generating)
+    + [Exit conditions: when to terminate the loop](#exit-conditions-when-to-terminate-the-loop)
+    + [Retry and backoff + interruption and recovery](#retry-and-backoff--interruption-and-recovery)
+    + [Agent Loop pseudocode](#agent-loop-pseudocode)
+    + [DSH event sourcing log: the "Model-visible ⟺ logged" hard invariant](#dsh-event-sourcing-log-the-model-visible--logged-hard-invariant)
+    + [DSH Agent Loop: ReactLoopAgent + the six-state TurnEndReason](#dsh-agent-loop-reactloopagent--the-six-state-turnendreason)
+    + [Pi Agent Loop: flat two-layer loop + 25+ TypeScript hook points](#pi-agent-loop-flat-two-layer-loop--25-typescript-hook-points)
+    + [Deterministic harness: the four-piece toolkit for high-stakes scenarios](#deterministic-harness-the-four-piece-toolkit-for-high-stakes-scenarios)
+  * [**3. Multi-Agent (multi-agent orchestration)**](#3-multi-agent-multi-agent-orchestration)
+    + [Claude Code built-in agents and adversarial verification (source-level)](#claude-code-built-in-agents-and-adversarial-verification-source-level)
+      - [Verification Agent: red-vs-blue adversarial design (`verificationAgent.ts`)](#verification-agent-red-vs-blue-adversarial-design-verificationagentts)
+      - [Runtime design of the Task tool (`AgentTool.tsx`, 1398 lines)](#runtime-design-of-the-task-tool-agenttooltsx-1398-lines)
+    + [Core points of the engineering implementation](#core-points-of-the-engineering-implementation)
+    + [Engineering implementation of task delegation](#engineering-implementation-of-task-delegation)
+      - [Wrapping the subagent as a standard tool (Task Tool)](#wrapping-the-subagent-as-a-standard-tool-task-tool)
+      - [Independent Lifecycle of a SubAgent](#independent-lifecycle-of-a-subagent)
+      - [Context Isolation](#context-isolation)
+    + [Agent Communication Mechanism](#agent-communication-mechanism)
+      - [Parent-Child Communication: Request-Response](#parent-child-communication-request-response)
+      - [Peer-to-Peer Communication: Message Bus](#peer-to-peer-communication-message-bus)
+    + [Parallel and Serial Orchestration](#parallel-and-serial-orchestration)
+    + [State Tracking and Recovery](#state-tracking-and-recovery)
+    + [Error Handling and Fallback Strategies](#error-handling-and-fallback-strategies)
+    + [DSH SubAgent: First-Class Seam + Cross-Product Interoperability](#dsh-subagent-first-class-seam--cross-product-interoperability)
+    + [The Four Multi-Agent Collaboration Patterns (Workflow / Supervisor / Hierarchical / Swarm)](#the-four-multi-agent-collaboration-patterns-workflow--supervisor--hierarchical--swarm)
+      - [Three Bottlenecks of a Single Agent](#three-bottlenecks-of-a-single-agent)
+      - [The Four Collaboration Patterns](#the-four-collaboration-patterns)
+      - [Multi-Agent Comparison Across the Five Projects](#multi-agent-comparison-across-the-five-projects)
+  * [**4. Context System**](#4-context-system)
+    + [Structured Assembly of the System Prompt](#structured-assembly-of-the-system-prompt)
+      - [Why Structure Is Needed: Static and Dynamic Zones](#why-structure-is-needed-static-and-dynamic-zones)
+      - [How the Cache Works](#how-the-cache-works)
+      - [Engineering Implementation Notes](#engineering-implementation-notes)
+    + [Dynamic Context Injection](#dynamic-context-injection)
+      - [Project-Level Context (CLAUDE.md / AGENTS.md)](#project-level-context-claudemd--agentsmd)
+      - [Conversation History Injection](#conversation-history-injection)
+      - [Tool Output Truncation and Persistence](#tool-output-truncation-and-persistence)
+    + [Context Compaction](#context-compaction)
+      - [Claude Code's Five-Layer Compaction System (Source-Level)](#claude-codes-five-layer-compaction-system-source-level)
+      - [Engineering Design of the Compaction Summary Prompt (`compact/prompt.ts`)](#engineering-design-of-the-compaction-summary-prompt-compactpromptts)
+      - [Folding](#folding)
+      - [Session Pruning](#session-pruning)
+      - [LLM Intelligent Summarization (Compaction)](#llm-intelligent-summarization-compaction)
+      - [Hermes Threshold Computation and Anti-Thrash Breaker (source-level)](#hermes-threshold-computation-and-anti-thrash-breaker-source-level)
+      - [Compaction Techniques Comparison Summary](#compaction-techniques-comparison-summary)
+    + [Cache Optimization: Reducing Repeated Token Consumption](#cache-optimization-reducing-repeated-token-consumption)
+      - [System Prompt Cache](#system-prompt-cache)
+      - [Tool Schema Cache](#tool-schema-cache)
+      - [Project-Level Context Cache](#project-level-context-cache)
+      - [Best Practices](#best-practices)
+    + [DSH Compaction: Two-Tier Plus Spill, a Third Path](#dsh-compaction-two-tier-plus-spill-a-third-path)
+    + [Spill Source Details (`spill/types.ts` all types + `cordis.patch.yml:352`)](#spill-source-details-spilltypests-all-types--cordispatchyml352)
+    + [Codex Compaction Mechanism: 90% Threshold + Dual Scope](#codex-compaction-mechanism-90-threshold--dual-scope)
+    + [Pi compaction: the cut point algorithm](#pi-compaction-the-cut-point-algorithm)
+    + [OpenCode compaction implementation (source-level)](#opencode-compaction-implementation-source-level)
+      - [Compaction trigger paths](#compaction-trigger-paths)
+      - [Threshold calculation (overflow.ts:8-25)](#threshold-calculation-overflowts8-25)
+      - [New context after compaction](#new-context-after-compaction)
+      - [Comparison with Claude Code compaction](#comparison-with-claude-code-compaction)
+    + [The three major constraints of Context and engineering countermeasures](#the-three-major-constraints-of-context-and-engineering-countermeasures)
+      - [Three physical constraints](#three-physical-constraints)
+      - [Constraint 1: Lost in the Middle](#constraint-1-lost-in-the-middle)
+      - [Constraint 2: Context Rot](#constraint-2-context-rot)
+      - [Constraint 3: Attention Budget](#constraint-3-attention-budget)
+      - [Summary](#summary)
+  * [**5. Memory System**](#5-memory-system)
+    + [Claude Code memdir implementation (source-level)](#claude-code-memdir-implementation-source-level)
+      - [Four memory types (`memoryTypes.ts`)](#four-memory-types-memorytypests)
+      - [Entrypoint file hard limits (`memdir.ts:34-38`)](#entrypoint-file-hard-limits-memdirts34-38)
+      - [Recall mechanism (`findRelevantMemories.ts`)](#recall-mechanism-findrelevantmemoriests)
+      - [Background consolidation (`autoDream.ts`)](#background-consolidation-autodreamts)
+    + [Introduction](#introduction)
+      - [The memory system's role](#the-memory-systems-role)
+      - [Relationship with the Context System](#relationship-with-the-context-system)
+    + [Memory lifecycle tiers: short-term, mid-term, long-term](#memory-lifecycle-tiers-short-term-mid-term-long-term)
+      - [Short-term memory: in-session message history](#short-term-memory-in-session-message-history)
+      - [Mid-term memory: project-level memory](#mid-term-memory-project-level-memory)
+      - [Long-term memory: global user preferences](#long-term-memory-global-user-preferences)
+    + [How production-grade agents implement memory engineering](#how-production-grade-agents-implement-memory-engineering)
+      - [OpenCode Memory](#opencode-memory)
+      - [Claude Code Memory: Semi-Automatic Memory](#claude-code-memory-semi-automatic-memory)
+      - [OpenClaw Memory Practice: A Memory System with Files as the "Source" and Vectors as the "Index"](#openclaw-memory-practice-a-memory-system-with-files-as-the-source-and-vectors-as-the-index)
+      - [Hermes: A Self-Evolving Closed-Loop Learning System](#hermes-a-self-evolving-closed-loop-learning-system)
+      - [Summary of Engineering Practice Principles](#summary-of-engineering-practice-principles)
+    + [Automatic Learning and Evolution](#automatic-learning-and-evolution)
+      - [Status and Role](#status-and-role)
+      - [Theoretical Foundations](#theoretical-foundations)
+      - [The Relationship Among Automatic Learning, Memory Freshness, Updating, and Forgetting](#the-relationship-among-automatic-learning-memory-freshness-updating-and-forgetting)
+      - [Claude Code: Auto Memory & Auto Dream](#claude-code-auto-memory--auto-dream)
+        * [Automatic Learning: Auto Memory](#automatic-learning-auto-memory)
+        * [Memory Freshness: Auto Dream](#memory-freshness-auto-dream)
+        * [Updating and Forgetting](#updating-and-forgetting)
       - [OpenClaw](#openclaw)
-        * [自动学习：Dreaming（梦境）](#-----dreaming----)
-        * [记忆保鲜：六维加权评分模型](#-------------)
-        * [更新与遗忘](#------1)
+        * [Automatic Learning: Dreaming](#automatic-learning-dreaming)
+        * [Memory Freshness: Six-Dimension Weighted Scoring Model](#memory-freshness-six-dimension-weighted-scoring-model)
+        * [Updating and Forgetting](#updating-and-forgetting-1)
       - [Hermes](#hermes)
-        * [自动学习：Skill闭环自进化](#-----skill-----)
-        * [自动学习：RL训练闭环：“权重内化”的终极“自进化”](#-----rl-------------------)
-        * [记忆保鲜](#----)
-        * [更新与遗忘](#------2)
-      - [总结](#--)
-    + [记忆持久化](#-----)
-    + [Codex 两阶段记忆管线（自进化最重的实现）](#codex------------------)
-     + [OpenCode 记忆系统架构（源码级）](#opencode------------)
+        * [Automatic Learning: Skill Closed-Loop Self-Evolution](#automatic-learning-skill-closed-loop-self-evolution)
+        * [Automatic learning: RL training loop — the ultimate "self-evolution" of "weight internalization"](#automatic-learning-rl-training-loop--the-ultimate-self-evolution-of-weight-internalization)
+        * [Memory freshness](#memory-freshness)
+        * [Update and forgetting](#update-and-forgetting)
+      - [Summary](#summary-1)
+    + [Memory persistence](#memory-persistence)
       - [Claude Code](#claude-code)
       - [OpenClaw](#openclaw-1)
       - [Hermes](#hermes-1)
-  * [**6. Tool Integration System（工具系统）**](#--6-tool-integration-system--------)
-    + [工具注册与发现](#-------)
-      - [Claude Code：自包含的模块化工具注册](#claude-code------------)
-      - [OpenClaw：以 MCP 为核心的插件化工具接入](#openclaw---mcp------------)
-  * [7. Agent 自进化：从 Skill 到模型权重（Harness Engineering for Self-Improvement）](#7-agent-------skill-------harness-engineering-for-self-improvement-)
-    + [7.1 翁荔框架：RSI 从 Harness 层开始](#71------rsi---harness----)
-    + [7.2 递进链条：优化对象一步步深入](#72---------------)
-    + [7.3 两个层级：非参数化与参数化](#73--------------)
-    + [7.4 第一层：Context Engineering 自进化（ACE / MCE）](#74-----context-engineering-----ace---mce-)
-    + [7.5 第二层：Workflow Design（AI Scientist / ADAS / AFlow）](#75-----workflow-design-ai-scientist---adas---aflow-)
-    + [7.6 第三层：Self-Improving Harness 与进化搜索（Self-Harness / DGM）](#76-----self-improving-harness-------self-harness---dgm-)
-    + [7.7 非参数化：Skill 动态沉淀](#77------skill-----)
-    + [7.8 记忆进化：从静态存储到自管理记忆](#78-----------------)
-    + [7.9 参数化：RL 训练闭环](#79-----rl-----)
-    + [7.10 六项目自进化对比](#710---------)
-    + [7.11 边界与风险：RSI 的七个瓶颈](#711-------rsi------)
+    + [Codex two-stage memory pipeline (the heaviest self-evolution implementation)](#codex-two-stage-memory-pipeline-the-heaviest-self-evolution-implementation)
+    + [OpenCode memory system architecture (source-level)](#opencode-memory-system-architecture-source-level)
+  * [**6. Tool Integration System (Tool System)**](#6-tool-integration-system-tool-system)
+    + [Tool registration and discovery](#tool-registration-and-discovery)
+      - [Claude Code: self-contained modular tool registration](#claude-code-self-contained-modular-tool-registration)
+      - [OpenClaw: MCP-centric pluggable tool integration](#openclaw-mcp-centric-pluggable-tool-integration)
+      - [Hermes: deep fusion of tool calls and the skill system](#hermes-deep-fusion-of-tool-calls-and-the-skill-system)
+    + [Skill and MCP](#skill-and-mcp)
+      - [Skill](#skill)
+        * [Engineering implementation of Skill](#engineering-implementation-of-skill)
+        * [Comparison of Skill implementations across production-grade Agents](#comparison-of-skill-implementations-across-production-grade-agents)
+        * [Commonalities](#commonalities)
+        * [Hermes's automatic Skill creation and learning evolution](#hermess-automatic-skill-creation-and-learning-evolution)
+      - [MCP](#mcp)
+        * [Claude Code's MCP integration](#claude-codes-mcp-integration)
+        * [OpenCode's MCP integration](#opencodes-mcp-integration)
+        * [OpenClaw's deep MCP integration](#openclaws-deep-mcp-integration)
+    + [Permission and security control](#permission-and-security-control)
+      - [Rule-based policy engine](#rule-based-policy-engine)
+      - [Claude Code's engineering implementation of permission and security controls](#claude-codes-engineering-implementation-of-permission-and-security-controls)
+        * [The deny → ask → allow rule chain](#the-deny--ask--allow-rule-chain)
+        * [The AutoMode ML classifier](#the-automode-ml-classifier)
+        * [Bash safety detection: AST syntax parsing](#bash-safety-detection-ast-syntax-parsing)
+      - [Cross-project permission model comparison (source-level)](#cross-project-permission-model-comparison-source-level)
+    + [The DSH Skill system: three-stage progressive disclosure](#the-dsh-skill-system-three-stage-progressive-disclosure)
+    + [The DSH tool execution guard pipeline](#the-dsh-tool-execution-guard-pipeline)
+      - [Guard instance 1: `repeat-tool-reminder` (233 lines, advisory anti-infinite-loop guard)](#guard-instance-1-repeat-tool-reminder-233-lines-advisory-anti-infinite-loop-guard)
+      - [Guard instance 2: `timeout-policy` (81 lines, cooperative timeout guard)](#guard-instance-2-timeout-policy-81-lines-cooperative-timeout-guard)
+    + [DSH Code Mode: `run_code`](#dsh-code-mode-run_code)
+    + [The Codex security model: Approval and Sandbox as two independent layers](#the-codex-security-model-approval-and-sandbox-as-two-independent-layers)
+  * [7. Agent self-evolution: from Skill to model weights (Harness Engineering for Self-Improvement)](#7-agent-self-evolution-from-skill-to-model-weights-harness-engineering-for-self-improvement)
+    + [7.1 The Lilian Weng framework: RSI starts from the Harness layer](#71-the-lilian-weng-framework-rsi-starts-from-the-harness-layer)
+    + [7.2 The progressive chain: optimization targets go deeper step by step](#72-the-progressive-chain-optimization-targets-go-deeper-step-by-step)
+    + [7.3 Two tiers: non-parametric and parametric](#73-two-tiers-non-parametric-and-parametric)
+    + [7.4 Layer 1: Context Engineering self-evolution (ACE / MCE)](#74-layer-1-context-engineering-self-evolution-ace--mce)
+    + [7.5 Layer 2: Workflow Design (AI Scientist / ADAS / AFlow)](#75-layer-2-workflow-design-ai-scientist--adas--aflow)
+    + [7.6 Layer 3: Self-Improving Harness and evolutionary search (Self-Harness / DGM)](#76-layer-3-self-improving-harness-and-evolutionary-search-self-harness--dgm)
+    + [7.7 Non-parametric: dynamic Skill consolidation](#77-non-parametric-dynamic-skill-consolidation)
+    + [7.8 Memory evolution: from static storage to self-managing memory](#78-memory-evolution-from-static-storage-to-self-managing-memory)
+    + [7.9 Parametric: the RL training loop](#79-parametric-the-rl-training-loop)
+    + [7.10 Self-evolution comparison of the six projects](#710-self-evolution-comparison-of-the-six-projects)
+    + [7.11 Boundaries and risks: the seven bottlenecks of RSI](#711-boundaries-and-risks-the-seven-bottlenecks-of-rsi)
   * [8. Loop Engineering](#8-loop-engineering)
-    + [8.1 概念层级](#81-----)
-    + [8.2 控制论三角色映射](#82---------)
-    + [8.3 三种循环结局](#83-------)
+    + [8.1 Conceptual hierarchy](#81-conceptual-hierarchy)
+    + [8.2 Cybernetics three-role mapping](#82-cybernetics-three-role-mapping)
+    + [8.3 Three loop outcomes](#83-three-loop-outcomes)
 
-# Agent定义
+# Agent definitions
 
-## **1.经典定义-四要素公式(2023~2025)**
+## **1. Classic definition - four-element formula (2023~2025)**
 
-​	**Agent = Model（大模型）+Planning（规划）+Memory（记忆）+Tool（工具使用）**
+	**Agent = Model (LLM) +Planning +Memory +Tool (tool use)**
 
-​	这个定义是从技术实现角度出发，指出实现一个Agent，它需要基于大模型，需要有规划的能力，能够思考接下来做的事，需要有记忆，包括长期记忆和短期记忆，需要能使用工具，这些能力的集合体叫做Agent。这一公式的价值在于**首次系统性地拆解了Agent的能力边界**。
+	This definition takes a technical implementation perspective: to build an Agent, it must be based on an LLM, have planning capability — the ability to think about what to do next — have memory, including long-term and short-term memory, and be able to use tools; the combination of these capabilities is called an Agent. The value of this formula is that it **was the first to systematically break down the capability boundary of an Agent**.
 
-> 1. 2022年10月提出Agent理论基石ReAct：由普林斯顿大学和谷歌研究院团队合作提出ReAct论文[《ReAct: Synergizing Reasoning and Acting in Language Models》](https://arxiv.org/abs/2210.03629),核心是通过"Thought（思考）→Action（行动）→Observation（观察）"的闭环流程让大模型具备边推理边交互的能力。
-> 2. 2023年6月提出Agent定义（四要素公式）：此公式由由 OpenAI 应用研究负责人 **Lilian Weng** 在2023年6月的知名博客文章[《LLM Powered Autonomous Agents》](https://lilianweng.github.io/posts/2023-06-23-agent/)中系统阐述。
+> 1. October 2022: ReAct, the theoretical cornerstone of Agents, was proposed. A joint Princeton University and Google Research team published the ReAct paper [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629); its core is the closed-loop flow of "Thought → Action → Observation" that gives LLMs the ability to interact while reasoning.
+> 2. June 2023: the Agent definition (four-element formula) was proposed. This formula was systematically articulated by OpenAI's head of applied research **Lilian Weng** in the well-known June 2023 blog post [LLM Powered Autonomous Agents](https://lilianweng.github.io/posts/2023-06-23-agent/).
 
-## **2.最新定义-Harness Engineering(2026~)**
+## **2. Latest definition - Harness Engineering (2026~)**
 
-### 最新公式
+### Latest formula
 
-**Agent = Model（大模型）+ Harness（基础设施） **
+**Agent = Model (LLM) + Harness (infrastructure) **
 
-​	在 AI 工程领域，**Agent Harness** 被借用并定义为：**围绕在大语言模型核心周围的一整套确定性、防御性的工程基础设施。**其目的是：让具有非确定性、概率性特征的大模型，能够在生产环境中表现为一个确定、可靠、可控的“工人”。
+	In AI engineering, **Agent Harness** has been borrowed and defined as: **a complete set of deterministic, defensive engineering infrastructure wrapped around the large language model core.** Its purpose: to let a non-deterministic, probabilistic LLM behave as a deterministic, reliable, controllable "worker" in production environments.
 
->Harness 在英语中的原意是 “马具”——即套在马身上用于控制方向、承受重负、连接马车的那套皮革与金属装置。
+>The word "harness" originally means "horse gear" in English — the leather-and-metal rigging fitted onto a horse to control direction, bear heavy loads, and connect it to a cart.
 
-> Harness概念提出时间线：
+> Harness concept timeline:
 >
-> 1. 2025年11月概念首发：**Anthropic** 在其工程博客[《Effective harnesses for long-running agents》](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)中首次将Claude Agent SDK描述为“一个强大的、通用的 Agent Harness”。
+> 1. November 2025, concept debut: **Anthropic**, in its engineering blog [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents), first described the Claude Agent SDK as "a powerful, general-purpose Agent Harness".
 >
-> 3. 2026年2月概念验证：**OpenAI** 发布技术博客[《Harness engineering: leveraging Codex in an agent-first world》](https://openai.com/zh-Hans-CN/index/harness-engineering/)，公布了其内部代号为“Codex”的团队如何仅凭3-7名工程师，在5个月内让AI Agent自主生成超过100万行生产级代码的实验，为Harness Engineering提供了强有力的实践验证，
+> 3. February 2026, concept validation: **OpenAI** published the technical blog [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/zh-Hans-CN/index/harness-engineering/), revealing the experiment in which its internal team, codenamed "Codex", had AI Agents autonomously generate over 1 million lines of production-grade code in 5 months with only 3-7 engineers, providing strong practical validation for Harness Engineering,
 
-### Harness核心公式
+### Core Harness formula
 
-​	<span style="background-color: lightgray;font-weight: bold;">生产级 Agent=模型潜能−模型熵增+Harness 约束</span>
+	<span style="background-color: lightgray;font-weight: bold;">Production-grade Agent=model potential−model entropy increase+Harness constraints</span>
 
-- **大模型本质是“熵增”的**：它基于概率生成，输出具有不确定性，输入微小的 Prompt 变化可能导致巨大的行为漂移。
-- **Harness 本质是“熵减”的**：它用**确定性的代码逻辑**去框住**不确定的模型输出**。
+- **The LLM is essentially "entropy-increasing"**: it generates based on probability, its outputs are uncertain, and a tiny Prompt change on the input can cause huge behavioral drift.
+- **The Harness is essentially "entropy-reducing"**: it uses **deterministic code logic** to fence in **uncertain model outputs**.
 
-### 四要素公式和Harness关系
+### Relationship between the four-element formula and Harness
 
-​	四要素公式跟Harness并非互斥对立概念，而是对AI Agent从**理论构想**走向**工程实践**的两次关键认知跃迁，从设计图纸到工程基础设施的实现。Agent的叙事重心发生了根本性转移：从**追求个体能力**，转向**构建系统可靠性**。
+	The four-element formula and Harness are not mutually exclusive, opposing concepts; they are two key cognitive leaps taking the AI Agent from **theoretical conception** to **engineering practice** — an implementation journey from design blueprint to engineering infrastructure. The Agent narrative has fundamentally shifted: from **pursuing individual capability** to **building system reliability**.
 
 ### Harness  Engineering
 
-​	Harness Engineering 是一门专注于为“非确定性 AI 模型”构建“确定性约束边界”的工程学科。其核心目标是将 Agent 的错误从“意外事故”转化为“可修复的系统漏洞”。
+	Harness Engineering is an engineering discipline focused on building "deterministic constraint boundaries" around "non-deterministic AI models". Its core goal is to turn Agent errors from "accidents" into "fixable system bugs".
 
->​	2026年2月概念提出：HashiCorp联合创始人Mitchell Hashimoto在其博客文章[《My AI Adoption Journey》](https://mitchellh.com/writing/my-ai-adoption-journey)中正式提出并命名了“**Harness Engineering（驾驭工程）**”这一实践领域。其核心是：每当Agent犯错，就将其工程化为一个永久性的系统修复，确保它不会再犯同样的错误“ - “Prompts are suggestions. Harness code is law.” 。
+>	February 2026, concept coined: HashiCorp co-founder Mitchell Hashimoto formally proposed and named the practice of "**Harness Engineering**" in his blog post [My AI Adoption Journey](https://mitchellh.com/writing/my-ai-adoption-journey). Its core: every time an Agent makes a mistake, engineer it into a permanent system fix so it never repeats the same mistake" - "Prompts are suggestions. Harness code is law.".
 
-|                 概念                  |           核心关注点            |         解决的问题         | 时间范围  |            比喻            |
+|                 Concept                  |           Core focus            |         Problem solved         | Time range  |            Metaphor            |
 | :-----------------------------------: | :-----------------------------: | :------------------------: | :-------: | :------------------------: |
-| **Prompt Engineering（提示词工程）**  |     如何让模型理解你的意图      |       单次输出的质量       | 2022-2024 |       对马喊话的技巧       |
-| **Context Engineering（上下文工程）** |    如何给模型正确的知识边界     |      给模型看什么信息      |   2025    |         给马看地图         |
-|        **Harness Engineering**        | 如何让 Agent 可靠、持续、不失控 | 多步骤、长周期任务的可靠性 |   2026-   | 造高速公路，配护栏和限速牌 |
+| **Prompt Engineering**  |     How to make the model understand your intent      |       Quality of a single output       | 2022-2024 |       Techniques for shouting at a horse       |
+| **Context Engineering** |    How to give the model the right knowledge boundary     |      What information the model sees      |   2025    |         Showing the horse a map         |
+|        **Harness Engineering**        | How to keep the Agent reliable, sustained, and under control | Reliability of multi-step, long-horizon tasks |   2026-   | Build a highway with guardrails and speed-limit signs |
 
 
 
-# 如何构建Agent（Harness）
+# How to Build an Agent (Harness)
 
-​	Harness的设计应遵循"从最简单的方案开始，只在必要时加复杂度"的原则。
+	Harness design should follow the principle of "start with the simplest solution and add complexity only when necessary".
 
-​	对比的四个项目存在本质差异，它们的定位各不相同：Claude Code 与 OpenCode 定位于智能编程 Agent，而 OpenClaw 与 Hermes 则定位于通用任务执行与个人助理型 Agent。
+	The four projects compared differ fundamentally and are positioned differently: Claude Code and OpenCode are positioned as intelligent coding Agents, while OpenClaw and Hermes are positioned as general-purpose task-execution, personal-assistant-style Agents.
 
-​	**为什么Cluade Code，OpenCode，OpenClaw和Hermes在这里放在一起对比分析？**
+	**Why are Claude Code, OpenCode, OpenClaw, and Hermes put together for comparison here?**
 
-1. **它们都是Agent Harness这一概念的完整实例**，都不同实现如下Agent Harness四层架构。
-2. **都体现了 Agent 从“工具”到“伙伴”演进的不同阶段**，对比它们能揭示架构与产品形态的因果关系。
-3. 在技术选型上形成了 完整的决策树，为构建自定义 Harness 提供了参考矩阵，**它们诸多模块可以借鉴或移植**。
+1. **They are all complete instances of the Agent Harness concept**, each implementing the four-layer Agent Harness architecture below in its own way.
+2. **They each embody a different stage of the Agent's evolution from "tool" to "partner"**; comparing them reveals the causal relationship between architecture and product form.
+3. They form a complete decision tree for technology selection, providing a reference matrix for building a custom Harness; **many of their modules can be borrowed or ported**.
 
 
 
-## **1.Agent Harness架构**
+## **1. Agent Harness architecture**
 
-### 四层架构
+### Four-layer architecture
 
-![Agent Harness 四层架构](ref/archify-harness-architecture-light.png)
+![Agent Harness four-layer architecture](ref/archify-harness-architecture-light.png)
 
-> 🖱️ [交互式版本](diagrams/harness-architecture.html)（支持缩放/搜索/路径追踪/暗色模式）
+> 🖱️ [Interactive version](diagrams/harness-architecture.html) (supports zoom/search/path tracing/dark mode)
 
-![Agent Harness 四层架构（手绘风）](ref/harness-architecture-excalidraw.png)
+![Agent Harness four-layer architecture (hand-drawn style)](ref/harness-architecture-excalidraw.png)
 
-​	以当前最成熟的、最强大的AI Agent产品 Claude Code后端架构图(v2.1.88)为例，Agent架构可以分为四层：
+	Taking the backend architecture diagram (v2.1.88) of Claude Code — currently the most mature and powerful AI Agent product — as an example, the Agent architecture can be divided into four layers:
 
-1. **推理与编排层**：充当“大脑与调度中心”，核心由 **Agent Loop** 与 **多智能体编排** 两大模块构成，负责Agent的核心决策逻辑与任务流转控制。
-   - **主循环（Agent Loop）**：接收来自支撑层解析后的用户指令，启动 TAOR 闭环。
-   - **规划与执行解耦**：复杂任务先进入 Plan Mode（如生成 TodoWrite 任务清单），用户批准后切至 Execute Mode。
-   - **多智能体协作**：若需要隔离子任务（如探索代码库），则通过 `Task` 工具委派 SubAgent；SubAgent 有自己的上下文和工具集，结果返回后主 Agent 继续处理。
-   - **状态控制**：监控退出条件（最大轮次、Token 预算、用户中断等），必要时触发 Checkpoint 持久化状态。
-2. **上下文与记忆层**：本层管理模型所需输入并支撑 Agent 的持续进化，包含 **Context System** 与 **Memory System**，管理模型输入上下文（System Prompt、项目规范、对话历史）以及短期/长期记忆的存储与进化。
-   - **上下文组装**：在每一轮推理开始前，该层从多个来源动态构建 System Prompt：
-     - 静态部分：角色定义、输出规范（利用 LLM 缓存机制放在前部）。
-     - 动态部分：项目级上下文（CLAUDE.md）、当前会话摘要、TodoWrite 清单、工具输出摘要。
-   - **上下文压缩**：若 Token 使用率超过阈值（如 92%），自动触发折叠或 LLM 智能摘要，压缩早期对话。
-   - **记忆持久化**：
-     - 短期：当前会话消息实时写入 SQLite等数据实体。
-     - 长期：用户偏好、项目约定通过 AutoMemory 后台分析，写入 MEMORY.md 等文件，供后续会话加载。
-   - **与推理层的交互**：推理层每次循环时从该层获取组装好的上下文，并将新的观察结果（Observe）写回，由该层决定是存储原始日志还是压缩后保存。
-3. **工具与安全执行层**：本层封装外部工具调用并构筑多级安全屏障，核心包含 **Tool System** 与 **Security** 模块。封装外部工具调用（包括 MCP、Skill、SubAgent 作为工具）并提供多级安全防护与沙箱隔离。
-   - **工具调用拦截**：推理层发出的每个工具请求，首先进入安全系统。
-   - **权限验证**：基于 allow/ask/deny 规则、Bash AST 风险分类、Auto Mode 后台独立分类器（Cladue Sonnet 4.6）进行判断。
-   - **沙箱隔离**：高风险操作（如文件修改）被重定向到 Git Worktree 临时副本或系统级沙箱（Daytona/Seatbelt）。
-   - **实际执行**：安全通过后，受控运行时（Runtime）调用具体工具（MCP、Skill、SubAgent 即工具）。
-   - **结果返回**：工具输出被截断（若超 Token 预算），完整内容持久化到本地，仅摘要或部分内容返回推理层。
-4. **支撑与基础架构层**：本层提供 Agent 稳定运行的底层基础设施，涵盖 **Session Manager**、**通信系统** 与 **Config System**。提供底层基础设施支撑，包括会话管理、前后端通信、配置加载、模型网关及可观测性。
-   - **会话管理**：为本次交互分配唯一 Session ID，记录完整对话历史，支持后续 Fork/Revert。
-   - **配置与模型网关**：加载多级配置（命令行 > 项目 > 用户 > 组织），并通过统一 Provider 调用大模型。
-   - **通信与可观测性**：通过 HTTP/SSE 接收用户请求，同时开启全链路 Trace，记录每个 Span 的 Token 消耗与延迟。
+1. **Reasoning & Orchestration Layer**: acts as the "brain and scheduling hub"; its core consists of two major modules, **Agent Loop** and **multi-agent orchestration**, responsible for the Agent's core decision logic and task flow control.
+   - **Main loop (Agent Loop)**: receives parsed user instructions from the support layer and starts the TAOR closed loop.
+   - **Plan-execution decoupling**: complex tasks first enter Plan Mode (e.g., generating a TodoWrite task list); after user approval they switch to Execute Mode.
+   - **Multi-agent collaboration**: when subtasks need isolation (e.g., exploring a codebase), they are delegated to a SubAgent via the `Task` tool; the SubAgent has its own context and tool set, and the main Agent continues processing once results return.
+   - **State control**: monitors exit conditions (max turns, Token budget, user interruption, etc.) and triggers Checkpoint state persistence when necessary.
+2. **Context & Memory Layer**: manages the inputs the model needs and supports the Agent's continuous evolution; it contains the **Context System** and **Memory System**, managing the model's input context (System Prompt, project conventions, conversation history) and the storage and evolution of short-term/long-term memory.
+   - **Context assembly**: before each reasoning round, this layer dynamically builds the System Prompt from multiple sources:
+     - Static parts: role definition, output conventions (placed at the front to leverage the LLM cache mechanism).
+     - Dynamic parts: project-level context (CLAUDE.md), current session summary, TodoWrite list, tool output summaries.
+   - **Context compaction**: if Token usage exceeds the threshold (e.g., 92%), folding or LLM intelligent summarization is automatically triggered to compact early conversation.
+   - **Memory persistence**:
+     - Short-term: current session messages are written in real time to SQLite and similar data stores.
+     - Long-term: user preferences and project conventions are analyzed in the background by AutoMemory and written to files such as MEMORY.md for later sessions to load.
+   - **Interaction with the reasoning layer**: on each loop, the reasoning layer fetches the assembled context from this layer and writes back new observations (Observe); this layer decides whether to store the raw log or save it compacted.
+3. **Tool & Secure Execution Layer**: encapsulates external tool calls and builds multi-level security barriers; its core contains the **Tool System** and **Security** modules. It encapsulates external tool calls (including MCP, Skill, and SubAgent as tools) and provides multi-level security protection and sandbox isolation.
+   - **Tool call interception**: every tool request issued by the reasoning layer first enters the security system.
+   - **Permission verification**: judged based on allow/ask/deny rules, Bash AST risk classification, and an independent Auto Mode background classifier (Claude Sonnet 4.6).
+   - **Sandbox isolation**: high-risk operations (e.g., file modifications) are redirected to a Git Worktree temporary copy or a system-level sandbox (Daytona/Seatbelt).
+   - **Actual execution**: once cleared, a controlled Runtime invokes the concrete tool (MCP, Skill, and SubAgent all act as tools).
+   - **Result return**: tool output is truncated if it exceeds the Token budget; the full content is persisted locally, and only a summary or partial content is returned to the reasoning layer.
+4. **Support & Infrastructure Layer**: provides the underlying infrastructure for stable Agent operation, covering the **Session Manager**, the **communication system**, and the **Config System**. It provides underlying infrastructure support, including session management, frontend-backend communication, config loading, model gateway, and observability.
+   - **Session management**: assigns a unique Session ID to the interaction, records the full conversation history, and supports later Fork/Revert.
+   - **Config and model gateway**: loads multi-level config (command line > project > user > organization) and calls LLMs through a unified Provider.
+   - **Communication and observability**: receives user requests via HTTP/SSE while enabling full-link Trace, recording Token consumption and latency for every Span.
 
-​	四层架构（推理与编排层、上下文与记忆层、工具与安全执行层、支撑与基础架构层）并非独立堆叠的模块，而是围绕 **“感知→决策→行动→反馈”** 闭环、紧密协作的流水线。正是四层各司其职、紧密配合，才使得 Agent 能够像人类一样：**记住过去（记忆层）、思考现在（推理层）、安全行动（工具层）、在稳定的环境中持续工作（支撑层）**，最终完成从自然语言到可靠行为的转换。
+	The four layers (Reasoning & Orchestration, Context & Memory, Tool & Secure Execution, Support & Infrastructure) are not independently stacked modules but a tightly collaborating pipeline built around the **"perceive → decide → act → feedback"** closed loop. It is precisely because the four layers each do their own job and cooperate closely that an Agent can, like a human: **remember the past (memory layer), think about the present (reasoning layer), act safely (tool layer), and keep working in a stable environment (support layer)**, ultimately completing the conversion from natural language to reliable behavior.
 
-### 生产级Harness架构核心模块&技术
+### Core modules & technologies of the production-grade Harness architecture
 
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <thead>
     <tr>
-      <th style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">分层</th>
-      <th style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">核心模块</th>
-      <th style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">核心模块功能</th>
-      <th style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">核心技术</th>
-      <th style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">描述与工程实践</th>
+      <th style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Layer</th>
+      <th style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Core module</th>
+      <th style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Core module function</th>
+      <th style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Core technology</th>
+      <th style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Description and engineering practice</th>
     </tr>
   </thead>
   <tbody>
-    <!-- 推理与编排层 - Agent Loop 5行 -->
+    <!-- Reasoning & Orchestration Layer - Agent Loop 5 rows -->
     <tr>
-      <td rowspan="11" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">推理与编排层</td>
+      <td rowspan="11" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Reasoning &amp; Orchestration Layer</td>
       <td rowspan="5" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent Loop</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">主循环调度、任务流转</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">TAOR 闭环（Think→Act→Observe→Reflect）</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">双框架核心为单线程串行主循环，CC 代号 n0，严格执行思考 - 行动 - 观察 - 反思四步闭环，无并发抢占，保证推理确定性。演进趋势：26年4月论文《From Agent Loops to Structured Graphs》提出SGH（Structured Graph Harness）框架，将控制流从隐式上下文中提取为显式静态DAG</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Main loop scheduling, task flow</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">TAOR closed loop (Think→Act→Observe→Reflect)</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">The core of both frameworks is a single-threaded serial main loop; CC, codename n0, strictly executes the four-step closed loop of think - act - observe - reflect, with no concurrent preemption, guaranteeing reasoning determinism. Evolution trend: the April 2026 paper "From Agent Loops to Structured Graphs" proposed the SGH (Structured Graph Harness) framework, extracting the control flow from implicit context into an explicit static DAG</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">规划执行解耦</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Plan & Execute 双模式</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent 先在 Plan Mode 下制定详细计划（如使用 TodoWrite 工具生成任务清单），待用户批准后，再切换到 Execute Mode 执行，确保复杂任务的可控性。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Plan-execution decoupling</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Plan &amp; Execute dual mode</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">The Agent first drafts a detailed plan in Plan Mode (e.g., using the TodoWrite tool to generate a task list), then switches to Execute Mode to execute it after user approval, ensuring controllability of complex tasks.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">实时转向</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">h2A 异步双缓冲队列</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">CC 通过 h2A 异步双缓冲队列，允许用户在 Agent 运行时中途注入新指令，实现任务的实时“转向”，而无需中断或重启整个流程。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Real-time steering</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">h2A async double-buffered queue</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Via the h2A async double-buffered queue, CC allows users to inject new instructions mid-run while the Agent is executing, achieving real-time task "steering" without interrupting or restarting the entire flow.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Checkpoint</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">状态持久化</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">多步任务需要对执行状态保存，实现任务可以恢复，可以回溯，也能做 time-travel debugging。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">State persistence</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Multi-step tasks need execution state saved so that tasks can resume, be traced back, and support time-travel debugging.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">状态控制</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">重试&amp;退出</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">任务执行过程中出现异常可以策略性的重试。Loop循环需要制定终止条件，避免无意义的循环，常见退出条件：模型输出里没有 tool call，最大轮次超限，token budget 耗尽，用户主动中断，安全拒答返回。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">State control</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Retry&amp;exit</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Exceptions during task execution can be retried strategically. The loop needs termination conditions to avoid meaningless looping; common exit conditions: no tool call in the model output, max turns exceeded, token budget exhausted, user interruption, or a safety-refusal response.</td>
     </tr>
-    <!-- 推理与编排层 - 多智能体编排 5行 -->
+    <!-- Reasoning & Orchestration Layer - Multi-agent orchestration 5 rows -->
     <tr>
-      <td rowspan="6" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">多智能体编排</td>
+      <td rowspan="6" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Multi-agent Orchestration</td>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">SubAgent</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">受限并行委派</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">主 Agent 派生出轻量级的 SubAgent 去处理特定、隔离的子任务（如“探索代码库”）。SubAgent 有独立的上下文和工具集，防止污染主 Agent 的上下文，且其递归派生深度受限，避免失控。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Bounded parallel delegation</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">The main Agent spawns lightweight SubAgents to handle specific, isolated subtasks (e.g., "explore the codebase"). A SubAgent has its own independent context and tool set, preventing pollution of the main Agent's context, and its recursive spawn depth is bounded to avoid loss of control.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent Teams (Swarm)</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">对等网状协作</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">规划模式生成结构化任务清单，用户审批后切换执行模式；OC 内置 TodoWrite 工具，CC 原生支持计划锁</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Peer-to-peer mesh collaboration</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Plan Mode generates a structured task list and switches to Execute Mode after user approval; OC has a built-in TodoWrite tool, CC natively supports plan locks</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent Teams (Swarm)</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">邮箱系统</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Claude Code 的 Agent Teams 采用基于文件的邮箱系统（如 ~/.claude/.../inboxes/）进行跨 Agent 通信，而 OpenCode 则使用进程内的事件驱动和 autoWake 机制，在收到消息时自动唤醒接收方。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Mailbox system</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Claude Code's Agent Teams use a file-based mailbox system (e.g., ~/.claude/.../inboxes/) for cross-Agent communication, while OpenCode uses in-process event-driven and autoWake mechanisms, automatically waking the receiver when a message arrives.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent 通信</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">父子委派与收集</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">父 Agent 向子 Agent 委派任务，并在任务结束时收集其结果，是最基本的协作模式。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent communication</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Parent-child delegation and collection</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">A parent Agent delegates tasks to child Agents and collects their results when tasks finish — the most basic collaboration pattern.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent 通信</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">对等消息 (Peer-to-Peer)</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">在 Agent Teams 中，Teammates 可以直接向彼此发送消息，进行点对点沟通，无需通过 Lead Agent 中转，实现了去中心化的协作。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent communication</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Peer-to-peer messaging (Peer-to-Peer)</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">In Agent Teams, Teammates can send messages directly to each other for point-to-point communication without relaying through the Lead Agent, achieving decentralized collaboration.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent 通信</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">A2A（Agent-to-Agent）协议</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">2025年4月Google发布的A2A（Agent-to-Agent）协议，旨在为跨厂商、跨框架的AI Agent提供标准化通信标准。演进趋势：目前行业正快速走向标准化跨平台协作Agent。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent communication</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">A2A (Agent-to-Agent) protocol</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">The A2A (Agent-to-Agent) protocol released by Google in April 2025 aims to provide a standardized communication standard for AI Agents across vendors and frameworks. Evolution trend: the industry is rapidly moving toward standardized cross-platform collaborative Agents.</td>
     </tr>
-    <!-- 上下文与记忆层 - Context System 5行 -->
+    <!-- Context & Memory Layer - Context System 5 rows -->
     <tr>
-      <td rowspan="8" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">上下文与记忆层</td>
+      <td rowspan="8" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Context &amp; Memory Layer</td>
       <td rowspan="5" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Context System</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">上下文组装</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">System Prompt 结构</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">定义模型的行为边界与身份。静态部分（如角色、规范）放在前部，动态部分（如环境、任务清单）放在后部，以利用 LLM 的缓存机制。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Context assembly</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">System Prompt structure</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Defines the model's behavioral boundaries and identity. Static parts (e.g., role, conventions) are placed at the front, dynamic parts (e.g., environment, task list) at the back, to leverage the LLM cache mechanism.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">上下文组装</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">项目级上下文</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent 启动时会读取项目根目录下的 CLAUDE.md 或 AGENTS.md，快速理解项目结构、技术栈和规范，这是高效协作的关键。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Context assembly</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Project-level context</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">On startup, the Agent reads CLAUDE.md or AGENTS.md from the project root to quickly understand project structure, tech stack, and conventions — key to efficient collaboration.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">上下文压缩</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">工具输出截断与持久化</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">设定 Token 预算，对超长工具输出（如 MCP 工具默认上限为 25,000 Tokens）进行截断。完整内容持久化到本地，只将摘要或部分内容送入 LLM 上下文。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Context compaction</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Tool output truncation and persistence</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">A Token budget is set, and overly long tool outputs (e.g., MCP tools default to a cap of 25,000 Tokens) are truncated. The full content is persisted locally, and only a summary or partial content enters the LLM context.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">上下文压缩</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">会话剪枝 (折叠)</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">将上下文中的冗余信息或早期对话内容“折叠”起来，但过程是可逆的，LLM 在需要时仍可展开查看，以节省 Token。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Context compaction</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Session pruning (folding)</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Redundant information or early conversation content in the context is "folded" away, but the process is reversible — the LLM can still unfold and view it when needed — to save Tokens.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">上下文压缩</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">LLM 智能摘要</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">当上下文使用率触及阈值（如 92%）时，触发 LLM 对整个会话历史进行智能摘要，作为新的记忆锚点。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Context compaction</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">LLM intelligent summarization</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">When context usage hits the threshold (e.g., 92%), the LLM is triggered to intelligently summarize the entire session history, serving as a new memory anchor.</td>
     </tr>
-    <!-- 上下文与记忆层 - Memory System 3行 -->
+    <!-- Context & Memory Layer - Memory System 3 rows -->
     <tr>
       <td rowspan="3" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Memory System</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">持久化存储</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">结构化数据库存储</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">OpenCode 使用 Drizzle ORM 将会话消息、状态等数据持久化到 SQLite 数据库中，支持高效查询和恢复。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Persistent storage</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Structured database storage</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">OpenCode uses Drizzle ORM to persist session messages, state, and other data into a SQLite database, supporting efficient queries and recovery.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">持久化存储</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">文件化知识库</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Claude Code 倾向于将项目记忆、用户偏好、学习到的模式等存储为 Markdown 文件（如 MEMORY.md），简单、透明且易于版本控制。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Persistent storage</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">File-based knowledge base</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Claude Code tends to store project memory, user preferences, learned patterns, and more as Markdown files (e.g., MEMORY.md) — simple, transparent, and easy to version control.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">自进化</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">自动学习 (AutoMemory)</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">系统在空闲或后台时，通过分析历史交互，自动提取用户习惯、项目约定等模式，去重、整合后写入 MEMORY.md 等记忆文件，实现记忆的自我进化。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Self-evolution</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Automatic learning (AutoMemory)</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">When idle or in the background, the system analyzes past interactions to automatically extract patterns such as user habits and project conventions, then deduplicates and consolidates them into memory files like MEMORY.md, achieving self-evolving memory.</td>
     </tr>
-    <!-- 工具与安全执行层 - Tool System 6行 -->
+    <!-- Tool & Secure Execution Layer - Tool System 6 rows -->
     <tr>
-      <td rowspan="11" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">工具与安全执行层</td>
+      <td rowspan="11" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Tool &amp; Secure Execution Layer</td>
       <td rowspan="6" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Tool System</td>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Tool</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">统一接口与 Schema</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">所有工具实现同一接口，使用 Zod 等库对入参、出参进行严格校验，确保调用稳定可靠。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Unified interface and Schema</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">All tools implement the same interface; libraries such as Zod strictly validate inputs and outputs to ensure stable, reliable calls.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Tool</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">受控运行时Runtime</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">将野生的 CLI 命令或 API 封装为标准系统调用，便于扩展、监控和统一管理。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Controlled Runtime</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Wraps raw CLI commands or APIs into standard system calls for easy extension, monitoring, and unified management.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Tool</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent 即工具</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">将启动 SubAgent 的过程封装成一个标准工具（Task/AgentInput），主 Agent 可像调用其它工具一样委派任务，实现无缝的协作扩展。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent as a tool</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Spawning a SubAgent is wrapped into a standard tool (Task/AgentInput); the main Agent delegates tasks just like calling any other tool, enabling seamless collaborative scaling.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Skill</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">渐进式披露</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">遵循 agentskills.io 标准，分步向模型注入信息，先注入 Skill 的名称和描述，在需要时再注入完整内容，避免上下文过载。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Progressive disclosure</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Follows the agentskills.io standard, injecting information into the model in steps — first the Skill's name and description, then the full content when needed — to avoid context overload.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Skill</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">自动生成+自主改进</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent自动从复杂任务总结出Skill，并可自主改进。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Auto-generation + self-improvement</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">The Agent automatically distills Skills from complex tasks and can improve them on its own.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">MCP</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">多样化连接</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">支持 本地 (stdio) 和 远程 (SSE/HTTP) 两种方式连接 MCP 服务器，极大扩展了 Agent 的能力边界。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Diverse connectivity</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Supports both local (stdio) and remote (SSE/HTTP) ways of connecting to MCP servers, greatly expanding the Agent's capability boundary.</td>
     </tr>
     <tr>
       <td rowspan="5" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Security System</td>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Security</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">6 级权限验证与护栏</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Claude Code 的工具调用会经过六级权限验证。系统通常基于 allow、ask、deny 规则进行三态门控，deny 规则优先级最高</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">6-level permission verification and guardrails</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Claude Code tool calls pass through six levels of permission verification. The system usually performs three-state gating based on allow, ask, and deny rules, with deny rules having the highest priority</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Security</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Bash 安全检测</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">通过 Bash AST 语法分析和风险命令分类器，识别并拦截高风险命令（如 rm -rf 等）</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Bash security detection</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Uses Bash AST syntax analysis and a risky-command classifier to identify and block high-risk commands (e.g., rm -rf)</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Security</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Auto Mode 后台分类器</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Claude Code 的 Auto Mode 在后台运行一个独立的 Sonnet 4.6 分类器来判断操作是否安全，且分类器只看操作本身，不被模型文本“甜言蜜语”所干扰，确保了安全判断的独立性。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Auto Mode background classifier</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Claude Code's Auto Mode runs an independent Sonnet 4.6 classifier in the background to judge whether an operation is safe; the classifier looks only at the operation itself and is not swayed by the model text's "sweet talk", ensuring the independence of the safety judgment.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">SandBox</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Git Worktree 隔离</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">利用 git worktree 在 .git 同级目录下创建一个独立的副本，Agent 的所有改动都发生在其中，与主工作区完全隔离。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Git Worktree isolation</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Uses git worktree to create an independent copy at the same level as .git; all Agent changes happen inside it, fully isolated from the main working tree.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">SandBox</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">系统级沙箱</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">集成 Daytona、Seatbelt 等更底层的沙箱技术，对文件系统、网络和进程进行更严格的隔离与控制。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">System-level sandbox</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Integrates lower-level sandbox technologies such as Daytona and Seatbelt to isolate and control the file system, network, and processes more strictly.</td>
     </tr>
-    <!-- 支撑与基础架构层 - Session Manage 3行 -->
+    <!-- Support & Infrastructure Layer - Session Manage 3 rows -->
     <tr>
-      <td rowspan="12" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">支撑与基础架构层</td>
+      <td rowspan="12" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Support &amp; Infrastructure Layer</td>
       <td rowspan="3" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Session Manage</td>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Session</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">状态管理与生命周期</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">通过唯一的 Session ID 追踪用户的一次完整对话历史。OpenCode 的会话系统支持父子层级，并通过全局事件总线实现 UI 的实时更新。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">State management and lifecycle</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Tracks a user's complete conversation history via a unique Session ID. OpenCode's session system supports parent-child hierarchy and achieves real-time UI updates through a global event bus.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Session</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Fork 与 Revert</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">支持从会话历史的任意节点 Fork 出一个新会话进行探索，也支持 Revert 到历史状态，文件变动也随之回滚，方便调试与对比。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Fork and Revert</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Supports forking a new session from any node in the session history for exploration, as well as reverting to a historical state, with file changes rolled back accordingly — convenient for debugging and comparison.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Session</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">会话共享</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">OpenCode 支持将本地会话记录通过 HTTP/SSE 等方式分享给远端其他用户，实现协作编程。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Session sharing</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">OpenCode supports sharing local session records with remote users via HTTP/SSE and similar means, enabling collaborative programming.</td>
     </tr>
-    <!-- 支撑与基础架构层 - 通信系统 3行 -->
+    <!-- Support & Infrastructure Layer - Communication system 3 rows -->
     <tr>
-      <td rowspan="3" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">通信系统</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">前后端通信</td>
+      <td rowspan="3" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Communication System</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Frontend-backend communication</td>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">HTTP/SSE</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">前后端通过 REST API 和 Server-Sent Events (SSE) 进行通信，实现请求-响应和实时服务端推送。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">The frontend and backend communicate via REST API and Server-Sent Events (SSE), enabling request-response and real-time server push.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">前后端通信</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Frontend-backend communication</td>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">ACP (Agent Client Protocol)</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">OpenCode 等工具支持的 Agent 客户端协议，用于与 IDE (如 Zed, JetBrains) 进行标准化集成，实现更紧密的交互。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">An Agent client protocol supported by tools like OpenCode, used for standardized integration with IDEs (e.g., Zed, JetBrains) for tighter interaction.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">系统内通信</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">事件总线 (Event Bus)</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">基于观察者模式实现发布-订阅消息总线，用于解耦系统内各模块，如日志、指标收集、状态同步等。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">In-system communication</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Event bus</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">A publish-subscribe message bus built on the observer pattern, used to decouple modules within the system, such as logging, metrics collection, and state synchronization.</td>
     </tr>
-    <!-- 支撑与基础架构层 - Context System 2行 -->
+    <!-- Support & Infrastructure Layer - Context System 2 rows -->
     <tr>
       <td rowspan="2" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Config System</td>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Config</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">多层级加载</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">配置可从多个层级加载，优先级通常为：命令行参数 > 项目本地配置 > 用户全局配置 > 远程组织配置，确保了配置的灵活性。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Multi-level loading</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Config can be loaded from multiple levels, usually with priority: command-line arguments > project-local config > user-global config > remote organization config, ensuring config flexibility.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Config</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">热缓存</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">定义了系统行为边界的配置在运行时被频繁查询，因此需要缓存以减少 I/O 开销，提升性能。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Hot cache</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Config that defines the system's behavioral boundaries is queried frequently at runtime, so it needs caching to reduce I/O overhead and improve performance.</td>
     </tr>
-    <!-- 支撑与基础架构层 - 模型网关 2行 -->
+    <!-- Support & Infrastructure Layer - Model gateway 2 rows -->
     <tr>
-      <td rowspan="2" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">模型网关</td>
+      <td rowspan="2" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Model Gateway</td>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Provider</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">多模型集成</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">通过统一的 Provider 接口，屏蔽不同模型厂商（OpenAI, Anthropic, Google 等）的 API 细节，实现无缝切换。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Multi-model integration</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Through a unified Provider interface, it shields the API details of different model vendors (OpenAI, Anthropic, Google, etc.), enabling seamless switching.</td>
     </tr>
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Auth</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">统一鉴权</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">为不同 Provider 的不同鉴权方式（API Key, OAuth 等）提供统一的抽象层，简化集成与管理。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Unified authentication</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Provides a unified abstraction layer for the different authentication methods (API Key, OAuth, etc.) of different Providers, simplifying integration and management.</td>
     </tr>
-    <!-- 支撑与基础架构层 - 可观测性 2行 -->
+    <!-- Support & infrastructure layer - Observability, 2 rows -->
     <tr>
-      <td rowspan="2" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">可观测性</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">全链路追踪 (Tracing)</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Trace 与 Span</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">将一次用户请求到最终响应的全过程记录为一个 Trace，内部每一步（LLM 调用、工具执行）为 Span，用于深度性能分析和调试。</td>
+      <td rowspan="2" style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Observability</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">End-to-end tracing (Tracing)</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Trace and Span</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Records the entire process from a user request to the final response as one Trace, with each internal step (LLM calls, tool execution) as a Span, for in-depth performance analysis and debugging.</td>
     </tr>
     <tr>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">成本分析</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Token 监控与归因</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">精确监控和统计每个会话、每个 Agent 甚至每次工具调用消耗的 Token 数量，并进行成本归因。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Cost analysis</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Token monitoring and attribution</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Precisely monitors and counts the tokens consumed by each session, each Agent, and even each tool call, and performs cost attribution.</td>
     </tr>
   </tbody>
 </table>
 
 
-### Claude Code架构图
+### Claude Code architecture diagram
 
-![Claude Code 架构图](ref/claude-code-architecture.png)
+![Claude Code architecture diagram](ref/claude-code-architecture.png)
 
 
 
@@ -517,52 +574,29 @@
 ---
 
 
-> 2026 年 8 月开源，3 小时 2 万+ Star。核心设计 **"Everything is a Plugin"**——包括 Agent Loop 本身都是插件。构建在内嵌的 **Cordis 元框架**之上（源自 Koishi QQ 机器人框架，生产运行 4 年、4000+ 社区插件）。被北大 + DeepSeek 的 88 页论文《A Programming Paradigm for Spatiotemporal Composability》形式化证明。
+> Open-sourced in August 2026, 20K+ Stars within 3 hours. Core design **"Everything is a Plugin"**—even the Agent Loop itself is a plugin. Built on the embedded **Cordis meta-framework** (derived from the Koishi QQ bot framework, 4 years in production, 4000+ community plugins). Formally proven by the 88-page paper "A Programming Paradigm for Spatiotemporal Composability" from Peking University + DeepSeek.
 
-### DSH Cordis 元框架：五个核心概念（插件化微内核）
+### DSH Cordis meta-framework: five core concepts (plugin-based microkernel)
 
-| 概念 | 说明 | 关键机制 |
+| Concept | Description | Key mechanism |
 |------|------|----------|
-| **插件** | 函数/对象/类三形态，一切功能皆插件 | 注册即副作用（`ctx.effect()`），卸载自动回卷 |
-| **Context** | 树状派生子上下文 | 每个插件拥有独立 Context，父子派生 |
-| **Fiber** | 六阶段生命周期状态机 | PENDING → LOADING → ACTIVE → FAILED / UNLOADING → DISPOSED |
-| **inject** | 声明式响应式依赖 | 服务消失 → 依赖方自动卸载；恢复 → 自动重载 |
-| **effect** | 可逆副作用原语 | 所有上下文变更归结为 `ctx.effect` 单一原语 |
+| **Plugin** | Three forms: function/object/class; everything is a plugin | Registration is a side effect (`ctx.effect()`), unloading auto-rolls back |
+| **Context** | Tree-derived child contexts | Each plugin owns an independent Context, derived parent to child |
+| **Fiber** | Six-phase lifecycle state machine | PENDING → LOADING → ACTIVE → FAILED / UNLOADING → DISPOSED |
+| **inject** | Declarative reactive dependencies | Service disappears → dependents auto-unload; restored → auto-reload |
+| **effect** | Reversible side-effect primitive | All context changes reduce to the single `ctx.effect` primitive |
 
-**事件五分发模式**：`emit` / `parallel` / `serial` / `bail` / **`waterfall`**（Koa 式中间件链，DSH 工具流水线 `pre-execute → execute → post-execute` 即 waterfall 链）。
+**Five event dispatch modes**: `emit` / `parallel` / `serial` / `bail` / **`waterfall`** (Koa-style middleware chain; the DSH tool pipeline `pre-execute → execute → post-execute` is a waterfall chain).
 
-**论文核心**：effect（对环境做了什么）与 coeffect（对环境要求什么）从编译期静态分析提升为运行时机制；独立性（可交换）定理支持单插件热卸载；Progress（无死锁必终止）+ Confluence（配置对账与顺序无关）两条元定理。
+**Paper core**: effect (what is done to the environment) and coeffect (what is required from the environment) are lifted from compile-time static analysis to runtime mechanisms; the independence (permutability) theorem supports hot-unloading a single plugin; two meta-theorems: Progress (no deadlock, guaranteed termination) + Confluence (configuration reconciliation is order-independent).
 
-> **对比 VS Code**：Top100 扩展 87 个含可执行代码，但无法运行时卸载单扩展必须重启宿主；`extensionDependencies` 仅 7 个扩展使用且类型是 any。
+> **Compared with VS Code**: 87 of the Top100 extensions contain executable code, but a single extension cannot be unloaded at runtime—the host must restart; only 7 extensions use `extensionDependencies`, and its type is any.
 
-### DSH 没有的（同样重要）
+### What DSH does not have (equally important)
 
-❌ 无向量库 / 无嵌入 / 无长期记忆巩固 / 无 RL / 无技能自动生成 / 无计划性反思
+❌ No vector store / no embeddings / no long-term memory consolidation / no RL / no automatic skill generation / no planned reflection
 
-**押注方向**：结构可组合 + 日志可重构，而非模型自学习。
-
----
-
-
----
-
-
-> OpenAI 开源，Rust 实现（codex-rs）。OpenBench 2026.7 同一模型 7 套 Harness 42 个任务，Codex 完成 31 个（73.8%），但中位耗时 94.6s、单任务 117,107 token，均为最重档——安全边界的代价。
-
-### Codex 架构：Thread / Turn / Item 三层
-
-- **Thread Manager**：`HashMap<ThreadId, Arc<CodexThread>>` 维护全部会话
-- **Thread** = 一次完整会话（对应 OpenCode 的 Session）
-- **Turn** = 一次用户交互（含多步工具调用）
-- **Item** = 消息/工具调用/推理等原子单元
-- 子 Agent = Thread Manager 派生的子 Thread（从父 Rollout 快照 fork）
-
-#### Codex 关键差异点
-
-- Rust 实现：性能最优、内存安全、编译期保证
-- 审批（Approval）与沙箱（Sandbox Policy）两层独立设计
-- Thread 级 fork：子代理从父 Rollout 快照 fork
-- 最重但最安全：多花 3 倍 token 换取确定性的安全边界
+**Bet**: structural composability + log reconstructability, not model self-learning.
 
 ---
 
@@ -570,93 +604,116 @@
 ---
 
 
-> Mario Zechner（badlogic）开发。核心只有 **read / write / edit / bash 四工具**，系统提示 **< 1000 token**。官网"What we did not build"比 feature list 还长。
+> Open-sourced by OpenAI, implemented in Rust (codex-rs). OpenBench 2026.7: same model, 7 harnesses, 42 tasks — Codex completed 31 (73.8%), but with a median 94.6s per task and 117,107 tokens on a single task, both the heaviest tier — the price of a safety boundary.
 
-### Pi 设计哲学：极简主义
+### Codex architecture: the Thread / Turn / Item three layers
 
-> 现代模型已在海量工具调用模式上训练过，harness 只需退到一边。
+- **Thread Manager**: `HashMap<ThreadId, Arc<CodexThread>>` maintains all sessions
+- **Thread** = one complete session (corresponds to OpenCode's Session)
+- **Turn** = one user interaction (including multi-step tool calls)
+- **Item** = atomic unit such as message/tool call/reasoning
+- Subagent = a child Thread spawned by the Thread Manager (forked from the parent Rollout snapshot)
 
-- 极简四工具 + 极短系统提示 = 最低 token 开销
-- Composio 实测：DeepSeek V4 Flash 跑 30 个任务，Pi 通过率 66.7%、中位成本 $0.012（四框架最低）
-- Databricks 百万行代码库基准：每轮上下文约**少 3 倍**、同模型成本差 2 倍以上
-- **代价**：无权限弹窗，安全责任交还用户（需自接容器/沙箱）
+#### Codex key differentiators
 
-#### Pi 关键差异点
+- Rust implementation: best performance, memory safety, compile-time guarantees
+- Approval and sandbox (Sandbox Policy) designed as two independent layers
+- Thread-level fork: subagents fork from the parent Rollout snapshot
+- Heaviest but safest: spending 3x more tokens in exchange for a deterministic safety boundary
 
-- 最简约：四工具 + 极短 prompt = 最低 token 开销和成本
-- 最可拆解：25+ hook 点让第三方几乎可以做任何事
-- 无权限系统：安全责任在设计上交还用户
-- 树状会话：支持分支派生，同一会话可并行试验不同方案
+---
+
+
+---
+
+
+> Developed by Mario Zechner (badlogic). The core is just **four tools: read / write / edit / bash**, with a system prompt **< 1000 tokens**. The website's "What we did not build" is longer than the feature list.
+
+### Pi design philosophy: minimalism
+
+> Modern models have already been trained on massive tool call patterns; the harness just needs to step aside.
+
+- Minimalist four tools + ultra-short system prompt = lowest token overhead
+- Composio benchmark: DeepSeek V4 Flash running 30 tasks, Pi pass rate 66.7%, median cost $0.012 (lowest of the four frameworks)
+- Databricks million-line codebase benchmark: about **3x less** context per turn, over 2x cost difference with the same model
+- **Cost**: no permission prompts; security responsibility is handed back to the user (you must attach your own container/sandbox)
+
+#### Pi key differentiators
+
+- Most minimalist: four tools + ultra-short prompt = lowest token overhead and cost
+- Most decomposable: 25+ hook points let third parties do almost anything
+- No permission system: security responsibility is handed back to the user by design
+- Tree-shaped sessions: supports branch derivation; the same session can trial different approaches in parallel
 
 ---
 
 
 ---
 
-### 六项目横向对比总表
+### Master comparison table of the six projects
 
-| 维度 | Claude Code | OpenCode | DSH | Codex | Pi | Hermes |
+| Dimension | Claude Code | OpenCode | DSH | Codex | Pi | Hermes |
 |------|------------|----------|-----|-------|----|--------|
-| **语言** | TypeScript/Bun | TypeScript/Bun | TypeScript/Bun | **Rust** | TypeScript | **Python** |
-| **架构风格** | 模块化服务 | 事件驱动服务 | **插件化微内核** | Thread/Turn/Item | 极简循环 | 自进化闭环 |
-| **Agent Loop** | while(true) 六步 pipeline | 状态机 + Runner | ReactLoopAgent（可替换插件）| Thread 内 Turn 循环 | 扁平 while + 25 hooks | TAOR + 状态机 |
-| **工具数** | 43+ | 16-18 | 40+（含插件扩展）| 视配置 | **4**（极简）| 40+ |
-| **系统提示** | 动态组装（静态+动态分区）| 模板 per-provider | 组装服务（可替换）| 极简 checkpoint | **<1000 token** | 冻结快照注入 |
-| **压缩触发** | 窗口−13K | count≥usable | pressure + overflow 双触发 | 窗口×90%（双 scope）| 窗口−16,384 | 输入预算×50% |
-| **压缩策略** | 四路（micro/session/legacy/partial）| 折叠+摘要 | 两级+Spill | 90%阈值+双时机 | 切点算法 | 四阶段+反抖动熔断 |
-| **记忆存储** | 文件目录 + MEMORY.md 索引 | MEMORY.md + FTS5 | 无长期记忆 | SQLite + git 化工作区 | 无 | MEMORY.md + FTS5 CJK |
-| **记忆检索** | 全注入 + Sonnet 选 5 | FTS5 BM25 | 无 | developer instruction | 无 | 启动冻结 + FTS5 |
-| **自进化** | autoDream 定时固化 | 无 | 无（押注可组合性）| **两阶段管线+固化子代理** | 无 | **curator + RL 双路径** |
-| **权限模型** | 6 级 + AST + 分类器 | 三层 Ruleset | 守卫流水线 + 单调 ToolGuard | Approval + Sandbox 独立 | **无** | 写审批门三态 |
-| **沙箱** | bubblewrap | — | bwrap/Landlock/Seatbelt | 内置沙箱策略 | **无** | — |
-| **多 Agent** | 6 内置 Agent + Fork | SubAgent + Inbox | SubAgent 6 provider + Teams | Thread Manager fork | 无内置 | 子 Agent 禁递归 |
-| **独特点** | 细节最全、生态最成熟 | 开箱即用、生产验证 | **一切皆插件、loop 可替换** | **Rust 安全、最重自进化** | **极简、成本最低** | **唯一自进化（Skill+RL）** |
+| **Language** | TypeScript/Bun | TypeScript/Bun | TypeScript/Bun | **Rust** | TypeScript | **Python** |
+| **Architecture style** | Modular services | Event-driven services | **Plugin-based microkernel** | Thread/Turn/Item | Minimalist loop | Self-evolving closed loop |
+| **Agent Loop** | while(true) six-step pipeline | State machine + Runner | ReactLoopAgent (replaceable plugin) | Turn loop within Thread | Flat while + 25 hooks | TAOR + state machine |
+| **Tool count** | 43+ | 16-18 | 40+ (including plugin extensions) | Depends on config | **4** (minimalist) | 40+ |
+| **System prompt** | Dynamically assembled (static + dynamic sections) | Template per-provider | Assembly service (replaceable) | Minimal checkpoint | **<1000 tokens** | Frozen snapshot injection |
+| **Compaction trigger** | Window−13K | count≥usable | pressure + overflow dual trigger | Window×90% (dual scope) | Window−16,384 | Input budget×50% |
+| **Compaction strategy** | Four-way (micro/session/legacy/partial) | Folding + summary | Two-level + Spill | 90% threshold + dual timing | Cut point algorithm | Four-phase + anti-jitter circuit breaker |
+| **Memory storage** | File directory + MEMORY.md index | MEMORY.md + FTS5 | No long-term memory | SQLite + git-ified workspace | None | MEMORY.md + FTS5 CJK |
+| **Memory retrieval** | Full injection + Sonnet picks 5 | FTS5 BM25 | None | developer instruction | None | Startup freeze + FTS5 |
+| **Self-evolution** | autoDream scheduled consolidation | None | None (bets on composability) | **Two-phase pipeline + consolidation subagent** | None | **curator + RL dual path** |
+| **Permission model** | 6 levels + AST + classifier | Three-layer Ruleset | Guard pipeline + monotonic ToolGuard | Approval + Sandbox independent | **None** | Write approval gate, three states |
+| **Sandbox** | bubblewrap | — | bwrap/Landlock/Seatbelt | Built-in sandbox policy | **None** | — |
+| **Multi-agent** | 6 built-in Agents + Fork | SubAgent + Inbox | SubAgent 6 providers + Teams | Thread Manager fork | None built-in | Subagents: recursion forbidden |
+| **Unique traits** | Most complete details, most mature ecosystem | Works out of the box, production-proven | **Everything is a plugin, replaceable loop** | **Rust safety, heaviest self-evolution** | **Minimalist, lowest cost** | **The only self-evolving one (Skill+RL)** |
 
 ---
 
-## **2. Agent Loop（ReAct/TAOR）**
+## **2. Agent Loop (ReAct/TAOR)**
 
-> 基于 claude-code `src/query.ts`（1729 行）源码逐行阅读。
+> Based on a line-by-line reading of the claude-code `src/query.ts` source (1729 lines).
 
-### Agent Loop 真实实现
+### The real Agent Loop implementation
 
-![Agent Loop 主循环流水线](ref/agent-loop-archify.png)
+![Agent Loop main loop pipeline](ref/agent-loop-archify.png)
 
-> 🖱️ [交互式版本](diagrams/agent-loop.workflow.html)（支持缩放/路径追踪/演示模式）。主循环的通用形态：组装上下文 → 流式推理 → 解析 → 循环守卫 → 并行执行 → 结果回注 → 继续循环或终止；溢出走压缩后重发。
+> 🖱️ [Interactive version](diagrams/agent-loop.workflow.html) (supports zoom/path tracing/demo mode). The general shape of the main loop: assemble context → streaming inference → parse → loop guards → parallel execution → feed results back → continue the loop or terminate; on overflow, compact and resend.
 
-Claude Code 的 Agent Loop 是 **AsyncGenerator**（`query.ts:219`），核心是一个 `while(true)` 循环，携带 10 个跨迭代可变状态字段。
+The Claude Code Agent Loop is an **AsyncGenerator** (`query.ts:219`); its core is a `while(true)` loop carrying 10 mutable state fields that persist across iterations.
 
 ```mermaid
 flowchart TD
-    START["query() 入口"] --> LOOP[while true 主循环]
+    START["query() entry"] --> LOOP[while true main loop]
 
-    LOOP --> SUB1["① Skill Prefetch（非阻塞并行）"]
-    SUB1 --> SUB2["② applyToolResultBudget<br/>工具结果大小预算"]
-    SUB2 --> SUB3["③ snipCompact（HISTORY_SNIP）"]
-    SUB3 --> SUB4["④ microcompact<br/>tool_use_id 清除旧结果"]
-    SUB4 --> SUB5["⑤ contextCollapse<br/>读时投影"]
-    SUB5 --> SUB6["⑥ autocompact<br/>fork 子代理生成摘要"]
-    SUB6 --> SUB7["⑦ Blocking Limit 检查"]
-    SUB7 --> LLM["⑧ callModel() 流式调用"]
+    LOOP --> SUB1["① Skill Prefetch (non-blocking, parallel)"]
+    SUB1 --> SUB2["② applyToolResultBudget<br/>tool result size budget"]
+    SUB2 --> SUB3["③ snipCompact (HISTORY_SNIP)"]
+    SUB3 --> SUB4["④ microcompact<br/>clear old results by tool_use_id"]
+    SUB4 --> SUB5["⑤ contextCollapse<br/>read-time projection"]
+    SUB5 --> SUB6["⑥ autocompact<br/>fork subagent to generate summary"]
+    SUB6 --> SUB7["⑦ Blocking Limit check"]
+    SUB7 --> LLM["⑧ callModel() streaming call"]
 
-    LLM --> STREAM["⑨ StreamingToolExecutor<br/>工具在模型流式输出时并行执行"]
-    STREAM --> RESP["⑩ Response 处理（withheld 错误恢复）"]
-    RESP --> TOOLS["⑪⑫ Tool 收集 + Abort 处理"]
+    LLM --> STREAM["⑨ StreamingToolExecutor<br/>tools run in parallel as the model streams"]
+    STREAM --> RESP["⑩ Response handling (withheld error recovery)"]
+    RESP --> TOOLS["⑪⑫ Tool collection + Abort handling"]
     TOOLS --> HOOKS["⑬⑯ Post-Sampling + Stop Hooks"]
-    HOOKS --> RECOVERY{"⑭⑮ 有错误需恢复?"}
+    HOOKS --> RECOVERY{"⑭⑮ Errors to recover?"}
 
     RECOVERY -- 413 --> DRAIN["collapse drain → reactive compact"]
-    RECOVERY -- max-tokens --> ESCALATE["8K→64K 升级 → Resume directly"]
-    RECOVERY -- 无错误 --> BUDGET["⑰ Token Budget"]
+    RECOVERY -- max-tokens --> ESCALATE["8K→64K escalation → Resume directly"]
+    RECOVERY -- no error --> BUDGET["⑰ Token Budget"]
 
-    BUDGET -- continue --> TOOL_EXEC["⑱ Tool Execution（streaming 或 batch）"]
-    BUDGET -- 完成 --> DONE["✅ return completed"]
+    BUDGET -- continue --> TOOL_EXEC["⑱ Tool Execution (streaming or batch)"]
+    BUDGET -- done --> DONE["✅ return completed"]
 
-    TOOL_EXEC --> ATTACH["⑲ Attachments（文件变更/记忆/skill 消费）"]
+    TOOL_EXEC --> ATTACH["⑲ Attachments (file changes/memory/skill consumption)"]
     ATTACH --> REFRESH["⑳⑲㉑ Tool Refresh / Task Summary"]
     REFRESH --> MAXCHECK{"㉒ maxTurns?"}
-    MAXCHECK -- 否 --> LOOP
-    MAXCHECK -- 是 --> STOP["return max_turns"]
+    MAXCHECK -- no --> LOOP
+    MAXCHECK -- yes --> STOP["return max_turns"]
 
     style LOOP fill:#003A70,color:#fff
     style LLM fill:#1565C0,color:#fff
@@ -664,17 +721,17 @@ flowchart TD
     style RECOVERY fill:#C8102E,color:#fff
 ```
 
-### 五层压缩流水线
+### The five-layer compaction pipeline
 
-按执行顺序，每层独立且可叠加。前四层**不调 LLM**，第五层才 fork 子代理：
+In execution order, each layer is independent and stackable. The first four layers **do not call the LLM**; only the fifth forks a subagent:
 
 ```mermaid
 flowchart LR
-    A["① ToolResultBudget<br/>始终启用<br/>按消息预算截断"] -->
-    B["② snipCompact<br/>HISTORY_SNIP<br/>历史裁剪"] -->
-    C["③ microcompact<br/>CACHED_MICROCOMPACT<br/>8 种工具结果清除"] -->
-    D["④ contextCollapse<br/>CONTEXT_COLLAPSE<br/>读时投影回放"] -->
-    E["⑤ autocompact<br/>fork 子代理<br/>生成 9 节摘要"]
+    A["① ToolResultBudget<br/>always on<br/>truncate by message budget"] -->
+    B["② snipCompact<br/>HISTORY_SNIP<br/>history pruning"] -->
+    C["③ microcompact<br/>CACHED_MICROCOMPACT<br/>clears 8 kinds of tool results"] -->
+    D["④ contextCollapse<br/>CONTEXT_COLLAPSE<br/>read-time projection replay"] -->
+    E["⑤ autocompact<br/>fork subagent<br/>generates 9-section summary"]
 
     style A fill:#E3F2FD
     style B fill:#E3F2FD
@@ -683,42 +740,42 @@ flowchart LR
     style E fill:#003A70,color:#fff
 ```
 
-> 前四层不调 LLM（零成本），如果压到阈值以下，第五层 autocompact 自动变 no-op。
+> The first four layers do not call the LLM (zero cost); if compaction gets below the threshold, the fifth layer's autocompact automatically becomes a no-op.
 
-**microcompact 白名单**（`microCompact.ts:41-50`，只有 8 种工具的结果会被清除）：
+**microcompact whitelist** (`microCompact.ts:41-50`; only the results of 8 tool types get cleared):
 
 ```
 Read / Bash / Grep / Glob / WebSearch / WebFetch / Edit / Write
 ```
 
-### 错误恢复链
+### Error recovery chain
 
-模型返回错误时不立即 yield，而是 withheld（暂扣），尝试恢复后再决定：
+When the model returns an error, it is not yielded immediately but withheld; recovery is attempted before deciding:
 
 ```mermaid
 flowchart TD
-    ERR["模型返回错误（withheld）"] --> TYPE{"错误类型?"}
+    ERR["Model returns error (withheld)"] --> TYPE{"Error type?"}
 
     TYPE -- 413 prompt-too-long --> PTL
-    subgraph PTL ["413 恢复链"]
-        P1["首选: collapse drain<br/>（便宜，保留细粒度上下文）"] --> P2{"已 drain 且仍 413?"}
-        P2 -- 是 --> P3["次选: reactive compact<br/>（完整摘要）"]
-        P2 -- 否 --> RETRY["continue 重试"]
-        P3 --> P4{"恢复成功?"}
-        P4 -- 是 --> RETRY
-        P4 -- 否 --> SURFACE["surface error<br/>⛔ 禁止 stop hooks<br/>（防 death spiral）"]
+    subgraph PTL ["413 recovery chain"]
+        P1["First: collapse drain<br/>(cheap, keeps fine-grained context)"] --> P2{"Drained but still 413?"}
+        P2 -- yes --> P3["Next: reactive compact<br/>(full summary)"]
+        P2 -- no --> RETRY["continue retry"]
+        P3 --> P4{"Recovery succeeded?"}
+        P4 -- yes --> RETRY
+        P4 -- no --> SURFACE["surface error<br/>⛔ stop hooks forbidden<br/>(prevents death spiral)"]
     end
 
     TYPE -- max-output-tokens --> MOT
-    subgraph MOT ["max-tokens 恢复链"]
-        M1["首选: 8K→64K 升级重试"] --> M2{"64K 也触顶?"}
-        M2 -- 是 --> M3["次选: multi-turn 恢复<br/>注入 Resume directly"]
-        M3 --> M4{"恢复次数 < 3?"}
-        M4 -- 是 --> RETRY2["continue"]
-        M4 -- 否 --> SURFACE2["yield error"]
+    subgraph MOT ["max-tokens recovery chain"]
+        M1["First: retry with 8K→64K escalation"] --> M2{"64K also hits the cap?"}
+        M2 -- yes --> M3["Next: multi-turn recovery<br/>inject Resume directly"]
+        M3 --> M4{"Recovery count < 3?"}
+        M4 -- yes --> RETRY2["continue"]
+        M4 -- no --> SURFACE2["yield error"]
     end
 
-    TYPE -- media-size --> MED["reactive compact strip-retry<br/>hasAttemptedReactiveCompact 防螺旋"]
+    TYPE -- media-size --> MED["reactive compact strip-retry<br/>hasAttemptedReactiveCompact prevents spiraling"]
 
     style SURFACE fill:#C8102E,color:#fff
     style SURFACE2 fill:#C8102E,color:#fff
@@ -726,133 +783,133 @@ flowchart TD
     style RETRY2 fill:#2E7D32,color:#fff
 ```
 
-> **关键设计**：413 恢复失败后**禁止运行 stop hooks**——error → hook blocking → retry → error 会形成死亡螺旋，烧数千 API 调用。
+> **Key design**: after a failed 413 recovery, **running stop hooks is forbidden** — error → hook blocking → retry → error forms a death spiral that burns thousands of API calls.
 
-### 终止条件（10 种）
+### Termination conditions (10 kinds)
 
-| 终止原因 | 条件 | 代码位置 |
+| Termination reason | Condition | Code location |
 |---|---|---|
-| `completed` | 无 tool_use 且无 stop hook blocking | :1357 |
-| `aborted_streaming` | 流式输出期间 Ctrl+C | :1051 |
-| `aborted_tools` | 工具执行期间 Ctrl+C | :1515 |
-| `max_turns` | 达到上限 | :1711 |
-| `hook_stopped` / `stop_hook_prevented` | hook 阻止 | :1520/:1279 |
-| `blocking_limit` | autoCompact 关闭时硬阻塞 | :646 |
-| `model_error` | 模型异常 | :996 |
-| `image_error` | 图片错误 | :977 |
-| `prompt_too_long` | 413 恢复穷尽 | :1175 |
+| `completed` | No tool_use and no stop hook blocking | :1357 |
+| `aborted_streaming` | Ctrl+C during streaming output | :1051 |
+| `aborted_tools` | Ctrl+C during tool execution | :1515 |
+| `max_turns` | Limit reached | :1711 |
+| `hook_stopped` / `stop_hook_prevented` | Hook blocked | :1520/:1279 |
+| `blocking_limit` | Hard block when autoCompact is off | :646 |
+| `model_error` | Model error | :996 |
+| `image_error` | Image error | :977 |
+| `prompt_too_long` | 413 recovery exhausted | :1175 |
 
-### 关键机制速览
+### Key mechanisms at a glance
 
-| 机制 | 说明 |
+| Mechanism | Description |
 |---|---|
-| **StreamingToolExecutor** | 模型流式输出时并行执行已完成的 tool_use；fallback 时 `discard()+重建` 防孤儿 |
-| **Task Budget 跨压缩** | `remaining -= preCompactContext`；发给服务端使其在压缩后仍追踪消耗 |
-| **Fallback 清理** | yield tombstones → 清空 4 个数组 → discard executor → strip thinking signatures → 切模型 |
-| **Memory Prefetch** | `startRelevantMemoryPrefetch` 与模型流并行，消费时过滤 `readFileState` 已读文件 |
-| **Skill Prefetch** | 97% 的调用发现无新内容——改为非阻塞并行，每迭代重试直到消费 |
+| **StreamingToolExecutor** | Executes completed tool_use in parallel while the model streams; on fallback, `discard()+rebuild` prevents orphans |
+| **Task Budget across compaction** | `remaining -= preCompactContext`; sent to the server so it keeps tracking consumption after compaction |
+| **Fallback cleanup** | yield tombstones → clear 4 arrays → discard executor → strip thinking signatures → switch models |
+| **Memory Prefetch** | `startRelevantMemoryPrefetch` runs in parallel with the model stream; on consumption, filters files already read in `readFileState` |
+| **Skill Prefetch** | 97% of calls found no new content — changed to non-blocking parallel, retried each iteration until consumed |
 
 ### Agent Loop
 
-​	**Agent Loop（智能体循环）是 Agent Harness（智能体驾驭系统）内部的“心脏”与核心动力引擎**。
+​	**The Agent Loop (agent loop) is the "heart" and core power engine inside the Agent Harness (agent harness system)**.
 
 ```typescript
-// Agent Loop伪代码
+// Agent Loop pseudocode
 while (done === false) {
-  const response = await callLLM(messages);    // 模型推理
-  if (response.toolCalls.length > 0) {         // 模型需要调用工具
+  const response = await callLLM(messages);    // model inference
+  if (response.toolCalls.length > 0) {         // model wants to call tools
     const results = await executeTools(response.toolCalls);
-    messages.push(...results);                 // 将结果注入上下文
-  } else {                                     // 模型返回纯文本，任务结束
+    messages.push(...results);                 // inject results into context
+  } else {                                     // model returns plain text, task done
     done = true;
     return response;
   }
 }
 ```
 
-​	**Agent Loop流程图：**
+​	**Agent Loop flowchart:**
 
 ```mermaid
 graph TD
-    A[用户输入] --> B[🏗️ 支撑与基础架构层<br>（会话管理、事件总线、全链路追踪）]
+    A[user input] --> B["🏗️ Support & Infrastructure layer<br>(session management, event bus, end-to-end tracing)"]
 
-    subgraph "🔁 Agent Loop 核心"
+    subgraph "🔁 Agent Loop core"
         direction LR
-        B --> C[🧠 上下文与记忆层<br>（组装System Prompt、加载记忆、压缩）]
-        C --> D{⚙️ 推理与编排层<br>（TAOR闭环）}
-        D -- 调用工具 --> E[🛡️ 工具与安全执行层<br>（权限校验、沙箱执行）]
-        E --> F[🧠 上下文与记忆层<br>（注入工具结果、存储）]
+        B --> C["🧠 Context & Memory layer<br>(assemble System Prompt, load memory, compaction)"]
+        C --> D{"⚙️ Reasoning & Orchestration layer<br>(TAOR loop)"}
+        D -- call tools --> E["🛡️ Tool & Safe Execution layer<br>(permission checks, sandboxed execution)"]
+        E --> F["🧠 Context & Memory layer<br>(inject tool results, persist)"]
         F --> D
     end
 
-    D -- 最终回复 --> G[用户]
+    D -- final response --> G[user]
 ```
 
 
 
-### 循环状态机
+### Loop state machine
 
-​	虽然Agent Loop本质是一个带有终止条件的无限循环组成，但是真实生产环境不能简单地只用while(true)实现，目前业内通用作用是引入状态机来处理每步循环，管理复杂的流转。
+​	Although the Agent Loop is essentially an infinite loop with termination conditions, real production environments cannot simply use a bare while(true); the common industry practice is to introduce a state machine to handle each loop step and manage complex transitions.
 
 ```typescript
-// Agent Loop状态机典型状态定义
+// Typical state definitions for the Agent Loop state machine
 type LoopState = 
-  | 'INIT'           // 初始，准备组装上下文
-  | 'THINKING'       // 正在调用 LLM
-  | 'PARSING'        // 解析 LLM 输出（提取 tool_calls 或文本）
-  | 'EXECUTING'      // 正在执行工具（可能有多个并行）
-  | 'OBSERVING'      // 收集工具结果，注入上下文
-  | 'REFLECTING'     // （可选）让 LLM 反思结果
-  | 'COMPRESSING'    // 触发上下文压缩
-  | 'TERMINATED';    // 结束
+  | 'INIT'           // initial, about to assemble context
+  | 'THINKING'       // calling the LLM
+  | 'PARSING'        // parsing LLM output (extract tool_calls or text)
+  | 'EXECUTING'      // executing tools (possibly several in parallel)
+  | 'OBSERVING'      // collect tool results, inject into context
+  | 'REFLECTING'     // (optional) let the LLM reflect on results
+  | 'COMPRESSING'    // trigger context compaction
+  | 'TERMINATED';    // done
 ```
 
-​	**循环状态机流程图：**
+​	**Loop state machine flowchart:**
 
 
 
 ```mermaid
 graph TD
-    INIT([INIT]) -->|调用 LLM| THINKING
-    THINKING -->|收到流式响应结束| PARSING
-    PARSING -->|有 tool_calls| EXECUTING
-    PARSING -->|无 tool_calls 且是最终回答| TERMINATED([TERMINATED])
-    EXECUTING -->|所有工具执行完毕| OBSERVING
-    OBSERVING -->|若 token 超阈值| COMPRESSING
-    OBSERVING -->|正常继续| THINKING
-    COMPRESSING -->|压缩后继续| THINKING
+    INIT([INIT]) -->|call LLM| THINKING
+    THINKING -->|stream response ends| PARSING
+    PARSING -->|has tool_calls| EXECUTING
+    PARSING -->|no tool_calls and final answer| TERMINATED([TERMINATED])
+    EXECUTING -->|all tools finished| OBSERVING
+    OBSERVING -->|if tokens exceed threshold| COMPRESSING
+    OBSERVING -->|continue normally| THINKING
+    COMPRESSING -->|resume after compaction| THINKING
 ```
 
-​	**实现要点**：状态机用枚举 + switch，配合事件驱动（Event Bus）解耦各阶段。
+​	**Implementation notes**: the state machine uses an enum + switch, combined with event-driven (Event Bus) decoupling of the phases.
 
->业界演进趋势：Agent Loop正被SGH（结构化图Harness）等新范式挑战：
+> Industry evolution trend: the Agent Loop is being challenged by new paradigms such as SGH (Structured Graph Harness):
 >
->2026年4月发表的论文《From Agent Loops to Structured Graphs》指出，当前主流的Agent Loop范式存在三大结构性缺陷：步骤间依赖隐式、恢复循环无界、执行历史可变导致调试困难。论文提出SGH（Structured Graph Harness）框架，将控制流从隐式上下文中提取为显式静态DAG，核心承诺包括：执行计划在版本内不可变、规划执行与恢复分离为三层、恢复遵循严格升级协议。
+> The April 2026 paper "From Agent Loops to Structured Graphs" points out three structural flaws in the current mainstream Agent Loop paradigm: implicit dependencies between steps, unbounded recovery loops, and mutable execution history that makes debugging difficult. The paper proposes the SGH (Structured Graph Harness) framework, which extracts control flow from implicit context into an explicit static DAG; its core promises include: execution plans are immutable within a version, planning, execution, and recovery are separated into three layers, and recovery follows a strict escalation protocol.
 
 
 
-### 工具调用并行（异步）执行
+### Parallel (async) tool call execution
 
-​	模型一次可能返回多个 `tool_calls`（例如同时读取三个文件）。工程实现需支持并行，同时遵守速率限制和依赖关系（如果工具 B 依赖 A 的输出，则不能并行）。
+​	The model may return multiple `tool_calls` at once (e.g., reading three files simultaneously). The engineering implementation must support parallelism while respecting rate limits and dependencies (if tool B depends on A's output, they cannot run in parallel).
 
-**并行策略：**
+**Parallelism strategies:**
 
-1. **无依赖并行**：所有工具调用同时发起（Promise.all）。
-2. **有依赖拓扑排序**：解析工具声明的依赖（通过 `depends_on` 字段），构建 DAG，按层并行。
-3. **限流并发**：控制同时执行数量（如最多 5 个），避免资源耗尽。
+1. **Parallel without dependencies**: all tool calls are issued at once (Promise.all).
+2. **Topological sort for dependencies**: parse the dependencies declared by tools (via the `depends_on` field), build a DAG, and parallelize layer by layer.
+3. **Rate-limited concurrency**: cap the number of simultaneous executions (e.g., at most 5) to avoid resource exhaustion.
 
-**注意事项：**
+**Caveats:**
 
-- **副作用冲突**：两个工具同时写入同一文件可能产生竞争 → 需要文件锁或串行化。
-- **错误处理**：一个工具失败不应影响其他工具。
-- **超时控制**：每个异步工具应有独立超时，避免无限等待。
+- **Side-effect conflicts**: two tools writing to the same file simultaneously can race → file locks or serialization are needed.
+- **Error handling**: one tool failing must not affect the others.
+- **Timeout control**: each async tool should have its own timeout to avoid waiting forever.
 
 ```typescript
-// 工具并行执行伪代码
+// Tool parallel execution pseudocode
 async function executeToolCalls(toolCalls: ToolCall[]): Promise<ToolResult[]> {
   const results: ToolResult[] = [];
   const pending = toolCalls.map(tc => executeOne(tc));
-  // 等待所有完成，但每个独立捕获异常
+  // wait for all to finish, but catch each failure independently
   const settled = await Promise.allSettled(pending);
   for (const s of settled) {
     if (s.status === 'fulfilled') results.push(s.value);
@@ -862,84 +919,84 @@ async function executeToolCalls(toolCalls: ToolCall[]): Promise<ToolResult[]> {
 }
 ```
 
->​	工具异步执行是指：**非阻塞**：执行工具时不阻塞 Agent Loop 的其他部分（如接收用户中断、处理流式输出）；**并发**：多个工具调用可以同时进行，而不是一个接一个串行等待；**基于 Promise/Future**：工具执行返回一个可等待的句柄，主循环可以继续其他工作；
+>​	Async tool execution means: **non-blocking**: executing tools does not block other parts of the Agent Loop (such as receiving user interrupts or handling streaming output); **concurrent**: multiple tool calls can proceed simultaneously instead of waiting serially one after another; **Promise/Future-based**: tool execution returns an awaitable handle, and the main loop can continue other work;
 
 
 
-### 流式处理：边生成边行动
+### Streaming: act while generating
 
-​	流式（Streaming）可以显著提升用户体验。Agent Loop 需要支持**流式 + 工具调用**的混合模式。
+​	Streaming can significantly improve user experience. The Agent Loop needs to support the hybrid **streaming + tool call** mode.
 
-​	**技术挑战**：模型可能在流式输出文本中途返回 `tool_calls`（通过特殊的 SSE 事件）。
+​	**Technical challenge**: the model may return `tool_calls` mid-way through streaming text (via special SSE events).
 
-​	**工程方案**：
+​	**Engineering solutions**:
 
-1. **双缓冲区**：一个缓冲区累积文本 token，另一个累积 tool_call delta
-2. **增量解析**：每收到一个 chunk，尝试解析是否包含完整的 tool_call
-3. **提前终止**：一旦检测到第一个 tool_call 的完整参数，立即停止流式接收，进入执行阶段
-4. **流式文本输出**：如果没有 tool_calls，则实时推送文本给前端
+1. **Double buffer**: one buffer accumulates text tokens, the other accumulates tool_call deltas
+2. **Incremental parsing**: on each chunk received, try to parse whether it contains a complete tool_call
+3. **Early termination**: once the first tool_call's complete arguments are detected, immediately stop stream reception and enter the execution phase
+4. **Streaming text output**: if there are no tool_calls, push text to the frontend in real time
 
 ```typescript
-// Agent Loop流式处理伪代码
+// Agent Loop streaming processing pseudocode
 let fullResponse = '';
 let toolCalls: ToolCall[] = [];
 for await (const chunk of stream) {
   fullResponse += chunk.choices[0]?.delta?.content || '';
-  // 累积 tool_call delta
+  // accumulate tool_call deltas
   if (chunk.choices[0]?.delta?.tool_calls) {
     mergeToolCallDelta(toolCalls, chunk.choices[0].delta.tool_calls);
   }
-  // 可选：将文本实时推给 UI
+  // optional: push text to the UI in real time
   emit('text-delta', chunk.choices[0]?.delta?.content);
 }
-// 流结束后，解析完整的 toolCalls
+// once the stream ends, parse the complete toolCalls
 ```
 
 
 
-### 退出条件：何时终止循环
+### Exit conditions: when to terminate the loop
 
-​	因为Agent Loop本质是有退出条件的无限循环，每轮对话式有头有尾，所以必须涉及明确的终止条件，防止死循环产生或者资源耗尽。
+​	Since the Agent Loop is essentially an infinite loop with exit conditions, and each conversation round has a clear beginning and end, explicit termination conditions must be defined to prevent dead loops or resource exhaustion.
 
-​	典型终止条件如下：
+​	Typical termination conditions are as follows:
 
-| 条件                  | 判断逻辑                                                     | 处理方式                    |
+| Condition | Detection logic | Handling |
 | :-------------------- | :----------------------------------------------------------- | :-------------------------- |
-| **模型无 tool_calls** | 解析 LLM 响应，`tool_calls` 数组为空或长度为0                | 正常终止，返回最终 content  |
-| **最大轮次超限**      | `round >= max_rounds`（通常 15~30）                          | 强制终止，提示任务未完成    |
-| **Token 预算耗尽**    | `total_tokens_used >= budget_limit`（如 200k）               | 终止，保存当前状态供恢复    |
-| **用户主动中断**      | 收到 SIGINT 或前端 cancel 信号                               | 停止当前 LLM 请求，终止循环 |
-| **安全拒答**          | 模型输出安全拦截标志（如 `refusal` 字段）                    | 立即终止，返回拒绝原因      |
-| **工具调用连续失败**  | 同一工具连续失败超过 `max_retries`                           | 终止，避免死循环            |
-| **循环检测**          | 检测到重复的 tool_calls 序列（如一直调用同一个工具且无进展） | 终止，提示可能存在逻辑错误  |
+| **Model returns no tool_calls** | Parse the LLM response; the `tool_calls` array is empty or of length 0 | Terminate normally, return the final content |
+| **Max rounds exceeded** | `round >= max_rounds` (usually 15~30) | Force termination, indicate the task is incomplete |
+| **Token budget exhausted** | `total_tokens_used >= budget_limit` (e.g., 200k) | Terminate, save the current state for recovery |
+| **User interrupt** | SIGINT received or a frontend cancel signal | Stop the current LLM request, terminate the loop |
+| **Safety refusal** | The model outputs a safety interception flag (e.g., a `refusal` field) | Terminate immediately, return the refusal reason |
+| **Consecutive tool call failures** | The same tool fails more than `max_retries` times in a row | Terminate to avoid a dead loop |
+| **Loop detection** | A repeated tool_calls sequence is detected (e.g., calling the same tool repeatedly with no progress) | Terminate, indicate a possible logic error |
 
 
 
-### 重试与退避 + 中断与恢复
+### Retry and backoff + interruption and recovery
 
-**重试与退避**
+**Retry and backoff**
 
-- **指数退避 + 抖动**：1s、2s、4s… 上限 30s，加随机延迟避免雷鸣群
-- **可重试错误**：5xx、超时、网络抖动；4xx（认证/参数）不重试
-- **实现要点**：每次重试使用相同消息历史，不追加错误信息
+- **Exponential backoff + jitter**: 1s, 2s, 4s... capped at 30s, with a random delay to avoid thundering herds
+- **Retryable errors**: 5xx, timeouts, network jitter; 4xx (auth/params) are not retried
+- **Implementation notes**: each retry uses the same message history, without appending error messages
 
-**中断与恢复**
+**Interruption and recovery**
 
-- **中断点**：
-  - `THINKING`：`AbortController` 取消 LLM 请求
-  - `EXECUTING`：工具支持 `AbortSignal`，超时/取消即停止
-  - `OBSERVING`：通常不中断
-- **恢复机制**：
-  - 序列化 `round`、`messages`、`pending tool calls` 至数据库
-  - 从最近 checkpoint 加载，恢复循环
-  - 部分完成的工具调用需**幂等设计**（事务/状态检查）
+- **Interruption points**:
+  - `THINKING`: `AbortController` cancels the LLM request
+  - `EXECUTING`: tools support `AbortSignal`; stop on timeout/cancel
+  - `OBSERVING`: usually not interrupted
+- **Recovery mechanism**:
+  - Serialize `round`, `messages`, and `pending tool calls` to the database
+  - Load from the latest checkpoint and resume the loop
+  - Partially completed tool calls require **idempotent design** (transactions/state checks)
 
 
 
-### Agent Loop伪代码
+### Agent Loop pseudocode
 
 ```typescript
-// Agent Loop伪代码
+// Agent Loop pseudocode
 class AgentLoop {
   private messages: Message[] = [];
   private round = 0;
@@ -954,15 +1011,15 @@ class AgentLoop {
       // 1. THINKING
       const response = await this.callLLMWithRetry(this.messages);
       
-      // 2. 如果没有 tool_calls，结束
+      // 2. if no tool_calls, done
       if (!response.tool_calls?.length) {
         return response.content;
       }
       
-      // 3. 并行执行工具
+      // 3. execute tools in parallel
       const results = await this.executeToolCalls(response.tool_calls);
       
-      // 4. 将结果注入 messages
+      // 4. inject results into messages
       this.messages.push({
         role: 'assistant',
         tool_calls: response.tool_calls
@@ -975,7 +1032,7 @@ class AgentLoop {
         });
       }
       
-      // 5. 可选：压缩上下文（如果 token 超阈值）
+      // 5. optional: compact context (if tokens exceed threshold)
       await this.maybeCompress();
     }
     
@@ -998,54 +1055,54 @@ class AgentLoop {
 
 ---
 
-### DSH 事件溯源日志："Model-visible ⟺ logged" 硬不变量
+### DSH event sourcing log: the "Model-visible ⟺ logged" hard invariant
 
-> 基于 `packages/core/session/src/surface.ts`（460 行）源码阅读。
+> Based on a source read of `packages/core/session/src/surface.ts` (460 lines).
 
-- **append-only、无损 JSON、seq 连续**的事件日志，内存 store（`ctx.sessions`）
-- 模型历史由 `deriveMessages()` 从日志投影
-- **不变量**：任何到达模型请求的东西必须能从日志重建，运行时 invariant 强制断言
+- An event log that is **append-only, lossless JSON, with contiguous seq**, backed by an in-memory store (`ctx.sessions`)
+- Model history is projected from the log by `deriveMessages()`
+- **Invariant**: anything that reaches a model request must be reconstructible from the log, enforced by runtime invariant assertions
 
-**SurfaceOp 两态**（`surface.ts:49-67`）：
+**Two SurfaceOp states** (`surface.ts:49-67`):
 
 ```typescript
-// 类型谓词
+// Type predicates
 export function isAppendSurfaceEvent(e: SessionEvent): e is SurfaceEvent & { surfaceOp: 'append' }
 export function isReplacementSurfaceEvent(e): e is SurfaceEvent & { surfaceOp: { op: 'replace' } }
 ```
 
-**关键设计**（`surface.ts:41-47`，原文）：
+**Key design** (`surface.ts:41-47`, original text):
 
 > "The model-visible surface deliberately shadows replaced ranges, so it is the wrong source for a human transcript — a landed replacement would erase durable source material; **replacement copies stay model-only**."
 
-| 操作 | 人类可见 | 模型可见 | 用途 |
+| Operation | Human-visible | Model-visible | Purpose |
 |---|---|---|---|
-| `append` | ✓ | ✓ | 正常追加 |
-| `replace` | ✗ | ✓ | 模型覆盖范围（如 plan-mode 重写）|
+| `append` | ✓ | ✓ | Normal append |
+| `replace` | ✗ | ✓ | Model-override ranges (e.g. plan-mode rewrites) |
 
-> **为什么模型可见与人类可见分离**：替换 (replace) 只影响模型视图，**人类回放仍看到原始来源**——这样既能让模型重写（cache 命中），又不丢历史可追溯性。
+> **Why model-visible is separated from human-visible**: replace only affects the model view, **human replay still sees the original source** — the model gets to rewrite (cache hit) without losing historical traceability.
 
-**持久化双后端（seam 可换）**：
-- 默认 `session-persistence-jsonl`（JSONL + **zstd 压缩**）
-- `session-persistence-sqlite`：node:sqlite `DatabaseSync`，`SCHEMA_VERSION = 17`，WAL journal
-- 跨会话检索：**SQLite FTS5 全文搜索**（默认关闭），模型侧 5 个只读工具 `session_search` 等
+**Dual persistence backends (swappable seam)**:
+- Default `session-persistence-jsonl` (JSONL + **zstd compression**)
+- `session-persistence-sqlite`: node:sqlite `DatabaseSync`, `SCHEMA_VERSION = 17`, WAL journal
+- Cross-session retrieval: **SQLite FTS5 full-text search** (off by default), with 5 model-side read-only tools such as `session_search`
 
-### DSH Agent Loop：ReactLoopAgent + 六态 TurnEndReason
+### DSH Agent Loop: ReactLoopAgent + the six-state TurnEndReason
 
-> 基于 `packages/core/agent-loop/src/agent.ts`（515 行）源码逐行阅读。
+> Based on a line-by-line source read of `packages/core/agent-loop/src/agent.ts` (515 lines).
 
-- **层级**：driver 循环（`kick`）→ turn（回合）→ step（步 = 一次模型请求 + 它调用的工具）
-- **ReactLoopAgent** 通过 `ctx.agents.setFactory()` 注册——**loop 本身可替换**
-- **状态机**：`idle` / `maintenance` / `running`（含 abort/turn/step/wakeRequested）
+- **Hierarchy**: driver loop (`kick`) → turn → step (a step = one model request + the tool calls it makes)
+- **ReactLoopAgent** is registered via `ctx.agents.setFactory()` — **the loop itself is swappable**
+- **State machine**: `idle` / `maintenance` / `running` (with abort/turn/step/wakeRequested)
 
 ```mermaid
 flowchart TD
     KICK["kick()"] --> W{"while (await turn())"}
-    W -->|turn 返回 true| W
-    W -->|false| DONE["driver 边界"]
+    W -->|turn returns true| W
+    W -->|false| DONE["driver boundary"]
 
-    subgraph TURN["turn() 内部"]
-        TS["session.append('turn/start')"] --> INNER{"while(true) 步循环"}
+    subgraph TURN["inside turn()"]
+        TS["session.append('turn/start')"] --> INNER{"while(true) step loop"}
         INNER --> PRE["preStep(target, position)"]
         PRE --> REJ{"decision.kind"}
         REJ -->|reject| BLOCKED["turnEnds = blocked"]
@@ -1053,14 +1110,14 @@ flowchart TD
         SS --> UMSG["append user/message × N"]
         UMSG --> STEP["step()"]
         STEP --> SE["session.append('step/end')"]
-        SE --> STICKY{"turnEnds 是 max-tokens?"}
-        STICKY -->|否| SET["turnEnds = stepEnd"]
-        STICKY -->|是| KEEP["保持 max-tokens（粘性）"]
-        SET --> EMPTY{"turnEnds && inbox.nextStep 空?"}
+        SE --> STICKY{"turnEnds is max-tokens?"}
+        STICKY -->|no| SET["turnEnds = stepEnd"]
+        STICKY -->|yes| KEEP["keep max-tokens (sticky)"]
+        SET --> EMPTY{"turnEnds && inbox.nextStep empty?"}
         KEEP --> EMPTY
-        EMPTY -->|是| TSTOP["dispatch.serial('agent/turn-stopping')"]
+        EMPTY -->|yes| TSTOP["dispatch.serial('agent/turn-stopping')"]
         TSTOP --> BREAK["break"]
-        EMPTY -->|否| NEXTSTEP["target = 'next-step'"]
+        EMPTY -->|no| NEXTSTEP["target = 'next-step'"]
         NEXTSTEP --> INNER
     end
 
@@ -1071,7 +1128,7 @@ flowchart TD
     style TSTOP fill:#1565C0,color:#fff
 ```
 
-**preStep 的瀑布式决策**（`agent.ts:225-243`）：
+**preStep's waterfall-style decision** (`agent.ts:225-243`):
 
 ```typescript
 const decision = await this.dispatch.waterfall(
@@ -1079,10 +1136,10 @@ const decision = await this.dispatch.waterfall(
   { messages: claimed, ...position, signal },
   () => Promise.resolve({ kind: 'enter', messages }),
 )
-// decision.kind === 'reject' → 关闭 turn，不花模型调用
+// decision.kind === 'reject' → close the turn without spending a model call
 ```
 
-**max-tokens 粘性的源码注释**（`agent.ts:285-290`）：
+**Source comment on max-tokens stickiness** (`agent.ts:285-290`):
 
 ```typescript
 // max-tokens is sticky: once any step hits the ceiling, later steps
@@ -1090,11 +1147,11 @@ const decision = await this.dispatch.waterfall(
 if (turnEnds === null || turnEnds.kind !== 'max-tokens') turnEnds = stepEnd
 ```
 
-**错误结构化**（`agent.ts:302-315`）：
+**Structured errors** (`agent.ts:302-315`):
 
 ```typescript
-// 每个失败都是结构化的：LlmError 保留事实，其他扁平化为
-// errorChain 文本 + UNKNOWN code
+// Every failure is structured: LlmError keeps the facts, anything else flattens to
+// errorChain text + UNKNOWN code
 turnEnds = signal.aborted
   ? { kind: 'aborted', reason: signal.reason as AgentCancelCause }
   : { kind: 'error', error: error instanceof LlmError
@@ -1102,48 +1159,48 @@ turnEnds = signal.aborted
       : { message: errorChain(error), code: 'UNKNOWN' } }
 ```
 
-**TurnEndReason 六态**：
+**The six TurnEndReason states**:
 
-| 状态 | 含义 |
+| State | Meaning |
 |------|------|
-| `completed` | 无工具调用的正常完成 |
-| `aborted` | 取消（cause: user / parent / hook / disposed）|
+| `completed` | Normal completion without tool calls |
+| `aborted` | Cancellation (cause: user / parent / hook / disposed) |
 | `blocked` | agent/pre-step reject |
-| `error` | 结构化失败 |
-| `max-tokens` | **粘性**：任一 step 触顶后不被后续正常 step 降级 |
-| `interrupted` | 崩溃孤儿 turn（loop 从不发）|
+| `error` | Structured failure |
+| `max-tokens` | **Sticky**: once any step hits the ceiling, it is not downgraded by later normal steps |
+| `interrupted` | Orphan turn left by a crash (never emitted by the loop) |
 
-![DSH TurnEndReason 六态状态机](ref/dsh-turnendreason-excalidraw.png)
+![DSH six-state TurnEndReason state machine](ref/dsh-turnendreason-excalidraw.png)
 
-**Inbox 双队列**：
-- `next-turn`：`followup()` 唤醒并开新 turn
-- `next-step`：`steer()`（插入当前 turn）与 `inject()`（不唤醒，搭车进入下次请求）——"注入上下文不打断当前工作"
+**The inbox's two queues**:
+- `next-turn`: `followup()` wakes the loop and opens a new turn
+- `next-step`: `steer()` (inserts into the current turn) and `inject()` (no wake-up, rides along into the next request) — "inject context without interrupting current work"
 
-**工具收口聚合**：DSH 用 **OR 聚合**（任一工具 `concludesTurn=true` 即软收口），Pi 用 **AND 聚合**（全部 `terminate:true` 才终止）。
+**Tool-call conclusion aggregation**: DSH uses **OR aggregation** (any single tool with `concludesTurn=true` produces a soft conclusion), while Pi uses **AND aggregation** (all tools must set `terminate:true` before the turn terminates).
 
-**并行工具**：执行可乱序完成，但**提交必须按模型调用顺序**（slots 机制），保证 replay/日志确定性。
+**Parallel tools**: execution may complete out of order, but **commits must follow model call order** (the slots mechanism), guaranteeing replay/log determinism.
 
 
 ---
 
-### Pi Agent Loop：扁平双层循环 + 25+ TypeScript Hook 点
+### Pi Agent Loop: flat two-layer loop + 25+ TypeScript hook points
 
-> 基于 `packages/agent/src/agent-loop.ts`（796 行）源码逐行阅读。
+> Based on a line-by-line source read of `packages/agent/src/agent-loop.ts` (796 lines).
 
 ```mermaid
 flowchart TD
     START["runAgentLoop()"] --> INI["runLoop()"]
-    INI --> STEER["读取 steering messages<br/>（用户等待时输入的）"]
-    STEER --> OUTER{"外层 while(true)"}
-    OUTER --> INNER{"内层 while<br/>hasMoreToolCalls || pendingMessages"}
-    INNER --> LLM["调用 LLM 流式"]
-    LLM --> TOOLS["执行工具批"]
+    INI --> STEER["read steering messages<br/>(typed by the user while waiting)"]
+    STEER --> OUTER{"outer while(true)"}
+    OUTER --> INNER{"inner while<br/>hasMoreToolCalls || pendingMessages"}
+    INNER --> LLM["call LLM streaming"]
+    LLM --> TOOLS["execute tool batch"]
     TOOLS --> TERM["hasMoreToolCalls = !executedToolBatch.terminate"]
     TERM --> HOOK{"shouldStopAfterTurn?()"}
-    HOOK -->|否| STEER2["重新读取 steering messages"]
+    HOOK -->|no| STEER2["re-read steering messages"]
     STEER2 --> INNER
-    HOOK -->|是| BREAK["跳出内层"]
-    BREAK --> FOLLOW["读取 follow-up messages"]
+    HOOK -->|yes| BREAK["break out of inner loop"]
+    BREAK --> FOLLOW["read follow-up messages"]
     FOLLOW --> OUTER
 
     style OUTER fill:#003A70,color:#fff
@@ -1151,27 +1208,27 @@ flowchart TD
     style HOOK fill:#C8102E,color:#fff
 ```
 
-**双层循环的职责划分**：
+**Division of responsibilities between the two loop layers**:
 
-| 层 | 条件 | 职责 |
+| Layer | Condition | Responsibility |
 |---|---|---|
-| **外层** `while(true)` | — | 消费 follow-up 消息队列 |
-| **内层** `while(hasMoreToolCalls \|\| pendingMessages)` | 有工具调用 或 有待处理 steering | 消费工具调用 + steering 消息 |
+| **Outer** `while(true)` | — | Consumes the follow-up message queue |
+| **Inner** `while(hasMoreToolCalls \|\| pendingMessages)` | Tool calls exist, or there is pending steering | Consumes tool calls + steering messages |
 
-**Steering vs Follow-up**：
+**Steering vs follow-up**:
 
 ```typescript
-// 内层开始前读 steering（用户可能在等待时输入了）
+// read steering before the inner loop starts (user may have typed while waiting)
 let pendingMessages = (await config.getSteeringMessages?.()) || []
 
-// 内层每轮工具执行后再读一次
+// re-read after each tool execution round in the inner loop
 pendingMessages = (await config.getSteeringMessages?.()) || []
 
-// 外层读 follow-up
+// outer loop reads follow-up
 const followUpMessages = (await config.getFollowUpMessages?.()) || []
 ```
 
-**terminate 的 AND 聚合**（`agent-loop.ts:583`，已亲自验证）：
+**AND aggregation of terminate** (`agent-loop.ts:583`, personally verified):
 
 ```typescript
 function shouldTerminateToolBatch(finalizedCalls): boolean {
@@ -1180,129 +1237,129 @@ function shouldTerminateToolBatch(finalizedCalls): boolean {
 }
 ```
 
-> **对比 DSH**：Pi 用 **AND 聚合**（**全部**工具 `terminate: true` 才终止 turn）；DSH 用 **OR 聚合**（**任一**工具 `concludesTurn=true` 即软收口）。Pi 更保守——只有当所有工具都同意结束才结束。
+> **Compared with DSH**: Pi uses **AND aggregation** (**all** tools must set `terminate: true` before the turn terminates); DSH uses **OR aggregation** (**any single** tool with `concludesTurn=true` produces a soft conclusion). Pi is more conservative — the turn only ends when every tool agrees to end.
 
-**Hook 点清单**（`getSteeringMessages` / `getFollowUpMessages` / `shouldStopAfterTurn` 是三个核心回调）：
+**Hook point inventory** (`getSteeringMessages` / `getFollowUpMessages` / `shouldStopAfterTurn` are the three core callbacks):
 
-| Hook | 作用 |
+| Hook | Purpose |
 |---|---|
-| `getSteeringMessages()` | 获取中途插入的消息（不打断当前工作）|
-| `getFollowUpMessages()` | 获取 turn 结束后的后续消息 |
-| `shouldStopAfterTurn()` | turn 结束后决定是否停止 |
-| `session_before_compact` | 可取消或**替换**整个压缩结果 |
-| `input` / `before_agent_start` / `tool_call` / `turn_end` / `agent_end` | 25+ 细粒度控制点 |
+| `getSteeringMessages()` | Retrieve messages inserted mid-run (without interrupting current work) |
+| `getFollowUpMessages()` | Retrieve follow-up messages after a turn ends |
+| `shouldStopAfterTurn()` | Decide whether to stop after a turn ends |
+| `session_before_compact` | Can cancel or **replace** the entire compaction result |
+| `input` / `before_agent_start` / `tool_call` / `turn_end` / `agent_end` | 25+ fine-grained control points |
 
-- 树状会话：支持分支派生并行试验
-- 全事件流（`agent_start` / `turn_start` / `message_update` / `tool_execution_*`）经 `EventStream` 推送
+- Tree-structured sessions: supports branch derivation for parallel experiments
+- Full event stream (`agent_start` / `turn_start` / `message_update` / `tool_execution_*`) pushed via `EventStream`
 
 
 ---
 
-### 确定性 Harness：高风险场景的四件套
+### Deterministic harness: the four-piece toolkit for high-stakes scenarios
 
-**核心矛盾**：LLM 概率性输出 vs 结论必须确定性。
+**Core tension**: the LLM's probabilistic output vs conclusions that must be deterministic.
 
-**四件套**：
+**The four pieces**:
 
-| 设计 | 说明 | 效果 |
+| Design | Description | Effect |
 |---|---|---|
-| 阶段化编排 | 9 阶段流水线 + goto 标签 | 路径确定 |
-| 全链路留痕 | FlowTracer | debug 关闭零开销 |
-| 提前短路 | IsFinal 声明式列表 | 2-3 分钟 → 20-40 秒 |
-| 统一网关 | MD5 签名 + Redis 100h 幂等 | 可重试不重复 |
+| Phased orchestration | 9-stage pipeline + goto labels | Deterministic path |
+| End-to-end tracing | FlowTracer | Zero overhead when debug is off |
+| Early short-circuit | IsFinal declarative list | 2-3 minutes → 20-40 seconds |
+| Unified gateway | MD5 signature + Redis 100h idempotency | Retriable without duplication |
 
-**分级置信度**：L1 模型直出 / L2 模型建议+人拍板 / L3 只给 SOP 禁自动执行
+**Tiered confidence**: L1 model emits directly / L2 model suggests + human signs off / L3 SOP only, automatic execution forbidden
 
 ---
 
-## **3. Multi-Agent（多Agent编排）**
+## **3. Multi-Agent (multi-agent orchestration)**
 
-​	多Agent编排的核心是**将复杂任务拆解为多个子任务，分配给多个Agent协作完成**。
+​	The core of multi-agent orchestration is **breaking a complex task into multiple subtasks and assigning them to multiple agents to complete collaboratively**.
 
-### Claude Code 内置 Agent 与对抗验证（源码级）
+### Claude Code built-in agents and adversarial verification (source-level)
 
-> 基于 `src/tools/AgentTool/` 源码逐行阅读。
+> Based on a line-by-line source read of `src/tools/AgentTool/`.
 
 ```mermaid
 flowchart TD
-    subgraph BUILTIN["6 个内置 Agent（builtInAgents.ts）"]
+    subgraph BUILTIN["6 built-in Agents (builtInAgents.ts)"]
         GP["General-Purpose<br/>tools: '*'"]
-        SL["Statusline Setup<br/>仅 Read + Edit"]
-        EX["Explore（只读）<br/>Haiku · omitClaudeMd"]
-        PL["Plan（只读）<br/>继承父模型 · 四步法"]
-        CG["Code Guide<br/>Haiku 查官方文档"]
-        VF["★ Verification<br/>红蓝对抗"]
+        SL["Statusline Setup<br/>Read + Edit only"]
+        EX["Explore (read-only)<br/>Haiku · omitClaudeMd"]
+        PL["Plan (read-only)<br/>inherits parent model · four-step method"]
+        CG["Code Guide<br/>Haiku looks up official docs"]
+        VF["★ Verification<br/>red/blue adversarial"]
     end
 
-    subgraph GATE["Feature Gate 控制"]
+    subgraph GATE["Feature Gate control"]
         F1["BUILTIN_EXPLORE_PLAN_AGENTS"]
         F2["VERIFICATION_AGENT<br/>+ tengu_hive_evidence"]
         F3["COORDINATOR_MODE<br/>→ getCoordinatorAgents()"]
     end
 
-    MAIN["主 Agent"] -->|Task tool| BUILTIN
-    GATE -.控制.-> BUILTIN
+    MAIN["Main Agent"] -->|Task tool| BUILTIN
+    GATE -.controls.-> BUILTIN
 
     style VF fill:#C8102E,color:#fff
     style MAIN fill:#003A70,color:#fff
 ```
 
-#### Verification Agent：红蓝对抗设计（`verificationAgent.ts`）
+#### Verification Agent: red-vs-blue adversarial design (`verificationAgent.ts`)
 
-系统提示词的开篇即是核心哲学：
+The opening of the system prompt is the core philosophy:
 
 > **"Your job is not to confirm the implementation works — it's to try to break it."**
 
-**两个被明确记录的失败模式**：
+**Two explicitly documented failure modes**:
 
-| 失败模式 | 表现 |
+| Failure mode | Manifestation |
 |---|---|
-| **验证回避**（Verification Avoidance）| 面对检查时找理由不运行——读代码、叙述"我会测什么"、写 PASS、继续 |
-| **被前 80% 迷惑**（Seduced by the first 80%）| 看到漂亮的 UI 或通过的测试就倾向放行，没注意到一半按钮无响应、刷新后状态丢失、后端坏输入崩溃 |
+| **Verification Avoidance** | Finding reasons not to run the check — reading code, narrating "what I would test", writing PASS, moving on |
+| **Seduced by the first 80%** | Inclined to pass something with a pretty UI or green tests, missing that half the buttons don't respond, state is lost after refresh, or the backend crashes on bad input |
 
-**关键技术约束**：
+**Key technical constraints**:
 
 ```typescript
-// 严格禁止修改项目
+// Strictly forbidden to modify the project
 === CRITICAL: DO NOT MODIFY THE PROJECT ===
-- 禁止创建/修改/删除项目目录中的任何文件
-- 禁止安装依赖
-- 禁止 git 写操作
-- 可以写临时测试脚本到 /tmp，但用完清理
+- Do not create/modify/delete any file in the project directory
+- Do not install dependencies
+- No git write operations
+- You may write temporary test scripts to /tmp, but clean up after use
 
-// 防造假：调用方可重新运行命令抽查
+// Anti-faking: the caller may re-run your commands to spot-check
 "The caller may spot-check your commands by re-running them —
  if a PASS step has no command output, or output that doesn't match
  re-execution, your report gets rejected."
 ```
 
-**按变更类型自适应策略**（10 类）：
+**Adaptive strategy by change type** (10 types):
 
-| 变更类型 | 验证策略 |
+| Change type | Verification strategy |
 |---|---|
-| 前端 | 启动 dev server → 检查浏览器自动化工具（mcp__claude-in-chrome__* / mcp__playwright__*）并**实际使用** → curl 子资源（HTML 可能 200 但引用的资源全挂）→ 跑前端测试 |
-| 后端/API | 启动 server → curl 端点 → **验证响应形状**（不只是状态码）→ 测错误处理 → 边界情况 |
-| CLI/脚本 | 代表输入运行 → 验证 stdout/stderr/exit code → 边界输入（空/畸形/边界）→ 验证 --help |
-| 基础设施/配置 | 语法校验 → dry-run（terraform plan / kubectl --dry-run / nginx -t）→ 检查 env/secret **实际被引用而非仅定义** |
-| Bug 修复 | 复现原 bug → 验证修复 → 回归测试 → 检查相关功能副作用 |
-| 移动端 | clean build → 装到模拟器 → dump accessibility tree → 按 label 找元素 → 点击 → 重新 dump 验证 |
-| 数据库迁移 | up → 验证 schema 符合意图 → down（可逆性）→ **对已有数据测，而非空库** |
-| 重构 | 现有测试套件**必须原样通过** → diff 公开 API 表面 → 抽查行为一致 |
+| Frontend | Start the dev server → check for browser automation tools (mcp__claude-in-chrome__* / mcp__playwright__*) and **actually use them** → curl sub-resources (the HTML may return 200 while every referenced asset is broken) → run frontend tests |
+| Backend/API | Start the server → curl endpoints → **validate the response shape** (not just status codes) → test error handling → boundary cases |
+| CLI/scripts | Run with representative inputs → verify stdout/stderr/exit code → boundary inputs (empty/malformed/edge) → verify --help |
+| Infrastructure/config | Syntax validation → dry-run (terraform plan / kubectl --dry-run / nginx -t) → check that env/secrets are **actually referenced, not just defined** |
+| Bug fixes | Reproduce the original bug → verify the fix → regression tests → check side effects on related functionality |
+| Mobile | clean build → install on an emulator → dump the accessibility tree → find elements by label → tap → re-dump to verify |
+| Database migrations | up → verify the schema matches intent → down (reversibility) → **test against existing data, not an empty database** |
+| Refactoring | the existing test suite **must pass unchanged** → diff the public API surface → spot-check behavioral consistency |
 
-**自我合理化识别**（这段极其精彩）：
+**Recognizing self-rationalization** (this passage is brilliant):
 
 ```
 You will feel the urge to skip checks. These are the exact excuses
 you reach for — recognize them and do the opposite:
-- "The code looks correct based on my reading" — 读代码不是验证。运行它。
-- "The implementer's tests already pass" — 实现者也是 LLM。独立验证。
-- "This is probably fine" — probably 不是 verified。运行它。
-- "I don't have a browser" — 你真的检查过 mcp__claude-in-chrome__* 吗？
-- "This would take too long" — 这不是你该决定的。
+- "The code looks correct based on my reading" — reading code is not verification. Run it.
+- "The implementer's tests already pass" — the implementer is also an LLM. Verify independently.
+- "This is probably fine" — probably is not verified. Run it.
+- "I don't have a browser" — did you actually check mcp__claude-in-chrome__*?
+- "This would take too long" — that is not your call.
 If you catch yourself writing an explanation instead of a command, stop. Run the command.
 ```
 
-**发 PASS 前必须有一个对抗性探测**（`BEFORE ISSUING PASS`）：
+**One adversarial probe is mandatory before issuing PASS** (`BEFORE ISSUING PASS`):
 
 ```
 Your report must include at least one adversarial probe you ran
@@ -1312,95 +1369,95 @@ If all your checks are "returns 200" or "test suite passes",
 you have confirmed the happy path, not verified correctness.
 ```
 
-**对抗性探测类型**：
-- **并发**：并行请求 create-if-not-exists 路径 → 重复会话？丢失写入？
-- **边界值**：0、-1、空串、超长字符串、unicode、MAX_INT
-- **幂等性**：同一 mutating 请求跑两次 → 重复创建？错误？正确的 no-op？
-- **孤儿操作**：delete/reference 不存在的 ID
+**Adversarial probe types**:
+- **Concurrency**: parallel requests to a create-if-not-exists path → duplicate sessions? Lost writes?
+- **Boundary values**: 0, -1, empty string, overlong strings, unicode, MAX_INT
+- **Idempotency**: run the same mutating request twice → duplicate creation? Error? A correct no-op?
+- **Orphan operations**: delete/reference a nonexistent ID
 
-**发 FAIL 前的反向检查**（避免误报）：
-- 是否已在别处处理（上游校验 / 下游错误恢复）
-- 是否有意为之（CLAUDE.md / 注释 / commit message 说明）
-- 是否不可操作（真实限制但破坏外部契约无法修复）→ 记为 observation 而非 FAIL
+**Reverse checks before issuing FAIL** (avoid false positives):
+- Whether it is already handled elsewhere (upstream validation / downstream error recovery)
+- Whether it is intentional (documented in CLAUDE.md / comments / commit message)
+- Whether it is non-actionable (a real limitation that breaks an external contract and cannot be fixed) → record it as an observation, not a FAIL
 
-> **设计精髓**：这个 Agent 的存在本身是对"自我评估"缺陷的工程化修复——LLM 评估自己的工作总是"自信地赞美"，所以把验证者独立出来，并给它一套**识别自身逃避倾向的元认知指令**。
+> **Design essence**: the very existence of this agent is an engineering fix for the "self-assessment" flaw — an LLM evaluating its own work always "confidently praises" it, so the verifier is split out and given a set of **metacognitive instructions for recognizing its own avoidance tendencies**.
 
-#### Task 工具的运行时设计（`AgentTool.tsx` 1398 行）
+#### Runtime design of the Task tool (`AgentTool.tsx`, 1398 lines)
 
-**输入 Schema**（`baseInputSchema` + 多 Agent 扩展）：
+**Input schema** (`baseInputSchema` + multi-agent extensions):
 
 ```typescript
 {
-  description: string        // 3-5 词任务描述
-  prompt: string             // 任务内容
-  subagent_type?: string     // Agent 类型
-  model?: 'sonnet'|'opus'|'haiku'  // 模型覆盖（优先于 agent 定义）
-  run_in_background?: boolean      // 异步执行，完成时通知
-  // 多 Agent 扩展
-  name?: string              // 命名，可通过 SendMessage({to: name}) 寻址
-  team_name?: string         // 团队名
-  mode?: permissionMode      // 权限模式（如 "plan" 需计划审批）
-  isolation?: 'worktree'|'remote'  // 隔离模式
-  cwd?: string               // 工作目录覆盖
+  description: string        // 3-5 word task description
+  prompt: string             // task content
+  subagent_type?: string     // agent type
+  model?: 'sonnet'|'opus'|'haiku'  // model override (takes precedence over agent definition)
+  run_in_background?: boolean      // run asynchronously, notify on completion
+  // multi-agent extensions
+  name?: string              // name; addressable via SendMessage({to: name})
+  team_name?: string         // team name
+  mode?: permissionMode      // permission mode (e.g. "plan" requires plan approval)
+  isolation?: 'worktree'|'remote'  // isolation mode
+  cwd?: string               // working directory override
 }
 ```
 
-**同步 → 异步的 6 个触发条件**（`AgentTool.tsx:567`）：
+**Six trigger conditions for sync → async** (`AgentTool.tsx:567`):
 
 ```typescript
 const shouldRunAsync = (
-  run_in_background === true ||        // ① 显式请求
-  selectedAgent.background === true || // ② Agent 定义声明
-  isCoordinator ||                     // ③ 协调者模式
-  forceAsync ||                        // ④ Fork subagent 实验
-  assistantForceAsync ||               // ⑤ KAIROS assistant 模式
-  (proactiveModule?.isProactiveActive() ?? false)  // ⑥ 主动模式
+  run_in_background === true ||        // ① explicit request
+  selectedAgent.background === true || // ② declared in agent definition
+  isCoordinator ||                     // ③ coordinator mode
+  forceAsync ||                        // ④ Fork subagent experiment
+  assistantForceAsync ||               // ⑤ KAIROS assistant mode
+  (proactiveModule?.isProactiveActive() ?? false)  // ⑥ proactive mode
 ) && !isBackgroundTasksDisabled
 ```
 
-> **为什么 assistant 模式强制全部异步**（源码注释）：同步 subagent 会**保持主循环的 turn 打开直到完成**——daemon 的 `inputQueue` 会积压；首个超时的 cron catch-up 在 spawn 时，会变成 **N 个串行 subagent turn 阻塞所有用户输入**。
+> **Why assistant mode forces everything async** (source comment): a synchronous subagent **keeps the main loop's turn open until it finishes** — the daemon's `inputQueue` backs up; when the first overdue cron catch-up spawns, it turns into **N serial subagent turns blocking all user input**.
 
-> **为什么 fork 实验强制全部异步**：为了统一 `<task-notification>` 交互模型——不只 fork spawn，所有 spawn 都走异步。
+> **Why the fork experiment forces everything async**: to unify the `<task-notification>` interaction model — not just fork spawns; all spawns go async.
 
-**后台 Agent 的 abort 语义**（`AgentTool.tsx:694-696`）：
+**Abort semantics of background agents** (`AgentTool.tsx:694-696`):
 
 ```typescript
-// 不链接父的 abort controller —— 背景 agent 应在用户按 ESC
-// 取消主线程时存活。它们通过 chat:killAgents 显式杀死。
+// Do not link the parent abort controller — background agents should survive
+// when the user cancels the main thread with ESC. They are killed explicitly via chat:killAgents.
 ```
 
-**Worktree 隔离的清理策略**（`AgentTool.tsx:644-685`）：
+**Cleanup strategy for worktree isolation** (`AgentTool.tsx:644-685`):
 
 ```mermaid
 flowchart TD
-    A["Agent 完成"] --> B{"是 hook-based worktree?"}
-    B -- 是 --> C["总是保留<br/>（无法检测 VCS 变更）"]
-    B -- 否 --> D{"有变更?"}
-    D -- 有 --> E["保留 worktree<br/>返回路径给父"]
-    D -- 无 --> F["删除 worktree + 清 metadata<br/>（防 resume 指向已删目录）"]
+    A["Agent finished"] --> B{"hook-based worktree?"}
+    B -- yes --> C["always keep<br/>(cannot detect VCS changes)"]
+    B -- no --> D{"has changes?"}
+    D -- yes --> E["keep worktree<br/>return path to parent"]
+    D -- no --> F["delete worktree + clear metadata<br/>(prevents resume pointing at deleted dir)"]
 
     style C fill:#FFF3E0
     style E fill:#E3F2FD
     style F fill:#E8F5E9
 ```
 
-**Fork 路径的 Prompt Cache 保护**（`AgentTool.tsx:610-633`）：
+**Prompt cache protection on the fork path** (`AgentTool.tsx:610-633`):
 
 ```typescript
-// Fork 路径：传父的 system prompt AND 父的精确 tool 数组（cache-identical prefix）。
-// workerTools 在 permissionMode 'bubble' 下重建，其 tool-def 序列化与父不同，
-// 会在第一个不同的 tool 处破坏 cache。
+// Fork path: pass the parent system prompt AND the parent's exact tool array (cache-identical prefix).
+// workerTools is rebuilt under permissionMode 'bubble'; its tool-def serialization differs from the parent's,
+// which would break the cache at the first differing tool.
 override: isForkPath ? { systemPrompt: forkParentSystemPrompt } : ...,
 availableTools: isForkPath ? toolUseContext.options.tools : workerTools,
-useExactTools: true,  // 继承父的 thinkingConfig 和 isNonInteractiveSession
+useExactTools: true,  // inherits parent thinkingConfig and isNonInteractiveSession
 ```
 
-> **核心权衡**：worker 需要自己的 tool pool（独立权限），但 fork 需要 cache-identical prefix（省 token）。两者冲突时，fork 路径选择**继承父的精确 tools** 并放弃独立权限——因为 cache 命中省下的钱比权限隔离更重要。
+> **Core trade-off**: the worker needs its own tool pool (independent permissions), but a fork needs a cache-identical prefix (saves tokens). When the two conflict, the fork path chooses to **inherit the parent's exact tools** and gives up independent permissions — because the money saved by cache hits matters more than permission isolation.
 
-**Name → agentId 路由注册**（`AgentTool.tsx:700-712`）：
+**Name → agentId routing registration** (`AgentTool.tsx:700-712`):
 
 ```typescript
-// 在 registerAsyncAgent 之后注册，避免 spawn 失败留下 stale entry
+// register after registerAsyncAgent, so a failed spawn doesn't leave a stale entry
 if (name) {
   rootSetAppState(prev => {
     const next = new Map(prev.agentNameRegistry)
@@ -1410,11 +1467,11 @@ if (name) {
 }
 ```
 
-**Worktree 路径转换通知**（`AgentTool.tsx:595-601`）：
+**Worktree path-transition notice** (`AgentTool.tsx:595-601`):
 
 ```typescript
-// Fork + worktree: 注入 notice 告诉 child 转换路径并重读可能过期的文件。
-// 附加在 fork directive 之后，作为 child 看到的最新指导。
+// Fork + worktree: inject a notice telling the child to switch paths and re-read possibly stale files.
+// Appended after the fork directive, as the latest guidance the child sees.
 if (isForkPath && worktreeInfo) {
   promptMessages.push(createUserMessage({
     content: buildWorktreeNotice(getCwd(), worktreeInfo.worktreePath)
@@ -1424,47 +1481,47 @@ if (isForkPath && worktreeInfo) {
 
 ---
 
-### 工程实现核心要点
+### Core points of the engineering implementation
 
 
-1. **将SubAgent封装为标准工具**（`task`），主Agent无特殊逻辑
-2. **独立上下文与工具集**，避免污染和权限越界
-3. **通信机制**：父子用同步请求-响应；对等用事件总线或文件邮箱
-4. **并行/串行控制**：`Promise.all` 扇出 + DAG工作流
-5. **状态持久化**：checkpoint每个子任务状态，支持中断恢复
-6. **超时与错误处理**：每个SubAgent独立超时，失败后主Agent可重新规划
+1. **Wrap the subagent as a standard tool** (`task`); the main agent has no special logic
+2. **Independent context and tool set**, avoiding pollution and permission overreach
+3. **Communication mechanism**: parent-child uses synchronous request-response; peers use an event bus or a file mailbox
+4. **Parallel/serial control**: `Promise.all` fan-out + DAG workflows
+5. **State persistence**: checkpoint each subtask's state, supporting interruption and resume
+6. **Timeout and error handling**: an independent timeout per subagent; on failure the main agent can re-plan
 
-​	多Agent协作模式如下，生产环境最常用的是**任务委派**，易于实现且可控。：
+​	The multi-agent collaboration patterns are listed below; production environments most commonly use **task delegation**, which is easy to implement and controllable:
 
-| 模式         | 架构                          | 适用场景                   | 工程复杂度 |
+| Pattern | Architecture | Applicable scenarios | Engineering complexity |
 | :----------- | :---------------------------- | :------------------------- | :--------- |
-| **任务委派** | 主Agent → SubAgent → 结果返回 | 任务可自然拆解、子任务隔离 | 低         |
-| **对等网状** | Agent间点对点通信，无中心     | 多角色辩论、分布式信息收集 | 高         |
-| **Swarm**    | 动态角色、基于信号触发        | 灵活探索、涌现式协作       | 高         |
+| **Task delegation** | Main agent → subagent → result returned | Task decomposes naturally, subtasks isolated | Low |
+| **Peer mesh** | Point-to-point communication between agents, no center | Multi-role debate, distributed information gathering | High |
+| **Swarm** | Dynamic roles, signal-triggered | Flexible exploration, emergent collaboration | High |
 
-### 任务委派的工程实现
+### Engineering implementation of task delegation
 
-#### 将SubAgent封装为标准工具（Task Tool）
+#### Wrapping the subagent as a standard tool (Task Tool)
 
-​	主Agent无需特殊逻辑，只需将“启动SubAgent”封装成一个普通工具，调用方式与读写文件无异。
+​	The main agent needs no special logic; just wrap "launch a subagent" into an ordinary tool, invoked no differently from reading or writing files.
 
 ```typescript
-// 任务委派的Agent Tool伪代码
-// 工具定义（JSON Schema）
+// Agent Tool pseudocode for task delegation
+// Tool definition (JSON Schema)
 const taskTool = {
   name: 'task',
-  description: '委派一个子任务给专门的SubAgent',
+  description: 'Delegate a subtask to a specialized SubAgent',
   parameters: {
     type: 'object',
     properties: {
       subagent_type: { type: 'string', enum: ['code-explorer', 'test-generator'] },
       prompt: { type: 'string' },
-      context: { type: 'object' }   // 可选，传递给子Agent的上下文
+      context: { type: 'object' }   // optional, context passed to the subagent
     }
   }
 };
 
-// 工具执行器
+// Tool executor
 async function executeTask(args: TaskArgs): Promise<TaskResult> {
   const subAgent = await createSubAgent(args.subagent_type);
   subAgent.setInitialContext(args.context);
@@ -1475,38 +1532,38 @@ async function executeTask(args: TaskArgs): Promise<TaskResult> {
 
 
 
-#### SubAgent的独立生命周期
+#### Independent Lifecycle of a SubAgent
 
-​	每个 SubAgent 拥有**独立的会话上下文、工具集、Token 预算和退出条件**。由于 SubAgent 的执行流程与主 Agent 完全一致（同样包含 Agent Loop、上下文组装、工具调用、压缩与退出检查等完整生命周期），生产环境通常将 SubAgent 设计为**可异步非阻塞执行的独立任务**：
+	Each SubAgent has **its own session context, tool set, token budget, and exit conditions**. Since a SubAgent's execution flow is identical to the main Agent's (including the full lifecycle of the Agent Loop, context assembly, tool calls, compaction, and exit checks), production systems typically design SubAgents as **independent tasks that run asynchronously and non-blockingly**:
 
-- 主 Agent 调用 SubAgent 时，通过 `Task` 工具发起一次**异步等待**（`await task.execute()`），当前主循环挂起，底层使用 Promise 等待 SubAgent 完成；
+- When the main Agent invokes a SubAgent, it issues an **async wait** through the `Task` tool (`await task.execute()`); the current main loop suspends, with a Promise underneath waiting for the SubAgent to finish;
 
-- 支持**并发委派**：主 Agent 可同时启动多个 SubAgent（如 `Promise.all`），并行执行多个隔离的子任务，待全部结束后聚合结果；
+- Supports **concurrent delegation**: the main Agent can launch multiple SubAgents at once (e.g. `Promise.all`), running multiple isolated subtasks in parallel and aggregating results once all of them finish;
 
-- SubAgent 的执行可被**中断**：主 Agent 的 `AbortSignal` 会传播给所有正在运行的 SubAgent，使其能够及时停止并清理资源；
+- SubAgent execution can be **interrupted**: the main Agent's `AbortSignal` propagates to all running SubAgents so they can stop in time and clean up resources;
 
-- 每个 SubAgent 拥有独立的**超时控制**（如 60 秒），超时后自动终止，并向主 Agent 返回部分结果或错误摘要。
+- Each SubAgent has independent **timeout control** (e.g. 60 seconds); on timeout it terminates automatically and returns partial results or an error summary to the main Agent.
 
   
 
-#### 上下文隔离
+#### Context Isolation
 
-​	为防止污染主Agent上下文，SubAgent的结果**只返回摘要**，完整日志单独存储。
+	To avoid polluting the main Agent's context, a SubAgent **returns only a summary**; full logs are stored separately.
 
 
 
-### Agent通信机制
+### Agent Communication Mechanism
 
-#### 父子通信：请求-响应式
+#### Parent-Child Communication: Request-Response
 
-​	父Agent发起任务，等待子Agent完成，结果带回。这是最简单的模式，无需额外通信设施。
+	The parent Agent dispatches a task, waits for the child Agent to finish, and gets the results back. This is the simplest pattern and requires no extra communication infrastructure.
 
-#### 对等通信：消息总线
+#### Peer-to-Peer Communication: Message Bus
 
-​	需要Agent间点对点协作时，引入内存事件总线或基于文件的邮箱。
+	When point-to-point collaboration between Agents is needed, introduce an in-memory event bus or a file-based mailbox.
 
 ```typescript
-// Agent通信-内存事件总线通信伪代码
+// Agent communication - in-memory event bus pseudocode
 class EventBus {
   private subscribers = new Map<string, Set<(data: any) => void>>();
   
@@ -1520,24 +1577,24 @@ class EventBus {
   }
 }
 
-// Agent A 发送消息
+// Agent A sends a message
 eventBus.publish('agentB.inbox', { from: 'A', content: 'need data' });
 
-// Agent B 订阅自己的邮箱
+// Agent B subscribes to its own mailbox
 eventBus.subscribe('agentB.inbox', (msg) => {
-  // 处理消息，可能触发Agent B的主动行为
+  // handle the message, possibly triggering Agent B's proactive behavior
 });
 ```
 
 
 
 ```typescript
-// Agent通信-基于文件的邮箱通信伪代码
-// 发送方
+// Agent communication - file-based mailbox pseudocode
+// Sender
 const inboxPath = `~/.agent/inboxes/${targetAgentId}`;
 await fs.writeFile(`${inboxPath}/${uuid()}.json`, JSON.stringify(message));
 
-// 接收方轮询
+// Receiver polling
 setInterval(async () => {
   const files = await fs.readdir(inboxPath);
   for (const file of files) {
@@ -1550,23 +1607,23 @@ setInterval(async () => {
 
 
 
-### 并行与串行编排
+### Parallel and Serial Orchestration
 
-1. **扇出-扇入（并行委派）**
+1. **Fan-out / Fan-in (parallel delegation)**
 
-主Agent同时启动多个SubAgent，等待所有完成。
+The main Agent launches multiple SubAgents at once and waits for all of them to complete.
 
-2. **DAG工作流（串行+并行混合）**
+2. **DAG workflow (serial + parallel hybrid)**
 
-复杂任务可构建有向无环图，按拓扑顺序执行。
+Complex tasks can be modeled as a directed acyclic graph and executed in topological order.
 
 ```typescript
-// Agent编排-DAG工作流伪代码
+// Agent orchestration - DAG workflow pseudocode
 interface WorkflowNode {
   id: string;
   subagent_type: string;
   prompt: string;
-  depends_on: string[];   // 依赖的节点ID
+  depends_on: string[];   // IDs of the nodes it depends on
 }
 
 async function executeWorkflow(nodes: WorkflowNode[]) {
@@ -1587,7 +1644,7 @@ async function executeWorkflow(nodes: WorkflowNode[]) {
       results.set(node.id, result);
       completed.add(node.id);
     }));
-    // 移除已执行节点
+    // remove executed nodes
     remaining.splice(remaining.indexOf(...ready), ready.length);
   }
   return results;
@@ -1596,99 +1653,98 @@ async function executeWorkflow(nodes: WorkflowNode[]) {
 
 
 
-### 状态追踪与恢复
+### State Tracking and Recovery
 
-1. **子Agent生命周期状态：**
+1. **SubAgent lifecycle states:**
 
-SubAgent一般具有如下生命周期状态：
+A SubAgent generally has the following lifecycle states:
 
 ```typescript
 type SubAgentStatus = 
-  | 'PENDING'     // 已创建，未启动
-  | 'RUNNING'     // 执行中
-  | 'WAITING'     // 等待外部消息（对等协作时）
-  | 'COMPLETED'   // 成功完成
-  | 'FAILED'      // 失败
-  | 'TIMEOUT';    // 超时
+  | 'PENDING'     // created, not started
+  | 'RUNNING'     // executing
+  | 'WAITING'     // waiting for an external message (peer collaboration)
+  | 'COMPLETED'   // completed successfully
+  | 'FAILED'      // failed
+  | 'TIMEOUT';    // timed out
 ```
 
-**子Agent状态流转：**
+**SubAgent state transitions:**
 
 
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDING: 创建子Agent
+    [*] --> PENDING: create subagent
     
-    PENDING --> RUNNING: 启动执行
+    PENDING --> RUNNING: start execution
     
-    RUNNING --> WAITING: 需要外部消息（对等协作）
-    WAITING --> RUNNING: 收到消息
+    RUNNING --> WAITING: needs external message (peer collaboration)
+    WAITING --> RUNNING: message received
     
-    RUNNING --> COMPLETED: 正常执行完成
-    RUNNING --> FAILED: 执行出错
-    RUNNING --> TIMEOUT: 执行超时
+    RUNNING --> COMPLETED: finished normally
+    RUNNING --> FAILED: execution error
+    RUNNING --> TIMEOUT: execution timed out
     
-    WAITING --> TIMEOUT: 等待超时
-    WAITING --> FAILED: 协作失败
+    WAITING --> TIMEOUT: wait timed out
+    WAITING --> FAILED: collaboration failed
     
     COMPLETED --> [*]
     FAILED --> [*]
     TIMEOUT --> [*]
 ```
 
-2. **Checkpoint持久化：**
+2. **Checkpoint persistence:**
 
-   多Agent编排通常执行**长时任务**（分钟到小时级），可能因服务重启、网络中断、用户手动暂停等原因中断。Checkpoint确保：
+   Multi-Agent orchestration usually runs **long-running tasks** (minutes to hours) that may be interrupted by service restarts, network outages, or manual user pauses. Checkpoints ensure:
 
-   - 中断后可从最近状态**恢复**，而非从头开始
+   - After an interruption, execution can **resume** from the latest state instead of starting over
 
-   - 支持**人机协同**：用户暂停、检查中间结果后继续
+   - Support for **human-in-the-loop**: the user can pause, inspect intermediate results, and continue
 
-   - 支持**调试与审计**：回放编排决策过程
+   - Support for **debugging and auditing**: replay the orchestration decision process
 
 
-| 关注点             | 推荐做法                              |
+| Concern                  | Recommended practice                                      |
 | :----------------- | :------------------------------------ |
-| **Checkpoint频率** | 每次状态变更都持久化（同步或异步）    |
-| **存储格式**       | JSON + SQLite，支持事件溯源           |
-| **恢复验证**       | 恢复后校验依赖完整性，处理悬空子Agent |
+| **Checkpoint frequency** | Persist on every state change (sync or async)    |
+| **Storage format**       | JSON + SQLite, supporting event sourcing           |
+| **Recovery validation**  | After recovery, verify dependency integrity and handle dangling SubAgents |
 
-3. **子Agent超时与强制终止：**
+3. **SubAgent timeout and forced termination:**
 
-每个SubAgent应有独立的超时控制。
+Each SubAgent should have independent timeout control.
 
-- 子Agent可能因模型死循环、工具挂起、死锁而无限运行
+- A child Agent may run forever due to model infinite loops, hung tool calls, or deadlocks
 
-- 防止单个子任务耗尽整个编排的资源（Token、时间、金钱）
+- Prevents a single subtask from exhausting the orchestration's resources (tokens, time, money)
 
-- 符合**服务等级协议**（如每个子任务不超过60秒）
+- Complies with **service level agreements** (e.g. each subtask must finish within 60 seconds)
 
   
 
-### 错误处理与降级策略
+### Error Handling and Fallback Strategies
 
-| 失败类型          | 处理策略                                           |
+| Failure type               | Handling strategy                                                     |
 | :---------------- | :------------------------------------------------- |
-| SubAgent 内部错误 | 返回错误摘要给主Agent，主Agent可决定重试或跳过     |
-| SubAgent 超时     | 终止子Agent，返回部分结果（如果有）或标记失败      |
-| 依赖节点失败      | 可配置：停止整个工作流 / 跳过后续 / 使用默认值继续 |
-| 资源耗尽（Token） | 保存checkpoint，请求用户扩容或简化任务             |
-
+| SubAgent internal error | Return an error summary to the main Agent, which can decide to retry or skip     |
+| SubAgent timeout     | Terminate the child Agent and return partial results (if any) or mark it failed      |
+| Dependency node failure      | Configurable: stop the whole workflow / skip downstream nodes / continue with defaults |
+| Resource exhaustion (tokens) | Save a checkpoint and ask the user to expand the budget or simplify the task             |
 
 
 
 ---
 
-### DSH SubAgent：一等 seam + 跨产品互操作
+### DSH SubAgent: First-Class Seam + Cross-Product Interoperability
 
-> 基于 `packages/subagent/subagent/src/index.ts`（515 行）源码阅读。
+> Based on a source-level reading of `packages/subagent/subagent/src/index.ts` (515 lines).
 
-- **6 个 provider**：`spawn`（默认）/ `fork`（继承父日志前缀）/ `acp` / **`claude-code`** / **`codex`** / `dsh-sdk`——**把竞品 CLI 当子代理后端**
-- **持久可续子代理**：`startContinuable()` + 冷恢复（从持久化 session 恢复）
-- **实验性 Agent Teams**：持久花名册 / 任务板 / 邮箱 / 日志，默认限额 8 成员 / 256 任务
+- **6 providers**: `spawn` (default) / `fork` (inherits the parent's log prefix) / `acp` / **`claude-code`** / **`codex`** / `dsh-sdk` — **treating competitor CLIs as subagent backends**
+- **Persistent continuable subagents**: `startContinuable()` + cold recovery (restored from a persisted session)
+- **Experimental Agent Teams**: persistent roster / task board / mailbox / logs, with default limits of 8 members / 256 tasks
 
-**Provider 注册的 fail-loud 契约**（`index.ts:385-400`）：
+**Fail-loud contract for provider registration** (`index.ts:385-400`):
 
 ```typescript
 registerProvider(provider: SubagentProvider): () => void {
@@ -1698,11 +1754,11 @@ registerProvider(provider: SubagentProvider): () => void {
       'DUPLICATE_PROVIDER'
     )
   }
-  // ...返回 disposer 用于 effect 卸载
+  // ...returns a disposer for effect teardown
 }
 ```
 
-**Continuable 能力的强制要求**（`index.ts:456`）：
+**Mandatory requirement for the Continuable capability** (`index.ts:456`):
 
 ```typescript
 if (!provider.contributesContinuableChildren) {
@@ -1713,126 +1769,126 @@ if (!provider.contributesContinuableChildren) {
 }
 ```
 
-> **设计精髓**：`startContinuable` 建立**持久可续子代理**（parent 可在任意时刻发送下一条消息，子代理从持久化 session 冷恢复）。这与 fork 的 one-shot 模式形成对比——一个轻量级（fork 跑一次就结束），一个长期协作（continuable 跑几小时几天）。
+> **Design essence**: `startContinuable` creates **persistent continuable subagents** (the parent can send the next message at any moment, and the subagent cold-recovers from the persisted session). This contrasts with fork's one-shot mode — one is lightweight (fork runs once and ends), the other is long-term collaboration (continuable runs for hours or days).
 
 
 ---
 
-### Multi-Agent 四大协作模式（Workflow / Supervisor / Hierarchical / Swarm）
+### The Four Multi-Agent Collaboration Patterns (Workflow / Supervisor / Hierarchical / Swarm)
 
-![Multi-Agent 编排与通信架构](ref/multi-agent-archify.png)
+![Multi-Agent orchestration and communication architecture](ref/multi-agent-archify.png)
 
-> 🖱️ [交互式版本](diagrams/multi-agent.architecture.html)。三种子代理寿命（独立 / fork / 可续）× 两种通信范式（结构化报告 / Inbox 异步）的编排全景。
+> 🖱️ [Interactive version](diagrams/multi-agent.architecture.html). An orchestration panorama of three subagent lifetimes (independent / fork / continuable) × two communication paradigms (structured reporting / async Inbox).
 
-#### 单 Agent 的三大瓶颈
+#### Three Bottlenecks of a Single Agent
 
-1. 工具太多选择退化（20 个 API → 错误率上升）
-2. 上下文互相污染（一个任务的中间结果干扰另一个）
-3. 一份提示词伺候矛盾角色（发散 vs 严谨）
+1. Too many tools degrade selection (20 APIs → rising error rate)
+2. Cross-contamination of context (intermediate results of one task interfere with another)
+3. One prompt serving contradictory roles (divergence vs rigor)
 
-#### 四大协作模式
+#### The Four Collaboration Patterns
 
-![Multi-Agent 四大协作模式](ref/multi-agent-modes-excalidraw.png)
+![The four Multi-Agent collaboration patterns](ref/multi-agent-modes-excalidraw.png)
 
-| 模式 | 架构 | 适用场景 | 自主性 | 可控性 |
+| Pattern | Architecture | Use cases | Autonomy | Controllability |
 |---|---|---|---|---|
-| **Workflow** | 代码预定义路径 | 报表 ETL、固定审批 | 低 | 高 |
-| **Supervisor** | 中央 Agent 动态拆分 | 深度研究、动态路由 | 中 | 中高 |
-| **Hierarchical** | 多层 Agent 树状 | 大规模协作+失败隔离 | 中高 | 中 |
-| **Swarm** | Agent 间 handoff 接力 | 客服意图多变 | 高 | 低 |
+| **Workflow** | Predefined paths in code | Report ETL, fixed approvals | Low | High |
+| **Supervisor** | Central Agent splits dynamically | Deep research, dynamic routing | Medium | Medium-high |
+| **Hierarchical** | Multi-level Agent tree | Large-scale collaboration + failure isolation | Medium-high | Medium |
+| **Swarm** | Handoff relays between Agents | Customer service with shifting intents | High | Low |
 
-**选型关键**：选了 Swarm 但底层是"调用—返回"，那 Swarm 只是纸面模式。
+**Key to selection**: if you pick Swarm but the underlying layer is "call–return", Swarm is only a paper pattern.
 
-#### 五项目 Multi-Agent 对比
+#### Multi-Agent Comparison Across the Five Projects
 
-| 项目 | SubAgent | 通信 | 上下文隔离 |
+| Project | SubAgent | Communication | Context isolation |
 |---|---|---|---|
-| Claude Code | Task tool + Team swarms | 父子结构化 + SendMessage | 独立 messages + worktree |
-| OpenCode | Actor tool + Inbox | 父子 Future + Inbox | 独立 session |
-| DSH | **6 种 provider**（含竞品适配）| subagent + send_message + report | cordis Scope 树 |
-| Codex | Thread Manager fork | 消息总线 + agent-graph | 共享 FS 但独立会话 |
-| Pi | **无** | — | — |
+| Claude Code | Task tool + Team swarms | Parent-child structured + SendMessage | Independent messages + worktree |
+| OpenCode | Actor tool + Inbox | Parent-child Future + Inbox | Independent sessions |
+| DSH | **6 providers** (including competitor adapters) | subagent + send_message + report | cordis Scope tree |
+| Codex | Thread Manager fork | Message bus + agent-graph | Shared FS but independent sessions |
+| Pi | **None** | — | — |
 
-**四模式在五项目中的真实落地（源码锚定）**——教科书模式与生产实现的对应关系：
+**How the four patterns actually land in the five projects (source-anchored)** — the mapping between textbook patterns and production implementations:
 
-| 模式 | 落地 | 源码证据 | 与教科书定义的偏差 |
+| Pattern | Implementation | Source evidence | Deviation from the textbook definition |
 |---|---|---|---|
-| Workflow | 五项目均无原生实现 | — | 生产 Harness 都押注动态性；固定路径留给外层脚本/CI |
-| Supervisor | Claude Code Task tool | `AgentTool.tsx`：子代理独立 context window 跑完，只把**一份最终报告**作为 tool result 回到父级 | 单向汇报——父级看不到子过程，只看结论 |
-| Hierarchical | Codex Thread Manager | `HashMap<ThreadId, Arc<CodexThread>>`，线程可再 fork（见 §1 Codex 架构） | 树状成立，但平级线程间无直接通信 |
-| Swarm | Claude Code SendMessage | `SendMessageTool` 点对点消息 + `EnterWorktreeTool` 隔离；编排责任完全在模型 | 框架只给手势，不给控制流 |
-| Supervisor×寿命双模 | DSH subagent | `fork`（one-shot）vs `startContinuable`（持久可续，见本章 DSH SubAgent 小节）| 同一系统两种寿命模式，而非二选一 |
+| Workflow | No native implementation in any of the five | — | Production Harnesses all bet on dynamism; fixed paths are left to outer scripts/CI |
+| Supervisor | Claude Code Task tool | `AgentTool.tsx`: the subagent runs to completion in its own context window, and only **a single final report** returns to the parent as the tool result | One-way reporting — the parent never sees the sub-process, only the conclusion |
+| Hierarchical | Codex Thread Manager | `HashMap<ThreadId, Arc<CodexThread>>`; threads can fork further (see §1 Codex architecture) | The tree holds, but peer threads have no direct communication |
+| Swarm | Claude Code SendMessage | `SendMessageTool` point-to-point messages + `EnterWorktreeTool` isolation; orchestration responsibility rests entirely on the model | The framework provides gestures, not control flow |
+| Supervisor × lifetime dual mode | DSH subagent | `fork` (one-shot) vs `startContinuable` (persistent continuable; see the DSH SubAgent section of this chapter) | Two lifetime modes in one system rather than either-or |
 
-三个值得单独说的实现细节：
+Three implementation details worth calling out:
 
-1. **fork 路径是"上下文隔离"的受控例外**（`AgentTool.tsx` 的 fork 分支）：`isForkPath` 下子代理**复制父上下文**继续跑而非从零开始（:332 的 fork-child 检测、:496-497 连 `forkParentSystemPrompt` 都继承）——适合"帮我把当前思路展开"而非"独立完成任务"。
-2. **质检节点用最短寿命实现**（`verificationAgent.ts`）：对抗验证子代理被限 `maxTurns: 1`——单 turn 内完成检查，被拒的工具调用即任务失败（Sonnet 4.6 上 2.79% 的调用会 fallback 到另一个模型重试）。层级模式里的"审核层"不需要长寿命，只需要独立性。
-3. **OpenCode 把子代理做成一等公民**（`opencode/tool/actor.ts`，1017 行）：Actor 注册表 + Inbox 表（fork 专有 DB 表）解耦收发——父级发完消息即可继续自己的循环，结果异步到达 Inbox，由 actor registry 管理等待与唤醒。这是 Swarm 的可控变体：点对点消息存在，但经过持久化中转而非直连。
+1. **The fork path is a controlled exception to "context isolation"** (the fork branch in `AgentTool.tsx`): under `isForkPath` the subagent **copies the parent context** and keeps running rather than starting from scratch (fork-child detection at :332, and :496-497 even inherits `forkParentSystemPrompt`) — suited to "expand my current line of thought" rather than "complete a task independently".
+2. **QA nodes use the shortest possible lifetime** (`verificationAgent.ts`): the adversarial-verification subagent is capped at `maxTurns: 1` — the check must complete within a single turn, and a rejected tool call means task failure (on Sonnet 4.6, 2.79% of calls fall back to another model for a retry). The "review layer" in hierarchical mode needs no long lifetime, only independence.
+3. **OpenCode makes subagents first-class citizens** (`opencode/tool/actor.ts`, 1017 lines): an Actor registry + Inbox table (a fork-specific DB table) decouples sending from receiving — the parent continues its own loop right after sending; results arrive asynchronously in the Inbox, and the actor registry manages waiting and wakeup. This is a controllable variant of Swarm: point-to-point messages exist, but go through persistent mediation rather than a direct connection.
 
 ---
 
-## **4. Context System（上下文系统）**
+## **4. Context System**
 
-​	上下文系统是 Agent 的“工作记忆”，负责在每次 LLM 调用前动态组装上下文，并在 Token 预算内最大化信息密度。
+	The context system is the Agent's "working memory", responsible for dynamically assembling the context before each LLM call and maximizing information density within the token budget.
 
-### System Prompt 的结构化组装
+### Structured Assembly of the System Prompt
 
-#### 为什么需要结构化：静态区和动态区
+#### Why Structure Is Needed: Static and Dynamic Zones
 
-​	LLM 的上下文窗口有限，且部分模型服务商支持**提示词缓存**（Prompt Caching），将不常变化的前缀内容缓存，重复使用，从而降低延迟和成本。因此 System Prompt 必须拆分为**静态区**和**动态区**：
+	LLM context windows are limited, and some model providers support **prompt caching**, where rarely changing prefix content is cached and reused to reduce latency and cost. Therefore the System Prompt must be split into a **static zone** and a **dynamic zone**:
 
-- **静态区**：角色定义、输出格式、工具 Schema、通用规则 —— 极少变化，可被缓存
-- **动态区**：当前时间、用户信息、临时指令、环境变量 —— 每次请求可能不同，放在缓存区之后
+- **Static zone**: role definition, output format, tool schemas, general rules — rarely changes, cacheable
+- **Dynamic zone**: current time, user info, temporary instructions, environment variables — may differ per request, placed after the cached zone
 
-#### 缓存工作原理
+#### How the Cache Works
 
-​	Anthropic API 允许在消息的 `content` 数组中给某个文本块添加 `cache_control` 字段。API 会缓存该块及其之前的所有文本块。后续请求如果**前缀完全相同**，则命中缓存，不计入输入 Token 费用，且响应更快。
+	The Anthropic API lets you add a `cache_control` field to a text block in a message's `content` array. The API caches that block and all preceding blocks. If a subsequent request has an **identical prefix**, it hits the cache, is not billed for input tokens, and responds faster.
 
 ```
-[静态块1] (cache_control) → 静态块2 → 静态块3 → 动态块
+[static block 1] (cache_control) → static block 2 → static block 3 → dynamic block
                 ↑
-           从此处开始缓存（包括之前的）
+           caching starts here (including earlier blocks)
 ```
 
-​	OpenAI 的 prompt caching 机制略有不同：它会自动缓存请求的前缀，无需显式标记。但原则相同：**静态内容放前面，动态内容放后面**。
+	OpenAI's prompt caching works slightly differently: it automatically caches the request prefix with no explicit marking. The principle is the same, though: **static content first, dynamic content last**.
 
-​	因此**静态部分必须连续且位于最前面**，动态部分追加在后面。
+	Therefore the **static part must be contiguous and come first**, with the dynamic part appended after it.
 
-#### 工程实现要点
+#### Engineering Implementation Notes
 
-- 静态部分（角色定义、输出规范、工具 Schema）基本不变，可被 LLM 服务端缓存
-- 动态部分（时间、环境变量、用户实时信息）每次追加在尾部，避免破坏缓存前缀
+- The static part (role definition, output conventions, tool schemas) barely changes and can be cached server-side by the LLM provider
+- The dynamic part (time, environment variables, real-time user info) is appended at the tail each time to avoid breaking the cached prefix
 
 
 
-### 动态上下文注入
+### Dynamic Context Injection
 
-​	动态上下文是指在每次 LLM 调用前，从外部源（文件系统、数据库、运行时状态）获取信息并注入到上下文中。
+	Dynamic context means fetching information from external sources (file system, database, runtime state) before each LLM call and injecting it into the context.
 
-#### 项目级上下文（CLAUDE.md / AGENTS.md）
+#### Project-Level Context (CLAUDE.md / AGENTS.md)
 
-​	Agent 启动时读取项目根目录下的配置文件，注入项目规范、技术栈、常用命令等。
+	At startup, the Agent reads config files from the project root and injects project conventions, tech stack, common commands, and so on.
 
-**作用：**
+**Purpose:**
 
-- 让 Agent 了解项目结构、编码规范、常用脚本、依赖关系等
-- 避免每次对话都重复说明项目背景
-- 可随项目版本控制，团队共享
+- Lets the Agent know the project structure, coding conventions, common scripts, dependencies, and more
+- Avoids re-explaining project background in every conversation
+- Can be version-controlled with the project and shared across the team
 
-​	项目上下文通常放在 System Prompt 的**动态区**（因为可能变化，但变化频率低，也可选择放入静态区尾部）。
+	Project context usually goes in the System Prompt's **dynamic zone** (because it can change, though rarely; alternatively it can go at the tail of the static zone).
 
-#### 对话历史注入
+#### Conversation History Injection
 
-​	对话历史是 Agent 的**短期记忆**，每条消息包含角色、内容、工具调用信息及元数据。
+	Conversation history is the Agent's **short-term memory**; each message carries a role, content, tool call information, and metadata.
 
-#### 工具输出截断与持久化
+#### Tool Output Truncation and Persistence
 
-​	工具输出可能非常大（如读取整个文件），不能直接全部放入上下文。**策略：截断至 Token 上限，完整内容保存到外部存储。**
+	Tool output can be huge (e.g. reading an entire file) and cannot go into the context in full. **Strategy: truncate to the token limit and save the complete content to external storage.**
 
 ```typescript
-// 工具输出截断与持久化伪代码
+// Tool output truncation and persistence pseudocode
 class ToolOutputManager {
-  private readonly MAX_TOOL_OUTPUT_TOKENS = 25000;  // Claude Code 默认值
+  private readonly MAX_TOOL_OUTPUT_TOKENS = 25000;  // Claude Code default
   
   async processToolOutput(rawOutput: string): Promise<string> {
     const tokenCount = await this.countTokens(rawOutput);
@@ -1840,18 +1896,18 @@ class ToolOutputManager {
       return rawOutput;
     }
     
-    // 截断
+    // truncate
     const truncated = await this.truncateToTokens(rawOutput, this.MAX_TOOL_OUTPUT_TOKENS);
     const fullOutputId = uuid();
     
-    // 持久化完整内容
+    // persist the full content
     await this.storage.save(`tool_outputs/${fullOutputId}`, rawOutput);
     
-    // 返回截断内容 + 引用
+    // return truncated content + reference
     return `${truncated}\n\n[Output truncated. Full content saved to ${fullOutputId}]`;
   }
   
-  // 按Token精确截断（使用 tiktoken 或类似库）
+  // truncate precisely by tokens (using tiktoken or a similar library)
   private async truncateToTokens(text: string, limit: number): Promise<string> {
     const encoder = await getEncoder('cl100k_base');
     const tokens = encoder.encode(text);
@@ -1865,40 +1921,40 @@ class ToolOutputManager {
 
 
 
-### 上下文压缩
+### Context Compaction
 
-![上下文压缩决策流水线](ref/compaction-archify.png)
+![Context compaction decision pipeline](ref/compaction-archify.png)
 
-> 🖱️ [交互式版本](diagrams/compaction.workflow.html)。通用压缩决策流水线：事前阈值检查（六项目阈值各异）→ 预压缩 → 摘要生成（选切点）→ 重组上下文 → 压缩后重发；Provider 溢出错误走事后补救支线。
+> 🖱️ [Interactive version](diagrams/compaction.workflow.html). The generic compaction decision pipeline: upfront threshold check (thresholds differ across the six projects) → pre-compaction → summary generation (choosing cut points) → context reassembly → resend after compaction; provider overflow errors take the after-the-fact remediation branch.
 
-​	上下文窗口是 Agent 系统最宝贵的资源之一。当对话历史累积到接近窗口上限时，必须进行压缩。主流压缩技术分为三种：**折叠**、**剪枝（Pruning）** 和 **LLM 智能摘要（Compaction）**。它们各有优劣，通常组合使用。
+	The context window is one of the most precious resources in an Agent system. When conversation history accumulates close to the window limit, compaction becomes necessary. Mainstream compaction techniques fall into three kinds: **folding**, **pruning**, and **LLM-powered summarization (compaction)**. Each has trade-offs, and they are usually combined.
 
-#### Claude Code 五层压缩体系（源码级）
+#### Claude Code's Five-Layer Compaction System (Source-Level)
 
-> 基于 `src/query.ts` + `src/services/compact/` 源码逐行阅读。这才是生产级的真实形态——**不是三选一，而是五层递进 + 响应式兜底**。
+> Based on a line-by-line reading of the `src/query.ts` + `src/services/compact/` sources. This is what production actually looks like — **not a choice of three, but five progressive layers + a reactive fallback**.
 
 ```mermaid
 flowchart TD
-    MSG["上下文累积"] --> L1
+    MSG["context accumulation"] --> L1
 
-    subgraph PROACTIVE["主动压缩（每轮 LLM 调用前）"]
-        L1["① applyToolResultBudget<br/>工具结果大小预算（始终启用）"]
-        L2["② snipCompact<br/>历史裁剪（HISTORY_SNIP）"]
-        L3["③ microcompact<br/>8 种工具结果清空（CACHED_MICROCOMPACT）"]
-        L4["④ contextCollapse<br/>读时投影（CONTEXT_COLLAPSE）"]
-        L5["⑤ autocompact<br/>fork 子代理生成 9 节摘要"]
+    subgraph PROACTIVE["proactive compaction (before each LLM call)"]
+        L1["① applyToolResultBudget<br/>tool result size budget (always on)"]
+        L2["② snipCompact<br/>history pruning (HISTORY_SNIP)"]
+        L3["③ microcompact<br/>clears 8 kinds of tool results (CACHED_MICROCOMPACT)"]
+        L4["④ contextCollapse<br/>read-time projection (CONTEXT_COLLAPSE)"]
+        L5["⑤ autocompact<br/>fork subagent to generate 9-section summary"]
     end
 
-    subgraph REACTIVE["响应式兜底（API 报错后）"]
-        R1["collapse drain<br/>（便宜，保留细粒度）"]
-        R2["reactiveCompact<br/>（完整摘要）"]
-        R3["surface error<br/>禁止 stop hooks"]
+    subgraph REACTIVE["reactive fallback (after API errors)"]
+        R1["collapse drain<br/>(cheap, keeps fine-grained)"]
+        R2["reactiveCompact<br/>(full summary)"]
+        R3["surface error<br/>stop hooks forbidden"]
     end
 
     L1 --> L2 --> L3 --> L4 --> L5
-    L5 -->|压到阈值以下| OK["继续 LLM 调用"]
-    L5 -->|仍超限| API["调用 API"]
-    API -->|413| R1 -->|仍 413| R2 -->|恢复失败| R3
+    L5 -->|below threshold| OK["continue LLM call"]
+    L5 -->|still over limit| API["call API"]
+    API -->|413| R1 -->|still 413| R2 -->|recovery failed| R3
 
     style L1 fill:#E3F2FD
     style L2 fill:#E3F2FD
@@ -1908,17 +1964,17 @@ flowchart TD
     style R3 fill:#C8102E,color:#fff
 ```
 
-**关键设计点**：
+**Key design points**:
 
-| 层 | 技术细节 | 源码位置 |
+| Layer | Technical details | Source location |
 |---|---|---|
-| ① ToolResultBudget | 按消息级别的工具结果大小预算，运行在 microcompact **之前**（cached MC 只按 tool_use_id 操作，从不检查内容，两者不冲突）| `query.ts:379` |
-| ② snipCompact | 返回 `snipTokensFreed` 传给 autocompact，因为 `tokenCountWithEstimation` 看不到 snip 释放的量 | `query.ts:403` |
-| ③ microcompact | 白名单机制，**只清除 8 种工具**的结果 | `microCompact.ts:41-50` |
-| ④ contextCollapse | 读时投影，commit log 回放。**运行在 autocompact 之前**——如果 collapse 已把上下文压到阈值以下，autocompact 变 no-op，保留细粒度上下文而非单个摘要 | `query.ts:441` |
-| ⑤ autocompact | fork 子代理复用主会话 prompt cache（实验证明不共享 cache 时 98% miss，成本 ~38B tok/天）| `compact.ts:435` |
+| ① ToolResultBudget | Message-level budget on tool result sizes, running **before** microcompact (cached MC only operates by tool_use_id and never inspects content, so the two don't conflict) | `query.ts:379` |
+| ② snipCompact | Returns `snipTokensFreed` to pass to autocompact, because `tokenCountWithEstimation` cannot see the amount freed by snips | `query.ts:403` |
+| ③ microcompact | Whitelist mechanism that **clears the results of only 8 tools** | `microCompact.ts:41-50` |
+| ④ contextCollapse | Read-time projection via commit log replay. **Runs before autocompact** — if collapse has already pushed the context below the threshold, autocompact becomes a no-op, preserving fine-grained context instead of a single summary | `query.ts:441` |
+| ⑤ autocompact | The fork subagent reuses the main session's prompt cache (experiments show a 98% miss rate without cache sharing, at a cost of ~38B tok/day) | `compact.ts:435` |
 
-**microcompact 白名单**（`microCompact.ts:41-50`）：
+**The microcompact whitelist** (`microCompact.ts:41-50`):
 
 ```typescript
 const COMPACTABLE_TOOLS = new Set<string>([
@@ -1933,11 +1989,11 @@ const COMPACTABLE_TOOLS = new Set<string>([
 ])
 ```
 
-> 只有这 8 种工具的历史结果会被原地清空为 `[Old tool result content cleared]`。图片统一按 **2000 token** 估算。
+> Only the historical results of these 8 tools are cleared in place as `[Old tool result content cleared]`. Images are uniformly estimated at **2000 tokens**.
 
-#### 压缩摘要 Prompt 的工程设计（`compact/prompt.ts`）
+#### Engineering Design of the Compaction Summary Prompt (`compact/prompt.ts`)
 
-**反工具调用前置声明**（`NO_TOOLS_PREAMBLE`）——必须放**最前面**：
+**Anti-tool-call preamble** (`NO_TOOLS_PREAMBLE`) — must be placed **at the very front**:
 
 ```
 CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.
@@ -1945,45 +2001,45 @@ CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.
 - Tool calls will be REJECTED and will waste your only turn — you will fail the task.
 ```
 
-> **为什么放最前面**：cache-sharing fork 路径继承父会话的完整工具集（cache-key 匹配需要），在 Sonnet 4.6+ adaptive-thinking 模型上，模型有时会无视较弱的末尾指令尝试工具调用。由于 `maxTurns: 1`，被拒的工具调用意味着**没有任何文本输出**→ 掉入 streaming fallback（4.6 上 2.79% vs 4.5 上 0.01%）。
+> **Why at the very front**: the cache-sharing fork path inherits the parent session's full tool set (required for cache-key matching), and on Sonnet 4.6+ adaptive-thinking models the model sometimes ignores the weaker trailing instructions and attempts tool calls. With `maxTurns: 1`, a rejected tool call means **no text output at all** → falling into streaming fallback (2.79% on 4.6 vs 0.01% on 4.5).
 
-**9 节摘要模板**：
+**The 9-section summary template**:
 
-| # | 节名 | 内容 |
+| # | Section | Content |
 |---|---|---|
-| 1 | Primary Request and Intent | 用户所有明确请求和意图 |
-| 2 | Key Technical Concepts | 重要技术概念、框架 |
-| 3 | **Files and Code Sections** | 具体文件与代码段，**含完整代码片段** |
-| 4 | Errors and fixes | 遇到的错误与修复方式（特别是用户反馈）|
-| 5 | Problem Solving | 已解决问题与进行中的排查 |
-| 6 | **All user messages** | **所有**用户消息（非工具结果）|
-| 7 | Pending Tasks | 待办任务 |
-| 8 | Current Work | 摘要请求前正在做的具体工作 |
-| 9 | Optional Next Step | 下一步（须与用户最近请求直接一致）|
+| 1 | Primary Request and Intent | All explicit user requests and intents |
+| 2 | Key Technical Concepts | Key technical concepts and frameworks |
+| 3 | **Files and Code Sections** | Specific files and code segments, **with full code snippets** |
+| 4 | Errors and fixes | Errors encountered and how they were fixed (especially user feedback) |
+| 5 | Problem Solving | Problems solved and investigations in progress |
+| 6 | **All user messages** | **All** user messages (not tool results) |
+| 7 | Pending Tasks | Outstanding tasks |
+| 8 | Current Work | The specific work in progress immediately before the summary request |
+| 9 | Optional Next Step | Next step (must align directly with the user's most recent request) |
 
-**`<analysis>` + `<summary>` 双块结构**：
+**`<analysis>` + `<summary>` two-block structure**:
 
 ```
 <analysis>
-[草稿草稿区 — 按时间顺序逐条分析，提高摘要质量]
+[Draft scratch area — analyze chronologically item by item to improve summary quality]
 </analysis>
 
 <summary>
-[正式摘要]
+[Formal summary]
 </summary>
 ```
 
-> `<analysis>` 是**草稿草稿区**，摘要写完后由 `formatCompactSummary()` **剥离丢弃**——它只提升摘要质量，本身没有信息价值。
+> `<analysis>` is the **draft scratch area**, stripped and discarded by `formatCompactSummary()` once the summary is written — it only improves summary quality and has no informational value itself.
 
-**三种 Prompt 变体**：
+**Three prompt variants**:
 
-| 变体 | 适用 | 特点 |
+| Variant | Applies to | Characteristics |
 |---|---|---|
-| `BASE_COMPACT_PROMPT` | 全量压缩 | 范围是"the conversation" |
-| `PARTIAL_COMPACT_PROMPT` | 部分压缩（from）| 范围是"recent messages" |
-| `PARTIAL_COMPACT_UP_TO_PROMPT` | 部分压缩（up_to）| 摘要放在保留消息**之前**，含 "Context for Continuing Work" 节 |
+| `BASE_COMPACT_PROMPT` | Full compaction | Scope is "the conversation" |
+| `PARTIAL_COMPACT_PROMPT` | Partial compaction (from) | Scope is "recent messages" |
+| `PARTIAL_COMPACT_UP_TO_PROMPT` | Partial compaction (up_to) | Summary placed **before** the retained messages, includes a "Context for Continuing Work" section |
 
-**恢复提示词**（`getCompactUserSummaryMessage`）——`suppressFollowUpQuestions` 时的续跑指令：
+**Resume prompt** (`getCompactUserSummaryMessage`) — the continuation instruction when `suppressFollowUpQuestions` is set:
 
 ```
 Continue the conversation from where it left off without asking the user any further questions.
@@ -1992,340 +2048,340 @@ do not preface with "I'll continue" or similar.
 Pick up the last task as if the break never happened.
 ```
 
-> **精妙之处**：显式禁止"确认摘要"和"我继续"这类客套——避免模型把恢复当成新对话开始。
+> **The subtlety**: it explicitly forbids pleasantries like "acknowledge the summary" and "I'll continue" — preventing the model from treating the resume as the start of a new conversation.
 
-**压缩后的状态恢复**（`compact.ts:517-585`）：
+**Post-compaction state restoration** (`compact.ts:517-585`):
 
 ```mermaid
 flowchart LR
-    C["压缩完成"] --> F["恢复最多 5 个<br/>最近读过的文件<br/>（总预算 50K，单文件 5K）"]
-    F --> S["恢复已调用的 skill<br/>（总 25K，单 skill 5K 截断）"]
-    S --> P["重注入 plan 模式指令"]
-    P --> A["重注入 agent 列表"]
-    A --> M["重注入 MCP 指令"]
-    M --> D["重注入 deferred tools delta"]
+    C["Compaction complete"] --> F["Restore up to 5<br/>recently read files<br/>(total budget 50K, 5K per file)"]
+    F --> S["Restore invoked skills<br/>(total 25K, truncated at 5K per skill)"]
+    S --> P["Re-inject plan mode instructions"]
+    P --> A["Re-inject agent list"]
+    A --> M["Re-inject MCP instructions"]
+    M --> D["Re-inject deferred tools delta"]
 
     style C fill:#003A70,color:#fff
 ```
 
-> **关键**：`sentSkillNames` **故意不重置**——压缩后重注入完整 skill_listing（~4K tokens）是纯 cache_creation，边际收益低；模型仍有 SkillTool schema，且 `invoked_skills` attachment 保留了已用 skill 的内容。
+> **Key point**: `sentSkillNames` is **deliberately not reset** — re-injecting the full skill_listing (~4K tokens) after compaction is pure cache_creation with low marginal benefit; the model still holds the SkillTool schema, and the `invoked_skills` attachment preserves the content of skills already used.
 
-#### 折叠
+#### Folding
 
-​	折叠的本质是**可逆压缩**：将一段已完成的历史消息打包成一个摘要，原始数据仍完整保留在外部存储中。当模型需要查看细节时（如用户询问"刚才那几轮你是怎么改的"），可以"展开"还原，重新注入上下文。
+	The essence of folding is **reversible compaction**: a stretch of completed history messages is packed into a single summary, while the raw data remains fully preserved in external storage. When the model needs to inspect details (e.g., the user asks "how did you make those changes a few turns ago"), it can "expand" to restore them and re-inject them into context.
 
-* **核心特征:**
+* **Core characteristics:**
 
-​	不修改原始消息数组，只在请求LLM前动态替换为摘要视图，会话历史本身保持不变。
+	It does not modify the original message array; it only dynamically substitutes a summary view before the LLM request, leaving the session history itself unchanged.
 
-* **折叠策略：**
+* **Folding strategies:**
 
-  - **按轮次折叠**：每 10 轮对话折叠一次
+  - **Fold by turns**: fold once every 10 conversation turns
 
-  - **按 Token 阈值折叠**：当累积 Token 超过预设值（如 50k）时，折叠最早的一部分
+  - **Fold by token threshold**: when accumulated tokens exceed a preset value (e.g., 50k), fold away the earliest portion
 
-  - **按时间折叠**：超过 30 分钟的早期对话自动折叠
-
-
-* **Claude Code的"折叠视图"：**
-
-  Claude Code的折叠是一种**轻量级的请求前预处理**，并非持久化的压缩机制。
-
-  其实现方式为：
-
-  1. **不修改原始消息数组**：会话历史在磁盘上保持完整
-
-  2. **仅影响请求视图**：在向LLM发起请求时，动态构建一个"摘要视图"
-
-  3. **判断依据**：检测任务阶段，将"已完成任务"的中间过程折叠成结论性描述
-
-  4. **典型输出**："已定位问题并通过测试"，隐藏详细的工具调用原文和中间输出
+  - **Fold by time**: conversation older than 30 minutes is folded automatically
 
 
-​	这种机制的成本极低（无需LLM调用），但压缩比有限——它只折叠"明显已完成"的部分，对处于进行中的任务不会干预。
+* **Claude Code's "folded view":**
+
+  Claude Code's folding is a **lightweight pre-request preprocessing**, not a persisted compaction mechanism.
+
+  Its implementation:
+
+  1. **Does not modify the original message array**: session history stays intact on disk
+
+  2. **Only affects the request view**: when issuing a request to the LLM, it dynamically builds a "summary view"
+
+  3. **Decision basis**: detects the task phase and folds the intermediate process of "clearly completed tasks" into conclusive descriptions
+
+  4. **Typical output**: "Issue located and tests passed", hiding the detailed tool call transcripts and intermediate outputs
+
+
+	The cost of this mechanism is extremely low (no LLM calls), but the compaction ratio is limited — it only folds the "clearly completed" parts and does not intervene in tasks still in progress.
 
 
 
-* **OpenCode的"占位符折叠"：**
+* **OpenCode's "placeholder folding":**
 
-  OpenCode本身没有内置"折叠"概念，但`@tarquinen/opencode-dcp`插件实现了类似的语义。
+  OpenCode itself has no built-in "folding" concept, but the `@tarquinen/opencode-dcp` plugin implements similar semantics.
 
-  核心机制：
+  Core mechanism:
 
-  1. **会话历史永不修改**：原始消息数组保持不变
+  1. **Session history is never modified**: the original message array stays unchanged
 
-  2. **请求前占位符替换**：将需要折叠的内容替换为`[Pruned: ...]`占位符
+  2. **Pre-request placeholder substitution**: content to be folded is replaced with a `[Pruned: ...]` placeholder
 
-  3. **prompt缓存影响**：占位符替换会破坏缓存前缀，但token节省和上下文中毒的减少往往更值得
+  3. **Prompt cache impact**: placeholder substitution breaks the cache prefix, but the token savings and reduced context poisoning are usually worth more
 
-​	折叠操作由模型自主决定：`compress`工具暴露给模型，模型可以根据任务完成状态自主决定何时折叠哪些内容，而不是静态触发。
+	The folding operation is decided autonomously by the model: the `compress` tool is exposed to the model, which can decide on its own when to fold what based on task completion status, rather than a static trigger.
 
-​	**优势**：模型有主动权，可以在任务完成节点执行折叠；支持嵌套压缩（新压缩覆盖旧压缩时，旧摘要被嵌套而非覆盖），信息在多轮压缩中逐渐精细而非稀释。
+	**Advantage**: the model holds the initiative and can fold at task completion milestones; it supports nested compaction (when a new compaction overwrites an old one, the old summary is nested rather than overwritten), so information gradually refines rather than dilutes across multiple compactions.
 
-| 维度             | Claude Code                      | OpenCode (DCP插件)                    |
+| Dimension        | Claude Code                      | OpenCode (DCP plugin)                 |
 | :--------------- | :------------------------------- | :------------------------------------ |
-| **触发方式**     | 系统自动判断（基于任务完成检测） | 模型主动调用`compress`工具            |
-| **成本**         | 极低（无LLM调用）                | 中等（需LLM生成摘要）                 |
-| **压缩比**       | 较低（只隐藏中间过程，保留结论） | 中等（替换为技术摘要）                |
-| **原始数据保留** | 完整保留，可展开                 | 完整保留，通过占位符替换              |
-| **缓存影响**     | 无影响                           | 破坏缓存前缀（但token节省通常更值得） |
+| **Trigger**      | Automatic system judgment (based on task completion detection) | Model actively calls the `compress` tool |
+| **Cost**         | Extremely low (no LLM calls)     | Medium (requires an LLM to generate the summary) |
+| **Compaction ratio** | Low (only hides intermediate process, keeps conclusions) | Medium (replaced with technical summaries) |
+| **Raw data retention** | Fully preserved, expandable | Fully preserved, via placeholder substitution |
+| **Cache impact** | None                             | Breaks the cache prefix (but token savings are usually worth more) |
 
 
 
-#### 会话剪枝（Pruning）
+#### Session Pruning
 
-​	剪枝是一种**不可逆压缩**：直接删除冗余、过时或无效的消息，释放上下文空间。与折叠不同，剪枝后的消息**无法恢复**。
+	Pruning is a form of **irreversible compaction**: redundant, outdated, or invalid messages are deleted outright, freeing context space. Unlike folding, pruned messages **cannot be recovered**.
 
-* **核心思想：**
+* **Core idea:**
 
-​	**并非所有历史消息的价值均等**。某些消息（如重复的工具调用结果、过时的中间状态、用户确认消息）可以安全删除，不影响后续对话理解。
+	**Not all history messages are of equal value**. Certain messages (e.g., duplicate tool call results, outdated intermediate states, user confirmation messages) can be safely deleted without affecting comprehension of the subsequent conversation.
 
-然后就是裁剪，具体执行裁剪时，Hermes 采用了与 OpenClaw 类似的“**头尾保留、中间摘要**”策略：
+Then there is pruning. When actually performing pruning, Hermes adopts a strategy similar to OpenClaw's: "**keep head and tail, summarize the middle**":
 
-**1.头部保护：**保留系统指令、初始任务定义等关键引导信息。
+**1. Head protection:** keep system instructions, the initial task definition, and other key guiding information.
 
-**2.尾部保护：**保留最近的几轮对话，确保短期记忆的连贯性。
+**2. Tail protection:** keep the most recent few conversation turns to ensure the coherence of short-term memory.
 
-**3.中间压缩：**对中间冗长的工具调用过程、推理步骤进行裁剪，并利用 LLM生成精炼的摘要（Summary）来替代原始细节。
+**3. Middle compaction:** prune the verbose tool call processes and reasoning steps in the middle, and use an LLM to generate a refined summary (Summary) to replace the original details.
 
-* **可剪枝的消息类型：**
+* **Message types eligible for pruning:**
 
-| 消息类型       | 剪枝原因                                         | 示例                              |
+| Message type   | Pruning reason                                   | Example                           |
 | :------------- | :----------------------------------------------- | :-------------------------------- |
-| 重复的工具输出 | 同一个工具被多次调用，早期输出已被后续覆盖       | 连续两次 `read_file` 读取同一文件 |
-| 过时的系统提示 | 提示中包含时间敏感信息（如“今天是周一”），已失效 | 一次性指令                        |
-| 用户确认消息   | 用户只回复“好的”、“继续”，无新信息               | 不包含决策或新上下文              |
-| 工具调用错误   | 错误已被处理，后续不再需要                       | `File not found` 然后改用其他路径 |
-| 中间计算结果   | 最终结果已得出，中间值无用                       | 迭代计算中的临时变量              |
+| Duplicate tool output | The same tool was called multiple times; earlier output has already been superseded by later calls | Two consecutive `read_file` calls reading the same file |
+| Outdated system prompt | The prompt contains time-sensitive information (e.g., "today is Monday") that is no longer valid | One-time instructions |
+| User confirmation messages | The user only replies "OK", "continue"; no new information | Contains no decisions or new context |
+| Tool call errors | The error has been handled and is no longer needed downstream | `File not found`, then switched to another path |
+| Intermediate computation results | The final result has been derived; intermediate values are useless | Temporary variables in iterative computation |
 
-* **Claude Code的剪枝实现：**
+* **Claude Code's pruning implementation:**
 
-​	Claude Code的剪枝主要体现在**工具结果预算化（Tool Result Budget）** 和**微压缩（Microcompact）** 两个层级。
+	Claude Code's pruning is embodied at two levels: **tool result budgeting (Tool Result Budget)** and **microcompaction (Microcompact)**.
 
-1. **工具结果预算化：**
+1. **Tool result budgeting:**
 
-​	这是五级压缩链中最便宜的一层：
+	This is the cheapest layer in the five-tier compaction chain:
 
-- 每个工具执行后立即对其输出进行预算限制（如截断、关键信息提取）
-- 使用磁盘持久化 + 字符串替换，完全无需LLM调用
-- 将Bash命令的数千行输出截断，保留头部和尾部
-- MCP工具输出默认上限为25,000 tokens，超限内容存外部，仅摘要入上下文
+- Budget-limits each tool's output immediately after execution (e.g., truncation, key information extraction)
+- Uses disk persistence + string substitution, requiring no LLM calls at all
+- Truncates thousands of lines of Bash command output, keeping the head and tail
+- MCP tool output defaults to a 25,000-token cap; content over the cap is stored externally and only a summary enters the context
 
-2. **微压缩：**
+2. **Microcompact:**
 
-​	专注于清理已处理过的工具结果，采用两种触发模式：
+	Focuses on clearing already-processed tool results, with two trigger modes:
 
-- **时间触发**：会话空闲超过60分钟后，仅保留最新5条工具结果（"冷会话"）
-- **缓存触发**：利用Anthropic API的prompt caching，通过参数动态剔除旧结果
+- **Time trigger**: after the session idles for more than 60 minutes, only the latest 5 tool results are kept ("cold session")
+- **Cache trigger**: leverages the Anthropic API's prompt caching, dynamically evicting old results via parameters
 
-​	微压缩的成本极低，因为它不调用LLM，只进行内容清空或`cache_edits`操作。
+	Microcompact costs almost nothing because it makes no LLM calls — only content clearing or `cache_edits` operations.
 
-3. **会话内存压缩（trySessionMemoryCompaction）**
+3. **Session memory compaction (trySessionMemoryCompaction)**
 
-- **触发条件**：功能启用 + 记忆文件（MEMORY.md等）存在且非空
-- **压缩方式**：利用预存的记忆文件压缩上下文，而非实时生成摘要
-- **成本**：中等（无需LLM调用，但需读取和格式化记忆文件）
-- **优先级**：在需要压缩时优先尝试此方案，若压缩后仍超阈值，才进入传统压缩
+- **Trigger condition**: feature enabled + memory files (MEMORY.md etc.) exist and are non-empty
+- **Compaction method**: compresses context using pre-stored memory files instead of generating summaries in real time
+- **Cost**: medium (no LLM calls, but requires reading and formatting memory files)
+- **Priority**: tried first when compaction is needed; only if the context still exceeds the threshold after compaction does it fall through to traditional compaction
 
-​	工程实现上，Claude Code会在`.claude/`目录下维护`MEMORY.md`等记忆文件，会话内存压缩通过读取这些预先生成的记忆文件来实现压缩，避免了实时调用LLM的成本。
-
-
-
-#### LLM 智能摘要（Compaction）
-
-​	智能摘要是**有损压缩**：调用 LLM 将一段对话历史转换成精炼的自然语言摘要，然后用这一条摘要消息替代原始的多条消息。与折叠不同，摘要不可逆，原始消息不再保留（除非单独存储用于审计）。
-
-* **核心思想：**
-
-​	LLM 本身擅长信息提取和压缩。通过精心设计的提示词，可以让 LLM 提取对话中的关键信息（决策、事实、未解决问题、代码变更等），丢弃重复或琐碎的细节。
-
->**核心权衡**：高压缩比 vs 信息丢失。研究表明，摘要压缩率可达99.3%（OpenAI opaque压缩），但多会话信息保留率仅37%，约2/3的事实被扭曲或丢失。最致命的损失是：文件路径、错误消息、行号等精确信息极易被摘要改写为模糊描述。
+	In terms of engineering, Claude Code maintains memory files such as `MEMORY.md` under the `.claude/` directory; session memory compaction achieves compaction by reading these pre-generated memory files, avoiding the cost of real-time LLM calls.
 
 
 
+#### LLM Intelligent Summarization (Compaction)
+
+	Intelligent summarization is **lossy compaction**: an LLM is invoked to convert a stretch of conversation history into a refined natural-language summary, and this single summary message replaces the original multiple messages. Unlike folding, summarization is irreversible; the original messages are no longer kept (unless stored separately for audit).
+
+* **Core idea:**
+
+	The LLM itself is good at information extraction and compression. Through carefully designed prompts, the LLM can be made to extract the key information from a conversation (decisions, facts, open questions, code changes, etc.) and discard repetitive or trivial details.
+
+>**Core trade-off**: high compaction ratio vs. information loss. Research shows summarization can reach a 99.3% compression rate (OpenAI opaque compaction), but multi-session information retention is only 37%, with about 2/3 of facts distorted or lost. The most damaging losses: precise details such as file paths, error messages, and line numbers are easily rewritten into vague descriptions by summaries.
 
 
-* **Claude Code的LLM摘要实现：**
-
-​	Claude Code的LLM摘要体现在**上下文折叠（Context Collapse）** 和**自动压缩（Auto-Compact）** 两个层级。
-
-1. **上下文折叠**
-
-   位于五级压缩链第四级（微压缩之后、自动压缩之前），这个操作会**修改消息数组**，意味着原始信息被替换，属于一种有损压缩：
-
-   - **触发条件**：微压缩后token仍超阈值
-
-   - **实现方式**：对对话进行重要性评分，调用LLM对低优先级部分生成结构化摘要
-
-   - **特点**：比微压缩更激进，比完整摘要更精细（只摘要"低价值"部分）
 
 
-> ​	Claude Code  LLM摘要截断中上下文折叠 与 它的"折叠视图"区别：**“折叠视图”是一个轻量级、无成本、仅影响展示的逻辑视图，而“上下文折叠”是压缩流水线中一个有成本、可修改历史、用于释放上下文的技术环节。**
+
+* **Claude Code's LLM summarization implementation:**
+
+	Claude Code's LLM summarization is embodied at two levels: **context collapse (Context Collapse)** and **auto-compaction (Auto-Compact)**.
+
+1. **Context collapse**
+
+   Located at the fourth level of the five-tier compaction chain (after microcompact, before auto-compact), this operation **modifies the message array**, meaning the original information is replaced — a form of lossy compaction:
+
+   - **Trigger condition**: tokens still exceed the threshold after microcompact
+
+   - **Implementation**: importance-scores the conversation and invokes the LLM to generate structured summaries of the low-priority portions
+
+   - **Characteristics**: more aggressive than microcompact, more fine-grained than a full summary (only summarizes the "low-value" parts)
+
+
+> 	In Claude Code's LLM summary truncation, the difference between context collapse and its "folded view": **the "folded view" is a lightweight, zero-cost logical view that only affects presentation, while "context collapse" is a costly, history-modifying technical step in the compaction pipeline used to free context.**
 >
-> | 维度             | **“折叠视图”**   | **“上下文折叠”**   |
+> | Dimension         | **"Folded view"** | **"Context collapse"** |
 > | :--------------- | :--------------- | :----------------- |
-> | **本质**         | **逻辑视图**     | **物理压缩**       |
-> | **是否调用 LLM** | **否**           | **是**             |
-> | **实现方式**     | 修改请求前的视图 | 修改底层的消息数组 |
-> | **是否可逆**     | 是               | 否                 |
-> | **成本**         | 极低             | 高                 |
+> | **Essence**      | **Logical view**  | **Physical compaction** |
+> | **Calls the LLM** | **No**           | **Yes**            |
+> | **Implementation** | Modifies the pre-request view | Modifies the underlying message array |
+> | **Reversible**   | Yes               | No                 |
+> | **Cost**         | Extremely low     | High               |
 >
-> ​	它们正好对应了 Agent Harness 架构中两种不同的“折叠”方式：一种是在**工具与安全执行层**通过视图处理来节省 Token，另一种是在**推理与编排层**通过调用模型来主动压缩上下文。它们是 Claude Code 这套精密系统在不同阶段、应对不同压力的工程策略。
+> 	They correspond exactly to the two different kinds of "folding" in the Agent Harness architecture: one saves tokens in the **tool and safe-execution layer** through view processing, while the other actively compresses context in the **reasoning and orchestration layer** by invoking the model. They are engineering strategies of the Claude Code system deployed at different stages under different pressures.
 
 
 
-2. **自动压缩（Auto-Compact）**
+2. **Auto-compact (Auto-Compact)**
 
-   - **触发阈值**：上下文使用率达到95%（约190K/200K tokens）
+   - **Trigger threshold**: context usage reaches 95% (~190K/200K tokens)
 
-   - **可用空间**：200K窗口需扣除系统提示词（~20K）、MCP工具Schema（0.9K-51K）、CLAUDE.md（0.3K-2K）、MEMORY.md（~200行）和输出预留缓冲区（~10K），实际可用约114K tokens
+   - **Available space**: the 200K window must deduct the system prompt (~20K), MCP tool schemas (0.9K-51K), CLAUDE.md (0.3K-2K), MEMORY.md (~200 lines), and the output reservation buffer (~10K); actually usable is about 114K tokens
 
-   - **三阶段流程**：①工具输出清除（最大消费者，占60-80%）；②结构化摘要生成（7,000-12,000字符）；③CLAUDE.md从磁盘重新注入
+   - **Three-phase flow**: ① tool output clearing (the largest consumer, 60-80%); ② structured summary generation (7,000-12,000 characters); ③ CLAUDE.md re-injected from disk
 
-   - **摘要结构**：包含"已完成的分析""修改的文件""关键决策""待办任务"等章节
-
-
-3. **手动压缩（/compact命令）**
-
-   用户可在任务完成节点主动触发，避免在任务中间被自动压缩打断：
-
-   - **执行流程**：清除旧工具输出 → 结构化摘要生成 → 会话从压缩状态继续
-
-   - **关键优势**：用户可以附带压缩指令（如"/compact preserve all file paths, test results, and the current debugging hypothesis"）
-
-   - **CLAUDE.md幸存**：所有CLAUDE.md文件在压缩后重新从磁盘加载，保证关键指令不丢失
+   - **Summary structure**: contains sections such as "Completed analyses", "Modified files", "Key decisions", "Pending tasks"
 
 
-* **OpenCode的LLM摘要实现：**
+3. **Manual compaction (/compact command)**
 
-  OpenCode内置的自动压缩机制：
+   Users can proactively trigger it at task completion milestones, avoiding being interrupted mid-task by automatic compaction:
 
-  - **可用上下文计算**：模型上下文窗口 - 输出预留(32K) - 安全缓冲区(20K)
+   - **Execution flow**: clear old tool outputs → structured summary generation → session continues from the compacted state
 
-  - **压缩触发**：若Token数超过可用上限，在用户消息中插入`CompactionPart`标记，排队进行摘要
+   - **Key advantage**: the user can attach compaction instructions (e.g., "/compact preserve all file paths, test results, and the current debugging hypothesis")
 
-  - **压缩后处理**：摘要生成后，重新播放用户消息以维持对话流程
+   - **CLAUDE.md survives**: all CLAUDE.md files are reloaded from disk after compaction, ensuring key instructions are not lost
+
+
+* **OpenCode's LLM summarization implementation:**
+
+  OpenCode's built-in auto-compaction mechanism:
+
+  - **Available context computation**: model context window - output reservation (32K) - safety buffer (20K)
+
+  - **Compaction trigger**: if the token count exceeds the usable cap, a `CompactionPart` marker is inserted into the user message, queuing summarization
+
+  - **Post-compaction handling**: after the summary is generated, user messages are replayed to maintain the conversation flow
 
 
 
-#### Hermes 阈值计算与反抖动熔断（源码级）
+#### Hermes Threshold Computation and Anti-Thrash Breaker (source-level)
 
-> 基于 `hermes-agent/agent/context_compressor.py`（5077 行）源码阅读。
+> Based on source reading of `hermes-agent/agent/context_compressor.py` (5,077 lines).
 
-**阈值计算公式**（`_compute_threshold_tokens`）：
+**Threshold computation formula** (`_compute_threshold_tokens`):
 
 ```python
-effective_window = context_length - (max_tokens or 0)   # 扣除输出预留
-pct_value = int(effective_window * threshold_percent)     # 默认 50%
-floored = max(pct_value, MINIMUM_CONTEXT_LENGTH)          # 下限保护
+effective_window = context_length - (max_tokens or 0)   # subtract output reserve
+pct_value = int(effective_window * threshold_percent)     # default 50%
+floored = max(pct_value, MINIMUM_CONTEXT_LENGTH)          # floor protection
 
-# 关键：下限不能吃掉输出预留，绑定 85% 上限
+# Key: the floor must not eat the output reserve; bound by the 85% cap
 trigger_cap = int(effective_window * 0.85)
 if floored > pct_value and floored > trigger_cap:
     floored = max(pct_value, trigger_cap)
 
-# 百分比 ≥ 窗口时不可达 → 改为 85% 触发
+# Percent >= window is unreachable -> trigger at 85% instead
 if floored >= effective_window:
     return max(1, min(trigger_cap, effective_window - 1))
 ```
 
-**为什么需要这两层保护**（源码注释原文）：
+**Why these two layers of protection are needed** (verbatim source comments):
 
-| Bug | 场景 | 问题 |
+| Bug | Scenario | Problem |
 |---|---|---|
-| #14690 | 64K 本地模型 | `max(0.5*64000, 64000) == 64000` → 阈值等于**整个窗口** → 自动压缩永远不触发，因为 provider 在 usage 到 100% 前就拒绝 |
-| #43547 | max_tokens=65536 的自定义 provider | 输入预算远小于原始窗口，基于全窗口的阈值让会话在压缩触发前就撞上 provider 400 |
+| #14690 | 64K local model | `max(0.5*64000, 64000) == 64000` → threshold equals the **entire window** → auto-compaction never triggers, because the provider rejects before usage reaches 100% |
+| #43547 | Custom provider with max_tokens=65536 | The input budget is far smaller than the raw window; a full-window threshold makes the session hit a provider 400 before compaction triggers |
 
-> 源码注释特别提到 **ollama**：它会静默裁剪超窗口 prompt，**永不抛出 overflow backstop**，导致会话卡死——所以必须有 85% 上限兜底。
+> The source comments specifically mention **ollama**: it silently trims over-window prompts and **never throws an overflow backstop**, leaving the session stuck — hence the 85% cap backstop is a must.
 
-**反抖动熔断**（`_tripped`）：
+**Anti-thrash breaker** (`_tripped`):
 
 ```python
 def _tripped(self) -> bool:
-    """Anti-thrash breaker: 连续两次无效压缩 或 连续两次兜底摘要。"""
+    """Anti-thrash breaker: two consecutive ineffective compactions or two consecutive fallback summaries."""
     return (self._ineffective_compression_count >= 2 
             or self._fallback_compression_streak >= 2)
 ```
 
-**四种阻塞原因**（`_compression_block_reason`）：
+**Four blocking reasons** (`_compression_block_reason`):
 
-| 原因 | 含义 |
+| Reason | Meaning |
 |---|---|
-| `cooldown:<s>` | 上次摘要失败后的冷却 |
-| `structural_backoff:<s>` | 结构性 no-op 的退避（无可压缩内容）|
-| `ineffective` | 熔断器已触发 |
+| `cooldown:<s>` | Cooldown after the last summary failure |
+| `structural_backoff:<s>` | Backoff for a structural no-op (nothing compressible) |
+| `ineffective` | The breaker has already tripped |
 
-> **设计精髓**：Hermes 是四项目里**防御最深**的——它假设压缩会失败，并为每种失败模式准备了独立的状态机（冷却/退避/熔断）。同时区分"结构性 no-op"（无可压缩内容，不该计入失败）和"真失败"，避免误熔断。
+> **Design essence**: Hermes has the **deepest defenses** among the four projects — it assumes compaction will fail and prepares an independent state machine for each failure mode (cooldown/backoff/breaker). It also distinguishes a "structural no-op" (nothing compressible, should not count as failure) from a "real failure", avoiding a mis-tripped breaker.
 
-#### 压缩技术对比总结
+#### Compaction Techniques Comparison Summary
 
-| 压缩技术    | 核心原理               | 可逆性 | LLM成本 | 典型应用场景                     |
+| Technique   | Core principle         | Reversibility | LLM cost | Typical use case                  |
 | :---------- | :--------------------- | :----- | :------ | :------------------------------- |
-| **折叠**    | 摘要替换，原始数据保留 | 可逆   | 低      | 已完成任务的中间过程折叠         |
-| **剪枝**    | 删除冗余/过时内容      | 不可逆 | 零      | 重复工具调用、覆盖写入、错误清理 |
-| **LLM摘要** | LLM生成结构化摘要      | 不可逆 | 高      | Token紧张时的最终兜底压缩        |
+| **Folding** | Summary replacement, raw data retained | Reversible | Low | Folding the intermediate process of completed tasks |
+| **Pruning** | Deleting redundant/outdated content | Irreversible | Zero | Duplicate tool calls, overwritten writes, error cleanup |
+| **LLM summarization** | LLM generates a structured summary | Irreversible | High | Final fallback compaction when tokens are tight |
 
 
 
-### 缓存优化：减少重复 Token 消耗
+### Cache Optimization: Reducing Repeated Token Consumption
 
-​	在大模型 Agent 系统中，每次 API 调用都涉及大量重复内容的传输，尤其是系统提示词、工具定义、项目配置文件等。缓存优化旨在减少这些重复消耗，降低延迟和成本。
+	In large-model agent systems, every API call involves transferring large amounts of repeated content, especially the system prompt, tool definitions, project configuration files, etc. Cache optimization aims to reduce these repeated costs, lowering latency and expense.
 
-#### System Prompt 缓存
+#### System Prompt Cache
 
-**为什么需要缓存：**
+**Why caching is needed:**
 
-​	System Prompt 通常包含大量静态内容，比如角色定义、输出格式要求、通用规范和工具列表&Schema，这些内容在每次请求中几乎不变，但会消耗大量输入 Token。
+	The system prompt usually contains large amounts of static content, such as role definitions, output format requirements, general conventions, and the tool list & schemas. These barely change across requests yet consume large numbers of input tokens.
 
-**缓存原理：**
+**Cache principle:**
 
-​	比如Anthropic API 支持 **Prompt Caching**，允许在消息的 `content` 数组中给特定文本块添加 `cache_control` 标记。API 会缓存该块及其之前的所有文本块。后续请求如果**前缀完全相同**（字节级匹配），则命中缓存。
+	For example, the Anthropic API supports **Prompt Caching**, allowing specific text blocks in a message's `content` array to be marked with `cache_control`. The API caches that block and all preceding text blocks. If a subsequent request's **prefix is exactly identical** (byte-level match), the cache is hit.
 
-​	OpenAI 的 Prompt Caching 机制相对简化：**自动缓存**：无需显式标记，API 会自动缓存请求前缀（包括 system 消息和 messages 开头的部分），但是前缀需完全匹配（字符串相同）。
+	OpenAI's Prompt Caching is relatively simplified: **automatic caching** — no explicit markers needed; the API automatically caches the request prefix (including the system message and the beginning of messages), but the prefix must match exactly (identical string).
 
-**注意事项：**
+**Caveats:**
 
-- **缓存命中率依赖前缀稳定性**：任何对静态部分的修改（包括空格、换行）都会导致缓存失效。建议使用模板字符串时保持格式一致。
-- **动态内容尽量后置**：将时间戳、随机 ID、用户临时指令等放在所有静态内容之后。
-- **监控缓存命中率**：通过 API 响应头（如 `anthropic-ai-cache-hit`）获取缓存命中情况，优化静态部分设计。
-- **长会话中的多轮复用**：同一个 System Prompt 在一个会话的多次 LLM 调用中均可复用缓存，效益显著。
-
-
-
-#### 工具 Schema 缓存
-
-**为什么需要缓存：**
-
-​	工具定义（JSON Schema）通常很大，特别是每个工具包括名称、描述、参数结构，多个工具组合成数组，总长度可能达到 5K-50K tokens，每次请求都需要将完整工具列表序列化为字符串并发送。
-
-​	虽然这些内容通常放在 System Prompt 中，但每次请求都要重新序列化（将工具对象转为 JSON 字符串），这本身就有 CPU 开销。**缓存可以避免重复的序列化操作**。
-
-**优化序列化格式：**
-
-除了利用缓存，还可以优化序列化格式：
-
-- **最小化 JSON**：移除不必要的空格和换行（使用 `JSON.stringify(obj)` 而非带格式的版本）
-- **使用 YAML**：对于某些 API（如 Anthropic），YAML 可能比 JSON 更紧凑
-- **压缩工具描述**：将冗长的 `description` 字段精简，保留关键信息
-
-**与 Prompt Caching 的协同：**
-
-​	工具 Schema 通常放在 System Prompt 的静态区，因此会随着 System Prompt 一起被 LLM 服务端缓存。客户端缓存解决的是**避免重复序列化和网络传输准备**，而服务端缓存解决的是**避免重复计算和收费**，两者协同工作。
+- **Cache hit rate depends on prefix stability**: any modification to the static portion (including spaces and newlines) invalidates the cache. Keep formatting consistent when using template strings.
+- **Push dynamic content to the end**: place timestamps, random IDs, ad-hoc user instructions, etc. after all static content.
+- **Monitor cache hit rate**: obtain cache hit information from API response headers (e.g., `anthropic-ai-cache-hit`) to optimize the static-portion design.
+- **Multi-turn reuse in long sessions**: the same system prompt can reuse the cache across multiple LLM calls within one session; the benefits are significant.
 
 
 
-#### 项目级上下文缓存
+#### Tool Schema Cache
 
-**为什么需要缓存：**
+**Why caching is needed:**
 
-​	Agent 启动时需要读取项目根目录下的配置文件（如 `CLAUDE.md`、`AGENTS.md`），这些文件内容相对稳定（变化频率低），可能较大（几千到几万字符），在单次会话中可能被多次读取（如每次压缩后重新加载），频繁的磁盘 I/O 会拖慢响应速度，尤其是在热重载场景下（文件变化时立即生效）。因此需要内存缓存。
+	Tool definitions (JSON Schema) are usually large — each tool includes a name, description, and parameter structure; multiple tools combine into an array that may total 5K-50K tokens, and every request must serialize the full tool list into a string and send it.
 
-**与 System Prompt 缓存的关系：**
+	Although this content usually sits in the system prompt, every request re-serializes it (converting tool objects into JSON strings), which itself has CPU overhead. **Caching avoids repeated serialization**.
 
-​	项目级上下文通常作为 System Prompt 的动态部分注入（因为可能随文件变化而更新）。对于变化频率极低的文件（如 `CLAUDE.md`），可以放在静态区尾部；对于用户频繁编辑的文件，放在动态区更合适。
+**Optimizing the serialization format:**
+
+Beyond caching, the serialization format can be optimized:
+
+- **Minified JSON**: remove unnecessary spaces and newlines (use `JSON.stringify(obj)` rather than the formatted version)
+- **Use YAML**: for some APIs (e.g., Anthropic), YAML may be more compact than JSON
+- **Compress tool descriptions**: trim verbose `description` fields, keeping key information
+
+**Synergy with Prompt Caching:**
+
+	Tool schemas usually sit in the static region of the system prompt, and are therefore cached server-side by the LLM service together with the system prompt. Client caching solves **avoiding repeated serialization and network-transfer preparation**, while server-side caching solves **avoiding repeated computation and billing**; the two work in synergy.
+
+
+
+#### Project-Level Context Cache
+
+**Why caching is needed:**
+
+	On startup, the agent needs to read configuration files at the project root (e.g., `CLAUDE.md`, `AGENTS.md`). These files are relatively stable (low change frequency), can be large (thousands to tens of thousands of characters), and may be read multiple times within a single session (e.g., reloaded after every compaction); frequent disk I/O slows down responses, especially in hot-reload scenarios (taking effect immediately when a file changes). Hence an in-memory cache is needed.
+
+**Relationship with system prompt caching:**
+
+	Project-level context is usually injected as the dynamic part of the system prompt (since it may update as files change). For files that change extremely rarely (e.g., `CLAUDE.md`), they can be placed at the tail of the static region; for files the user edits frequently, the dynamic region is more appropriate.
 
 ```typescript
-// 项目级上下文缓存-基于文件监听的热重载缓存伪代码
+// Project-level context cache: hot-reload cache pseudocode based on file watching
 import chokidar from 'chokidar';
 
 class HotReloadProjectCache {
@@ -2349,7 +2405,7 @@ class HotReloadProjectCache {
     watcher.on('change', async () => {
       const newContent = await this.load(projectRoot);
       this.cache.set(projectRoot, newContent);
-      // 通知所有订阅者
+      // Notify all subscribers
       this.callbacks.forEach(cb => cb(newContent));
     });
     this.watchers.set(projectRoot, watcher);
@@ -2360,54 +2416,54 @@ class HotReloadProjectCache {
   }
   
   private async load(projectRoot: string): Promise<string> {
-    // 同前
+    // Same as above
   }
 }
 ```
 
 
 
-#### 最佳实践
+#### Best Practices
 
-1. 始终将静态内容（角色、格式、通用工具）放在 System Prompt 最前面，并启用缓存标记。
-2. 动态内容（时间、用户临时指令）放在所有静态内容之后，避免破坏前缀。
-3. 工具 Schema 使用客户端缓存避免重复序列化，同时依赖服务端缓存减少传输。
-4. 项目配置文件使用 TTL 内存缓存 + 热重载，平衡实时性和性能。
-5. 监控缓存命中率，通过日志或指标系统评估优化效果。
+1. Always put static content (role, format, general tools) at the very front of the system prompt and enable cache markers.
+2. Put dynamic content (time, ad-hoc user instructions) after all static content to avoid breaking the prefix.
+3. Use client-side caching for tool schemas to avoid repeated serialization, while relying on server-side caching to reduce transfer.
+4. Use TTL in-memory caching + hot reload for project configuration files, balancing freshness and performance.
+5. Monitor cache hit rates; evaluate optimization effectiveness through logs or a metrics system.
 
 
 
 
 ---
 
-### DSH 压缩：两级 + Spill 第三条路
+### DSH Compaction: Two-Tier Plus Spill, a Third Path
 
-> 基于 `packages/compaction/compaction-basic/src/index.ts` + `summarizer.ts` 源码逐行阅读。
+> Based on line-by-line source reading of `packages/compaction/compaction-basic/src/index.ts` + `summarizer.ts`.
 
-**两级压缩**：
-1. **工具结果先剪枝**：`compaction-tool-result-pruner`（`thresholdChars: 8192, headChars: 4096, tailChars: 1024`）
-2. **会话压缩**：`BasicCompactionEngine`，双触发器，摘要复用会话自己的 system prompt/tools **避免打爆 provider KV cache**
+**Two-tier compaction**:
+1. **Prune tool results first**: `compaction-tool-result-pruner` (`thresholdChars: 8192, headChars: 4096, tailChars: 1024`)
+2. **Session compaction**: `BasicCompactionEngine`, dual triggers, with the summary reusing the session's own system prompt/tools to **avoid blowing the provider KV cache**
 
-**双触发器的源码实现**（`index.ts:133-212`）：
+**Source implementation of the dual triggers** (`index.ts:133-212`):
 
 ```typescript
-// 触发器 1：pressure —— 挂在 agent/pre-step，between-step 检查 token 压力
+// Trigger 1: pressure - hooked at agent/pre-step, between-step checks token pressure
 const result = await this.compactIfNeeded(agent, 'pressure', signal)
 if (result !== null) logResult(result, 'step pressure')
 
-// 触发器 2：context-overflow —— 挂在 agent/request-error
+// Trigger 2: context-overflow - hooked at agent/request-error
 if (failure.code !== CONTEXT_WINDOW_EXCEEDED_CODE || signal.aborted) return next()
 result = await this.compactIfNeeded(agent, 'context-overflow', signal)
-// 压缩成功后返回 retry，重发请求
+// After compaction succeeds, return retry to resend the request
 return { kind: 'retry' }
 ```
 
-**关键设计**（源码注释原文）：
+**Key design** (verbatim source comment):
 
 > `context-overflow compaction failed after durable surface progress: ...; retrying from the replacement surface`
-> —— 即使压缩失败，只要有**持久化 surface 进展**，也从 replacement surface 重试，不丢弃。
+> — even if compaction fails, as long as there is **durable surface progress**, it retries from the replacement surface without discarding anything.
 
-**可替换的摘要器**（`index.ts:96-99`）：
+**Replaceable summarizer** (`index.ts:96-99`):
 
 ```typescript
 // Dependency-light compaction backend using ctx.tokenMeter for pressure
@@ -2415,58 +2471,57 @@ return { kind: 'retry' }
 ```
 
 
-**Spill 机制**（第三条路）：纯文本工具结果超过 `maxInlineBytes`（默认 50000）时全文外置存储，模型只看到 head/tail 预览 + 定位符。跳过 `read` 工具防止 read→spill→再 read 死循环。
+**Spill mechanism** (the third path): when a plain-text tool result exceeds `maxInlineBytes` (default 50000), the full text is stored externally and the model sees only a head/tail preview + locator. The `read` tool is skipped to prevent a read→spill→re-read infinite loop.
 
-### Spill 源码细节（`spill/types.ts` 全部类型 + `cordis.patch.yml:352`）
+### Spill Source Details (`spill/types.ts` all types + `cordis.patch.yml:352`)
 
 ```typescript
-// 不可见句柄（branded type）—— 后端可能是 FS path、URI 或 DB key
+// Opaque handle (branded type) - backend may be an FS path, URI, or DB key
 export type SpillLocator = Branded<'SpillLocator'>
 // save-time namespace
 export interface SpillOwner { sessionId: SessionId }
-// 工具+调用 ID —— 纯描述，不用作 ACL
+// Tool + call ID - purely descriptive, not used as ACL
 export interface SpillSource { toolName: string; callId: CallId; label: string }
-// 保存请求
+// Save request
 export interface SaveTextSpill { owner; source; suggestedName; content }
-// 返回的 ref
+// Returned ref
 export interface SpillRef { locator: SpillLocator; bytes: number; retrievalHint: string }
 ```
 
-**关键设计**（模块 docstring 原文）：
-- `suggestedName` 是**提示**，后端做 sanitization 成安全路径段，**绝不解析为路径**
-- `SpillLocator` 是不透明句柄，consumer 用 `retrievalHint` 渲染
-- `fork` 会话**继承**已存在的 locator（不复制/不重 owner）；fork 之后产生的 spill 用 child sessionId
+**Key design** (verbatim module docstring):
+- `suggestedName` is a **hint**; the backend sanitizes it into a safe path segment and **never parses it as a path**
+- `SpillLocator` is an opaque handle; consumers render it with `retrievalHint`
+- A `fork` session **inherits** existing locators (no copying / no re-owning); spills produced after the fork use the child sessionId
 
-**Inline 阈值**（`cordis.patch.yml:352`）：`maxInlineBytes: 50000`（默认 50KB）
+**Inline threshold** (`cordis.patch.yml:352`): `maxInlineBytes: 50000` (default 50KB)
 
 
 ---
 
-### Codex 压缩机制：90% 阈值 + 双 scope
+### Codex Compaction Mechanism: 90% Threshold + Dual Scope
 
-> 基于 `codex-rs/protocol/src/openai_models.rs` + `core/src/session/context_window.rs`（91 行，全文）+ `core/src/compact.rs`（799 行）源码阅读。
+> Based on source reading of `codex-rs/protocol/src/openai_models.rs` + `core/src/session/context_window.rs` (91 lines, full text) + `core/src/compact.rs` (799 lines).
 
-**触发阈值**（`openai_models.rs:486-497`，已亲自验证）：
-
+**Trigger threshold** (`openai_models.rs:486-497`, personally verified):
 ```rust
 pub fn auto_compact_token_limit(&self) -> Option<i64> {
     let context_limit = self.resolved_context_window()
-        .map(|context_window| (context_window * 9) / 10);   // 默认 90%
+        .map(|context_window| (context_window * 9) / 10);   // default 90%
     let config_limit = self.auto_compact_token_limit;
     if let Some(context_limit) = context_limit {
         return Some(config_limit.map_or(context_limit, |limit| 
-            std::cmp::min(limit, context_limit)));          // config 覆盖取 min
+            std::cmp::min(limit, context_limit)));          // config override takes min
     }
     config_limit
 }
 ```
 
-**双 scope 的源码实现**（`context_window.rs`，全文 91 行）：
+**Source implementation of the dual scopes** (`context_window.rs`, 91 lines in total):
 
 ```rust
 match turn_context.config.model_auto_compact_token_limit_scope {
     AutoCompactTokenLimitScope::Total => (
-        active_context_tokens,                          // 全上下文
+        active_context_tokens,                          // full context
         turn_context.model_info.auto_compact_token_limit(),
         None,
     ),
@@ -2476,7 +2531,7 @@ match turn_context.config.model_auto_compact_token_limit_scope {
         let scope_limit = turn_context.config.model_auto_compact_token_limit
             .or_else(|| turn_context.model_info.auto_compact_token_limit());
         (
-            active_context_tokens.saturating_sub(baseline),  // 只计前缀之后新增
+            active_context_tokens.saturating_sub(baseline),  // count only what the prefix added
             scope_limit,
             window.prefill_input_tokens,
         )
@@ -2484,19 +2539,19 @@ match turn_context.config.model_auto_compact_token_limit_scope {
 }
 ```
 
-> **`BodyAfterPrefix` 的意义**：只计算**初始前缀之后新增的 token**——因为初始上下文（系统提示、指令、工具定义）是固定的，不该占用 auto-compact 预算。
+> **Significance of `BodyAfterPrefix`**: only **tokens added after the initial prefix** are counted—because the initial context (system prompt, instructions, tool definitions) is fixed and should not consume the auto-compact budget.
 
-**三重触发判定**（`context_window.rs` 末尾）：
+**Triple trigger check** (end of `context_window.rs`):
 
 ```rust
-// 1. 达到 buffered auto-compact limit
-// 2. 或达到模型完整上下文窗口（硬上限，独立于 auto-compact scope）
+// 1. Buffered auto-compact limit reached
+// 2. Or the model's full context window reached (hard cap, independent of auto-compact scope)
 let token_limit_reached = buffered_auto_compact_limit
     .is_some_and(|limit| auto_compact_scope_tokens >= limit)
     || full_context_window_limit_reached;   // active_context_tokens >= full limit
 ```
 
-**fallback buffer 的条件预留**（源码注释原文）：
+**Conditional reservation of the fallback buffer** (source comment verbatim):
 
 ```rust
 // Only reserve the fallback buffer when there is a fallback prompt to use it.
@@ -2505,63 +2560,63 @@ let auto_compact_fallback_buffer_tokens = turn_context.config.token_budget
     .map_or(0, TokenBudgetConfig::fallback_buffer_tokens);
 ```
 
-**重建历史的预算装填算法**（`compact.rs:644-690`，已亲自验证）：
+**Budget-packing algorithm for rebuilding history** (`compact.rs:644-690`, personally verified):
 
 ```rust
-// 从最新 user 消息往回装填，预算 20K
+// Pack backward from the newest user message, budget 20K
 let mut remaining = max_tokens;   // COMPACT_USER_MESSAGE_MAX_TOKENS = 20_000
-for message in user_messages.iter().rev() {    // 反向遍历（最新优先）
+for message in user_messages.iter().rev() {    // reverse iteration (newest first)
     if remaining == 0 { break }
     let tokens = approx_token_count(&message.message);
     if tokens <= remaining {
         selected_messages.push(message.clone());
         remaining = remaining.saturating_sub(tokens);
     } else {
-        // 装不下就截断到剩余预算，然后停止
+        // If it does not fit, truncate to the remaining budget, then stop
         let truncated = truncate_text(&message.message, TruncationPolicy::Tokens(remaining));
         selected_messages.push(CompactedUserMessage { message: truncated, ... });
         break;
     }
 }
-selected_messages.reverse();   // 恢复时间顺序
+selected_messages.reverse();   // restore chronological order
 ```
 
-**压缩后历史结构**：
+**Post-compaction history structure**:
 
 ```
-新历史 = [初始上下文再注入] + [最近真实 user 消息（预算 20K）] + [摘要]
+New history = [re-injected initial context] + [recent real user messages (budget 20K)] + [summary]
 ```
 
-**注入位置区分**：
+**Injection placement distinction**:
 
-| 时机 | 策略 | 原因 |
+| Timing | Strategy | Reason |
 |---|---|---|
-| **mid-turn**（轮内）| `BeforeLastUserMessage` | 模型被训练为把摘要视为历史末项 |
-| **pre-turn / 手动** | `DoNotInject` | 下一轮再全量重注入 |
+| **mid-turn** (within a turn) | `BeforeLastUserMessage` | the model is trained to treat the summary as the last item of history |
+| **pre-turn / manual** | `DoNotInject` | fully re-injected on the next turn |
 
 
 ---
 
-### Pi 压缩：切点算法
+### Pi compaction: the cut point algorithm
 
-> 基于 `packages/coding-agent/src/core/compaction/compaction.ts`（~850 行）源码阅读。
+> Based on a source reading of `packages/coding-agent/src/core/compaction/compaction.ts` (~850 lines).
 
-**触发与配置**（`DEFAULT_COMPACTION_SETTINGS`）：
+**Trigger and configuration** (`DEFAULT_COMPACTION_SETTINGS`):
 
 ```typescript
 export const DEFAULT_COMPACTION_SETTINGS: CompactionSettings = {
   enabled: true,
-  reserveTokens: 16384,      // 预留（给摘要输出）
-  keepRecentTokens: 20000,   // 保留最近的 token 量
+  reserveTokens: 16384,      // reserve (for summary output)
+  keepRecentTokens: 20000,   // number of recent tokens kept
 }
 
-// 触发条件
+// Trigger condition
 export function shouldCompact(contextTokens, contextWindow, settings): boolean {
   return contextTokens > contextWindow - settings.reserveTokens
 }
 ```
 
-**切点算法的核心约束**（`isCutPointMessage`）：
+**Core constraint of the cut point algorithm** (`isCutPointMessage`):
 
 ```typescript
 function isCutPointMessage(message: AgentMessage): boolean {
@@ -2574,41 +2629,41 @@ function isCutPointMessage(message: AgentMessage): boolean {
     case "compactionSummary":
       return true
     case "toolResult":
-      return false     // ★ 关键：绝不在工具结果处切
+      return false     // ★ Key: never cut at a tool result
   }
 }
 ```
 
-> **为什么绝不在 toolResult 处切**：保证 `tool_use` / `tool_result` 配对完整——如果从中间切断，API 会因孤立的 tool_use 或无主的 tool_result 报错。
+> **Why never cut at a toolResult**: keeps the `tool_use` / `tool_result` pairing intact—cutting in the middle makes the API error out on an orphaned tool_use or an unclaimed tool_result.
 
 ```mermaid
 flowchart LR
-    MSG["完整会话"] --> SCAN["从最新往回累加 token"]
-    SCAN --> CHK{"累计 ≥ keepRecentTokens<br/>（20K）?"}
-    CHK -- 否 --> SCAN
-    CHK -- 是 --> FIX["向前修正到最近的<br/>合法切点<br/>（跳过 toolResult）"]
-    FIX --> CUT["在此处切分"]
-    CUT --> OLD["切点之前 → 摘要"]
-    CUT --> NEW["切点之后 → verbatim 保留"]
+    MSG["Full session"] --> SCAN["Accumulate tokens backward from newest"]
+    SCAN --> CHK{"Accumulated >= keepRecentTokens<br/>(20K)?"}
+    CHK -- No --> SCAN
+    CHK -- Yes --> FIX["Adjust back to the nearest<br/>valid cut point<br/>(skip toolResult)"]
+    FIX --> CUT["Cut here"]
+    CUT --> OLD["Before cut point -> summary"]
+    CUT --> NEW["After cut point -> kept verbatim"]
 
     style FIX fill:#C8102E,color:#fff
 ```
 
-**摘要格式**（6 节）：
+**Summary format** (6 sections):
 
-| # | 节名 |
+| # | Section |
 |---|---|
 | 1 | `## Goal` |
 | 2 | `## Constraints & Preferences` |
-| 3 | `## Progress`（Done / In Progress / Blocked 三态）|
-| 4 | `## Key Decisions`（决策 + 理由）|
-| 5 | `## Next Steps`（有序）|
+| 3 | `## Progress` (Done / In Progress / Blocked, three states) |
+| 4 | `## Key Decisions` (decision + rationale) |
+| 5 | `## Next Steps` (ordered) |
 | 6 | `## Critical Context` |
 
-**跨次压缩的文件操作累积**（`extractFileOperations`）：
+**Accumulation of file operations across compactions** (`extractFileOperations`):
 
 ```typescript
-// 从上次 compaction 的 details 继承（如果是 pi 生成的）
+// Inherited from the previous compaction's details (if generated by pi)
 if (prevCompactionIndex >= 0) {
   const prevCompaction = entries[prevCompactionIndex] as CompactionEntry
   if (!prevCompaction.fromHook && prevCompaction.details) {
@@ -2616,152 +2671,152 @@ if (prevCompactionIndex >= 0) {
     for (const f of details.modifiedFiles) fileOps.edited.add(f)
   }
 }
-// 再从本次 tool calls 提取
+// Then extract from this round's tool calls
 for (const msg of messages) extractFileOpsFromMessage(msg, fileOps)
 ```
 
-> **设计意图**：文件操作跨多次压缩**累积**维护——这样即使经过 N 次压缩，Agent 仍知道自己读过/改过哪些文件。摘要中会注入文件清单。
+> **Design intent**: file operations are maintained **cumulatively** across multiple compactions—so even after N compactions, the agent still knows which files it has read/modified. The file inventory is injected into the summary.
 
-**迭代合并**：已有 previousSummary 时用 `UPDATE_SUMMARIZATION_PROMPT` 增量合并（保留全部旧信息、把 In Progress 移入 Done、更新 Next Steps），而非重写。
+**Iterative merging**: when a previousSummary already exists, merge incrementally via `UPDATE_SUMMARIZATION_PROMPT` (keep all old information, move In Progress items into Done, update Next Steps) instead of rewriting.
 
-**压缩产物的存储**：追加到会话的 `CompactionEntry`，重建上下文时旧消息**不发给 LLM**。
+**Storage of the compaction output**: appended to the session's `CompactionEntry`; when rebuilding context, old messages are **not sent to the LLM**.
 
-**无独立记忆系统**——pi 的"记忆"就是 `AGENTS.md` / `CLAUDE.md` 等上下文文件加载（`resource-loader.ts`，按 `AGENTS.override.md → AGENTS.md → CLAUDE.md` 顺序从全局 + cwd 所有祖先目录收集）。
+**No standalone memory system**—pi's "memory" is just the loading of context files such as `AGENTS.md` / `CLAUDE.md` (`resource-loader.ts`, collected from the global location plus all ancestor directories of cwd, in `AGENTS.override.md → AGENTS.md → CLAUDE.md` order).
 
 
 ---
 
-### OpenCode压缩实现（源码级）
+### OpenCode compaction implementation (source-level)
 
-#### 压缩触发路径
+#### Compaction trigger paths
 
-- **事前预防**：finish-step 时 `count ≥ usable` 即触发（processor.ts:617-634）
-- **事后补救**：provider 溢出错误 → `ContextOverflowError` → 压缩后重发（processor.ts:762）
+- **Preventive**: triggered at finish-step as soon as `count ≥ usable` (processor.ts:617-634)
+- **Reactive**: provider overflow error → `ContextOverflowError` → compact and resend (processor.ts:762)
 
-#### 阈值计算（overflow.ts:8-25）
+#### Threshold calculation (overflow.ts:8-25)
 
 ```
 usable =
-  context 未配置(=0) → 0 → 永不触发
-  input 已配置 → input - reserved     ← 主分支
-  input 未配置 → context - maxOutput  ← 回退分支
+  context not configured (=0) -> 0 -> never triggers
+  input configured -> input - reserved     <- main branch
+  input not configured -> context - maxOutput  <- fallback branch
 
-reserved 默认 min(20K, maxOutputTokens)
+reserved defaults to min(20K, maxOutputTokens)
 maxOutputTokens = min(limit.output, 32K)
 ```
 
-举例（context=128K, input=118K, reserved=36K）：`usable = 82K`
+Example (context=128K, input=118K, reserved=36K): `usable = 82K`
 
-**一句话**：input 定上限，reserved 定提前量。
+**In one sentence**: input sets the ceiling, reserved sets the trigger lead.
 
-#### 压缩后新上下文
+#### New context after compaction
 
 ```
-新上下文 = [摘要 2K] + [近期对话 verbatim 41K] + [新消息] ≈ 43K 起步
+New context = [summary 2K] + [recent conversation verbatim 41K] + [new messages] ~= 43K starting point
 ```
 
-- 摘要 8 段 Markdown 模板（Current Focus / Goal / Constraints & Preferences / Progress(Done/In Progress/Blocked) / Key Decisions / Next Steps / Critical Context / Relevant Files）
-- 近期对话预算 `usable × 50%`，上限 32K（OpenCode 从 25% 调到 50%，compaction.ts:192-201）
-- Lite 模式 `tailTurns=0`（仅摘要），非 Lite 返回 2
+- 8-section Markdown summary template (Current Focus / Goal / Constraints & Preferences / Progress(Done/In Progress/Blocked) / Key Decisions / Next Steps / Critical Context / Relevant Files)
+- Recent conversation budget `usable × 50%`, capped at 32K (OpenCode raised it from 25% to 50%, compaction.ts:192-201)
+- Lite mode `tailTurns=0` (summary only); non-Lite returns 2
 
-#### 与 Claude Code 压缩对比
+#### Comparison with Claude Code compaction
 
-| 维度 | OpenCode | Claude Code |
+| Dimension | OpenCode | Claude Code |
 |---|---|---|
-| 触发 | `input - reserved` | 有效窗口 - 13K |
-| 摘要模板 | 8 段 + Forward Progress + 记忆 YAML | 9 节 analysis+summary |
-| tail 预算 | `usable × 50%` | 最近 5 文件 + skill 25K |
-| Lite 差异 | `tailTurns=0` | 无对应 |
-| 记忆提取 | 压缩时同步（省 LLM）| 独立 subagent |
-| 兜底 | splitTurn + MAX_AUTO_COMPACT | PTL 重试 3 次 |
+| Trigger | `input - reserved` | effective window - 13K |
+| Summary template | 8 sections + Forward Progress + memory YAML | 9-section analysis+summary |
+| Tail budget | `usable × 50%` | last 5 files + skill 25K |
+| Lite difference | `tailTurns=0` | no equivalent |
+| Memory extraction | inline during compaction (saves LLM) | separate subagent |
+| Fallback | splitTurn + MAX_AUTO_COMPACT | PTL retried 3 times |
 
 
 ---
 
-### Context 三大约束与工程对策
+### The three major constraints of Context and engineering countermeasures
 
-![Context 三大约束](ref/context-constraints-excalidraw.png)
+![Three major context constraints](ref/context-constraints-excalidraw.png)
 
-> 来源：Anthropic《Effective Context Engineering for AI Agents》(2025.9)、Stanford《Lost in the Middle》(2023)、Philipp Schmid (2025.6)
+> Sources: Anthropic "Effective Context Engineering for AI Agents" (2025.9), Stanford "Lost in the Middle" (2023), Philipp Schmid (2025.6)
 
-#### 三大物理约束
+#### Three physical constraints
 
-#### 约束一：Lost in the Middle
+#### Constraint 1: Lost in the Middle
 
-**现象**：LLM 对上下文中间位置的信息召回率显著低于首尾位置。
+**Phenomenon**: LLMs recall information in the middle of the context significantly worse than at the beginning or end.
 
-- Stanford 实验：给 LLM 10~20 个文档，只有一个含正确答案，改变其位置
-- **U 型曲线**：答案在开头或结尾时正确率约 75%；夹在中间时降至约 35%
-- 开卷（提供文档但答案在中间）甚至低于闭卷（不给文档）基线 56.1%
-- 在 claude-1.3、gpt-3.5-turbo、mpt-30b-instruct、longchat-13b 等多种模型上稳定复现
+- Stanford experiment: give the LLM 10-20 documents, only one of which contains the correct answer, and vary its position
+- **U-shaped curve**: accuracy is about 75% when the answer is at the beginning or end; it drops to about 35% when buried in the middle
+- Open-book (documents provided but the answer in the middle) even falls below the closed-book (no documents) baseline of 56.1%
+- Stably reproduced across multiple models such as claude-1.3, gpt-3.5-turbo, mpt-30b-instruct, and longchat-13b
 
-**根因**：Transformer 注意力的位置偏差 + 训练数据中长序列远少于短序列。
+**Root cause**: positional bias in Transformer attention + far fewer long sequences than short ones in training data.
 
-**工程对策**：关键信息置于首尾（首因效应 + 近因效应）；避免关键规则夹在工具调用记录中间。
+**Engineering countermeasure**: place key information at the beginning and end (primacy effect + recency effect); avoid burying key rules in the middle of tool call records.
 
-#### 约束二：Context Rot（上下文腐化）
+#### Constraint 2: Context Rot
 
-**现象**：上下文 Token 越多，模型准确召回上下文信息的能力**线性下降**。
+**Phenomenon**: the more tokens in the context, the more the model's ability to accurately recall context information **decays linearly**.
 
-**典型表现**：代码重构 Agent 第 1 轮设定 camelCase 规范，第 1~10 轮严格遵守，到第 40 轮上下文累积数万 token 后规范信号被稀释，Agent 开始生成 snake_case——不是"忘了"，是信号被稀释。
+**Typical manifestation**: a code refactoring agent sets a camelCase convention in round 1 and follows it strictly through rounds 1-10; by round 40, after tens of thousands of tokens have accumulated in the context, the convention's signal is diluted and the agent starts generating snake_case—it is not "forgetting", the signal is being diluted.
 
-**工程对策**：定期压缩、外置记忆、工具返回值截断、只注入决策必需的最小字段集。
+**Engineering countermeasures**: periodic compaction, externalized memory, truncating tool return values, injecting only the minimal set of fields required for decisions.
 
-#### 约束三：Attention Budget（注意力预算）
+#### Constraint 3: Attention Budget
 
-**现象**：自注意力 O(n²) 复杂度，上下文越长计算/延迟/费用三重代价越高。
+**Phenomenon**: self-attention has O(n²) complexity—the longer the context, the higher the triple cost of compute, latency, and expense.
 
-| Token 数 | 计算量 | 意义 |
+| Token count | Compute | Meaning |
 |---|---|---|
-| 1K | 1× | 一般提示词 |
-| 10K | 100× | 约 5000 字中文 |
-| 128K | 16,384× | 接近 GPT-4 Turbo 上限 |
-| 200K | 40,000× | 接近 Claude 上限 |
+| 1K | 1× | an ordinary prompt |
+| 10K | 100× | about 5,000 Chinese characters |
+| 128K | 16,384× | near the GPT-4 Turbo limit |
+| 200K | 40,000× | near the Claude limit |
 
-**核心原则**：注意力是稀缺资源。增加无关内容不是中性操作，而是主动损害有效信息的信号强度。
+**Core principle**: attention is a scarce resource. Adding irrelevant content is not a neutral operation—it actively damages the signal strength of the effective information.
 
-#### 汇总
+#### Summary
 
-| 约束 | 对策 |
+| Constraint | Countermeasure |
 |---|---|
-| Lost in the Middle | 关键信息置于首尾 |
-| Context Rot | 定期压缩、精简历史 |
-| Attention Budget | 控制总长、按需加载 |
+| Lost in the Middle | place key information at the beginning and end |
+| Context Rot | periodic compaction, trim history |
+| Attention Budget | control total length, load on demand |
 
-**核心公式**：最优上下文 = 最小 Token 数量 × 最高信噪比
+**Core formula**: optimal context = minimal token count × maximal signal-to-noise ratio
 
 ---
 
-## **5. Memory System（记忆系统）**
+## **5. Memory System**
 
-​	Agent Harness 中的 Memory System，是整个 AI Agent 工程里最核心的基础设施之一。它定义了智能体如何跨时间地存储、检索和应用知识，也是 Harness 与简单“模型+工具”循环最本质的区别。
+	The Memory System in an Agent Harness is one of the most core pieces of infrastructure in the whole of AI agent engineering. It defines how an agent stores, retrieves, and applies knowledge across time, and it is also the most essential difference between a Harness and a simple "model + tool" loop.
 
-### Claude Code Memdir 实现（源码级）
+### Claude Code memdir implementation (source-level)
 
-> 基于 `src/memdir/` 目录源码逐行阅读。
+> Based on a line-by-line reading of the `src/memdir/` directory source.
 
 ```mermaid
 flowchart TD
-    subgraph STORAGE["存储层 ~/.claude/projects/&lt;slug&gt;/memory/"]
-        EP["MEMORY.md 索引<br/>≤200 行 / ≤25KB"]
-        TOPIC["主题文件 *.md<br/>YAML frontmatter"]
+    subgraph STORAGE["Storage layer ~/.claude/projects/&lt;slug&gt;/memory/"]
+        EP["MEMORY.md index<br/>≤200 lines / ≤25KB"]
+        TOPIC["Topic files *.md<br/>YAML frontmatter"]
     end
 
-    subgraph INJECT["注入层（每轮 system prompt）"]
-        LOAD["loadMemoryPrompt()<br/>全文注入 MEMORY.md"]
-        TRUNC["truncateEntrypointContent()<br/>超限截断 + 警告"]
+    subgraph INJECT["Injection layer (each turn's system prompt)"]
+        LOAD["loadMemoryPrompt()<br/>inject full MEMORY.md"]
+        TRUNC["truncateEntrypointContent()<br/>truncate over limit + warn"]
     end
 
-    subgraph RECALL["召回层（按需检索）"]
-        SCAN["scanMemoryFiles()<br/>扫描全部主题文件生成 manifest"]
-        SIDE["Sonnet sideQuery<br/>max 256 tokens 结构化输出"]
-        SEL["选最多 5 个相关文件"]
-        FILT["过滤条件：<br/>① 最近已展示过的<br/>② 当前正在用的工具文档"]
+    subgraph RECALL["Recall layer (on-demand retrieval)"]
+        SCAN["scanMemoryFiles()<br/>scan all topic files to build manifest"]
+        SIDE["Sonnet sideQuery<br/>max 256 tokens structured output"]
+        SEL["Select up to 5 relevant files"]
+        FILT["Filter criteria:<br/>(1) already shown recently<br/>(2) tool docs currently in use"]
     end
 
-    subgraph WRITE["写入层"]
-        AUTO["每轮结束 Stop hook<br/>fork 代理抽取"]
-        DREAM["autoDream 后台固化<br/>24h + 5 会话门控"]
+    subgraph WRITE["Write layer"]
+        AUTO["Stop hook at turn end<br/>fork agent for extraction"]
+        DREAM["autoDream background consolidation<br/>gated by 24h + 5 sessions"]
     end
 
     EP --> LOAD --> TRUNC
@@ -2776,29 +2831,29 @@ flowchart TD
     style DREAM fill:#C8102E,color:#fff
 ```
 
-#### 四类记忆（`memoryTypes.ts`）
+#### Four memory types (`memoryTypes.ts`)
 
-| 类型 | 用途 |
+| Type | Purpose |
 |---|---|
-| **User** | 用户偏好、习惯 |
-| **Feedback** | 用户对 Agent 行为的纠正反馈 |
-| **Project** | 项目约定、架构决策 |
-| **Reference** | 外部参考资料 |
+| **User** | user preferences, habits |
+| **Feedback** | user corrective feedback on agent behavior |
+| **Project** | project conventions, architecture decisions |
+| **Reference** | external reference material |
 
-#### 入口文件硬限制（`memdir.ts:34-38`）
+#### Entrypoint file hard limits (`memdir.ts:34-38`)
 
 ```typescript
 export const ENTRYPOINT_NAME = 'MEMORY.md'
 export const MAX_ENTRYPOINT_LINES = 200      // ~125 chars/line
-export const MAX_ENTRYPOINT_BYTES = 25_000   // p100 观测：197KB 塞进 200 行
+export const MAX_ENTRYPOINT_BYTES = 25_000   // p100 observation: 197KB squeezed into 200 lines
 ```
 
-**截断策略**（`truncateEntrypointContent`）：先按行截断（自然边界）→ 再按字节在最后一个换行处截断（避免切半行）→ 追加警告说明触发的是哪个上限。
+**Truncation strategy** (`truncateEntrypointContent`): truncate by lines first (natural boundary) → then by bytes at the last newline (to avoid splitting a line in half) → append a warning stating which limit was hit.
 
-#### 召回机制（`findRelevantMemories.ts`）
+#### Recall mechanism (`findRelevantMemories.ts`)
 
 ```typescript
-// 用 Sonnet 做语义选择，max 256 tokens，JSON schema 结构化输出
+// Use Sonnet for semantic selection, max 256 tokens, JSON schema structured output
 const result = await sideQuery({
   model: getDefaultSonnetModel(),
   system: SELECT_MEMORIES_SYSTEM_PROMPT,  // "up to 5, only if certain"
@@ -2807,16 +2862,16 @@ const result = await sideQuery({
 })
 ```
 
-**关键设计**：`alreadySurfaced` 过滤掉前几轮已展示的文件，让 5 个名额花在新候选上；`recentTools` 过滤掉当前正在使用的工具的文档（避免关键词假阳性匹配）。
+**Key design**: `alreadySurfaced` filters out files already shown in recent turns, so the 5 slots go to new candidates; `recentTools` filters out documentation of tools currently in use (avoiding false-positive keyword matches).
 
-#### 后台固化（`autoDream.ts`）
+#### Background consolidation (`autoDream.ts`)
 
 ```mermaid
 flowchart LR
-    A["时间门<br/>距上次 ≥24h"] --> B["会话门<br/>新 transcript ≥5"]
-    B --> C["锁<br/>跨进程防并发"]
-    C --> D["fork 子代理<br/>执行 /dream prompt"]
-    D --> E["整合 memory 目录<br/>合并重复/删矛盾/时间戳标准化"]
+    A["Time gate<br/>≥24h since last run"] --> B["Session gate<br/>≥5 new transcripts"]
+    B --> C["Lock<br/>cross-process, prevents concurrency"]
+    C --> D["fork subagent<br/>run /dream prompt"]
+    D --> E["Consolidate memory directory<br/>merge duplicates/remove contradictions/normalize timestamps"]
 
     style A fill:#E3F2FD
     style B fill:#E3F2FD
@@ -2824,195 +2879,195 @@ flowchart LR
     style D fill:#003A70,color:#fff
 ```
 
-> **对比 Claude Code vs OpenCode 记忆系统**：Claude Code 用 **Sonnet 侧查询选 5 个文件**（LLM 语义选择）；OpenCode 用 **FTS5 BM25 全文检索**（无 LLM 调用）。前者精准但每次召回都花一次 API 调用；后者零成本但依赖关键词匹配质量（OpenCode 为此加了 CJK 分词器）。
+> **Claude Code vs OpenCode memory systems compared**: Claude Code uses **a Sonnet side query to pick 5 files** (LLM semantic selection); OpenCode uses **FTS5 BM25 full-text search** (no LLM calls). The former is precise but costs one API call per recall; the latter is zero-cost but depends on keyword match quality (OpenCode added a CJK tokenizer for this).
 
 ---
 
-### 介绍
+### Introduction
 
-#### 记忆系统的地位
+#### The memory system's role
 
-​	Agent Harness 是操作系统，而Memory System是它的文件与内存管理子系统：
+	An Agent Harness is an operating system, and the Memory System is its file and memory management subsystem:
 
-- **工作记忆（RAM）**：即上下文窗口，存储当前会话的对话历史。
-- **长期记忆（Disk）**：即跨会话的持久化存储，确保Agent重启后仍能记住过往。
-- **记忆管理器（OS Kernel）**：负责在两者间搬运数据（加载/压缩），并决定哪些记忆是有效的。
+- **Working memory (RAM)**: the context window, storing the current session's conversation history.
+- **Long-term memory (Disk)**: persistent storage across sessions, ensuring the agent still remembers the past after a restart.
+- **Memory manager (OS Kernel)**: moves data between the two (loading/compaction) and decides which memories are valid.
 
-#### 与Context System关系
+#### Relationship with the Context System
 
-​	在 Agent Harness 架构中，**记忆系统（Memory System）** 和 **上下文系统（Context System）** 是两个紧密协作但职责泾渭分明的核心子系统。一个形象的比喻是：
+	In the Agent Harness architecture, the **Memory System** and the **Context System** are two core subsystems that collaborate closely yet have sharply divided responsibilities. A vivid analogy:
 
-| 对比项       | 记忆系统                              | 上下文系统                            |
+| Aspect       | Memory System                         | Context System                        |
 | :----------- | :------------------------------------ | :------------------------------------ |
-| **核心问题** | 如何让 Agent 跨时间**记住**该记住的？ | 如何让 Agent 在当下**看到**该看到的？ |
-| **典型挑战** | 知识提炼、冲突消解、遗忘淘汰          | Token 预算、信息裁剪、延迟控制        |
-| **设计目标** | 长期连贯性、个性化、持续进化          | 单次任务的高质量、低成本、低延迟      |
+| **Core question** | how does the agent **remember** what it should remember across time? | how does the agent **see** what it should see right now? |
+| **Typical challenges** | knowledge distillation, conflict resolution, forgetting/eviction | token budget, information pruning, latency control |
+| **Design goals** | long-term coherence, personalization, continuous evolution | high quality, low cost, low latency for a single task |
 
 ```mermaid
 flowchart LR
-    subgraph Harness [Agent Harness 核心]
+    subgraph Harness [Agent Harness core]
         direction TB
-        CS[上下文系统 Context System]
-        MS[记忆系统 Memory System]
+        CS[Context System]
+        MS[Memory System]
     end
 
-    User[用户输入] --> CS
-    CS -- 1.检索请求 --> MS
-    MS -- 2.返回相关记忆 --> CS
-    CS -- 3.组装完整上下文 --> LLM[大模型推理]
-    LLM -- 4.生成响应或调用工具 --> CS
-    CS -- 5.输出响应 --> User
+    User[User input] --> CS
+    CS -- 1.Retrieval request --> MS
+    MS -- 2.Return relevant memories --> CS
+    CS -- 3.Assemble full context --> LLM[LLM inference]
+    LLM -- 4.Generate response or call tools --> CS
+    CS -- 5.Output response --> User
     
-    CS -- 6.对话轨迹与结果 --> MS
-    MS -- 7.提炼并归档 --> MS
+    CS -- 6.Conversation trace and results --> MS
+    MS -- 7.Distill and archive --> MS
 ```
 
 
 
-### 记忆生命周期分层：短期、中期、长期
+### Memory lifecycle tiers: short-term, mid-term, long-term
 
-![Agent 记忆生命周期流转](ref/memory-lifecycle-excalidraw.png)
+![Agent memory lifecycle flow](ref/memory-lifecycle-excalidraw.png)
 
-​	在 Agent 系统中，记忆按生命周期和存储位置分为**短期记忆（工作记忆）**、**中期记忆（项目记忆）** 和 **长期记忆（全局记忆）**。三层协同工作，让 Agent 既能处理当前对话，又能跨会话复用知识，还能不断进化。
+	In agent systems, memory is divided by lifecycle and storage location into **short-term memory (working memory)**, **mid-term memory (project memory)**, and **long-term memory (global memory)**. The three tiers work together so the agent can handle the current conversation, reuse knowledge across sessions, and keep evolving.
 
-| 层次         | 存储内容                                             | 生命周期                               | 典型容量                                  | 存储位置                                                 | 示例                         |
+| Tier         | Stored content                                       | Lifecycle                              | Typical capacity                          | Storage location                                         | Example                      |
 | :----------- | :--------------------------------------------------- | :------------------------------------- | :---------------------------------------- | :------------------------------------------------------- | :--------------------------- |
-| **短期记忆** | 当前会话的消息历史、工具调用结果、中间状态           | 会话结束可清除（但通常持久化用于恢复） | 受 LLM 上下文窗口限制（通常 200K tokens） | 内存 + SQLite/文件                                       | 用户刚刚说的“重构 utils.js”  |
-| **中期记忆** | 特定项目的约定、技术栈、常用命令、用户对该项目的偏好 | 跨会话，与项目绑定，随项目演进         | 数千行文本（如 CLAUDE.md 可达几百行）     | 项目目录下的文件（`CLAUDE.md`, `MEMORY.md`, `.claude/`） | “这个项目用 React 18 + Vite” |
-| **长期记忆** | 用户全局偏好、跨项目的通用模式、个人习惯             | 跨项目，永久（除非手动删除）           | 数千条事实（如 MEMORY.md 索引）           | 用户目录（`~/.claude/global-memory/`）                   | “用户喜欢详细的注释”         |
+| **Short-term memory** | the current session's message history, tool call results, intermediate state | clearable when the session ends (but usually persisted for recovery) | bounded by the LLM context window (usually 200K tokens) | in-memory + SQLite/files | the user's just-spoken "refactor utils.js" |
+| **Mid-term memory** | a specific project's conventions, tech stack, common commands, user preferences for that project | across sessions, bound to the project, evolving with it | thousands of lines of text (e.g. CLAUDE.md can reach several hundred lines) | files under the project directory (`CLAUDE.md`, `MEMORY.md`, `.claude/`) | "this project uses React 18 + Vite" |
+| **Long-term memory** | user global preferences, cross-project general patterns, personal habits | across projects, permanent (unless manually deleted) | thousands of facts (e.g. the MEMORY.md index) | the user's home directory (`~/.claude/global-memory/`) | "the user likes detailed comments" |
 
-#### 短期记忆：会话内的消息历史
+#### Short-term memory: in-session message history
 
-​	短期记忆是 Agent 的**工作台**，存储当前会话的所有交互。它的工程实现已经在“Context System”中详细讲解。
+	Short-term memory is the agent's **workbench**, storing all interactions of the current session. Its engineering implementation has already been covered in detail in "Context System".
 
 
 
-#### 中期记忆：项目级记忆
+#### Mid-term memory: project-level memory
 
-​	中期记忆绑定到**特定项目**，跨会话持久化。它包含项目规范、常用命令、架构决策、用户对该项目的偏好等。
+	Mid-term memory is bound to a **specific project** and persists across sessions. It contains project conventions, common commands, architecture decisions, user preferences for that project, and so on.
 
-存储形式
+Storage forms
 
-**存储形式：**
+**Storage forms:**
 
-| 平台        | 文件/目录                         | 用途                                |
+| Platform    | File/directory                    | Purpose                             |
 | :---------- | :-------------------------------- | :---------------------------------- |
-| Claude Code | `CLAUDE.md` (项目根目录)          | 项目指令、技术栈、常用脚本          |
-| Claude Code | `MEMORY.md` (项目目录)            | 项目特定的记忆索引（200行上限）     |
-| Claude Code | `.claude/projects/<slug>/memory/` | 自动学习的项目级事实（独立.md文件） |
-| OpenCode    | `AGENTS.md`                       | 项目指令（标准）                    |
-| OpenCode    | `opencode-memory` 插件            | 项目级记忆 SQLite 表                |
+| Claude Code | `CLAUDE.md` (project root)        | project instructions, tech stack, common scripts |
+| Claude Code | `MEMORY.md` (project directory)   | project-specific memory index (200-line limit) |
+| Claude Code | `.claude/projects/<slug>/memory/` | automatically learned project-level facts (standalone .md files) |
+| OpenCode    | `AGENTS.md`                       | project instructions (standard)     |
+| OpenCode    | `opencode-memory` plugin          | project-level memory SQLite table   |
 
-**加载策略：**
+**Loading strategies:**
 
-* **分层加载**：Claude Code 从根目录到当前目录递归加载所有 `CLAUDE.md`，合并后注入 System Prompt。
+* **Layered loading**: Claude Code recursively loads all `CLAUDE.md` files from the root directory down to the current directory, merges them, and injects them into the System Prompt.
 
-* **索引式加载**：`MEMORY.md` 仅包含索引行（≤150字符），Agent 启动时只加载索引，需要时再通过 `Read` 工具加载具体文件。
+* **Index-based loading**: `MEMORY.md` contains only index lines (≤150 characters); at startup the agent loads only the index, and fetches specific files via the `Read` tool when needed.
 
-**热重载与缓存：**
+**Hot reload and cache:**
 
-项目文件变化时，Agent 应能感知并更新记忆。实现方式：
+When project files change, the agent should sense it and update its memory. Implementation:
 
-- 使用 `chokidar` 监听 `CLAUDE.md` 变化，清除缓存。
-- 下次请求前重新加载。
+- Use `chokidar` to watch `CLAUDE.md` changes and clear the cache.
+- Reload before the next request.
 
 
 
-#### 长期记忆：全局用户偏好
+#### Long-term memory: global user preferences
 
-长期记忆跨项目、跨会话，存储用户的**全局偏好**、**通用习惯**、**个人知识**。例如：“用户是后端工程师，喜欢 TypeScript，讨厌写文档”。
+Long-term memory spans projects and sessions, storing the user's **global preferences**, **general habits**, and **personal knowledge**. For example: "the user is a backend engineer who likes TypeScript and hates writing documentation".
 
-**存储位置：**
+**Storage locations:**
 
-| 平台        | 路径                           | 格式             |
+| Platform    | Path                           | Format           |
 | :---------- | :----------------------------- | :--------------- |
-| Claude Code | `~/.claude/global-memory/`     | Markdown 文件    |
-| Claude Code | `~/.claude/memory.json`        | JSON（部分版本） |
+| Claude Code | `~/.claude/global-memory/`     | Markdown files   |
+| Claude Code | `~/.claude/memory.json`        | JSON (some versions) |
 | OpenCode    | `~/.config/opencode/memory.db` | SQLite           |
-| 通用        | `~/.agent/memory/`             | 文本文件         |
+| Generic     | `~/.agent/memory/`             | text files       |
 
 
 
-### 生产级Agent在记忆工程上的实现
+### How production-grade agents implement memory engineering
 
-* **OpenCode** 选择了最纯粹的“本地优先，人类掌控”路线，它不主动学习，记忆完全由用户通过`AGENTS.md`等指令文件手动定义。
+* **OpenCode** chose the purest "local-first, human-in-control" route: it does not learn proactively, and memory is defined entirely manually by the user via instruction files such as `AGENTS.md`.
 
-* **Claude Code** 是“半自动化、深度集成”的代表，它拥有一套精致的内置记忆系统，但局限在其自有生态内。
+* **Claude Code** represents "semi-automated, deeply integrated": it has a refined built-in memory system, but it is confined to its own ecosystem.
 
-* **OpenClaw** 开创了“数据与索引分离”的先河，用Markdown文件作为“记忆源”，用向量数据库构建“检索索引”，兼顾了人类可读性和机器检索效率。
+* **OpenClaw** pioneered the "separation of data and index", using Markdown files as the "memory source" and a vector database to build the "retrieval index", balancing human readability with machine retrieval efficiency.
 
-* **Hermes** 则实现了“闭环学习”，它不仅能记住，还能从经验中自动提炼出可复用的“技能”，形成自我强化的正向循环。
+* **Hermes** achieved "closed-loop learning": it not only remembers, but can also automatically distill reusable "skills" from experience, forming a self-reinforcing positive loop.
 
-| 项目            | 设计哲学               | 核心架构分层                                                 |
+| Project         | Design Philosophy      | Core Architecture Layers                                                     |
 | :-------------- | :--------------------- | :----------------------------------------------------------- |
-| **OpenCode**    | **本地优先，人类掌控** | 运行时状态 (内存/磁盘/归档) + 数据模型 (Session/Message/Part) + 指令文件 |
-| **Claude Code** | **半自动化，深度集成** | 手动记忆 (CLAUDE.md) + 自动记忆 (Auto Memory) + 会话记忆 (Compact) + 后台整合 (Auto Dream) |
-| **OpenClaw**    | **数据与索引分离**     | 基础层 (Markdown源) + 索引层 (SQLite+向量) + 运行时层 (上下文管理) |
-| **Hermes**      | **闭环学习，自我进化** | 提示记忆 (Prompt) + 会话归档 (Session) + 技能记忆 (Skills) + 建模层 (Optional) |
+| **OpenCode**    | **Local-first, human in control** | Runtime state (memory/disk/archive) + data model (Session/Message/Part) + instruction files |
+| **Claude Code** | **Semi-automated, deeply integrated** | Manual memory (CLAUDE.md) + auto memory (Auto Memory) + session memory (Compact) + background consolidation (Auto Dream) |
+| **OpenClaw**    | **Data and index separated** | Foundation layer (Markdown source) + index layer (SQLite+vector) + runtime layer (context management) |
+| **Hermes**      | **Closed-loop learning, self-evolution** | Prompt memory (Prompt) + session archive (Session) + skill memory (Skills) + modeling layer (Optional) |
 
 
 
-#### OpenCode记忆
+#### OpenCode Memory
 
-​	OpenCode的记忆系统是“会话持久化”而非“学习”。它确保应用重启后能恢复历史，但不会让这次会话的信息去影响下一次。
+	OpenCode's memory system is "session persistence" rather than "learning". It ensures history can be restored after the app restarts, but information from one session does not influence the next.
 
-​	OpenCode通过`Session.createNext()`函数创建新会话，该函数**不加载任何旧会话数据**。因此，其“记忆”完全依赖用户手动编辑的指令文件，如`AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`。
+	OpenCode creates a new session through the `Session.createNext()` function, which **loads no data from any previous session**. Its "memory" therefore relies entirely on instruction files manually edited by the user, such as `AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`.
 
-​	所以OpenCode只是简单地持久化存储记忆，并不会从历史里进行学习，当然这也是其编程智能体这个特性所决定的。
+	So OpenCode simply persists memory without learning from history — which is also determined by its nature as a coding agent.
 
 ```mermaid
 flowchart TD
-    A[OpenCode 核心] --> B[会话管理模块<br>src/session]
+    A[OpenCode core] --> B[Session management module<br>src/session]
     
-    B --> C[内存活跃区<br>session-manager.ts]
-    B --> D[磁盘持久区<br>message-v2.ts]
-    B --> E[历史归档区<br>compaction.ts]
+    B --> C[In-memory active zone<br>session-manager.ts]
+    B --> D[On-disk persistence zone<br>message-v2.ts]
+    B --> E[Historical archive zone<br>compaction.ts]
     
-    D --> F[SQLite 数据库]
-    F --> G["(Session 表)"]
-    F --> H["(Message 表)"]
-    F --> I["(Part 表)"]
+    D --> F[SQLite database]
+    F --> G["(Session table)"]
+    F --> H["(Message table)"]
+    F --> I["(Part table)"]
     
-    C --> J[快速访问<br>当前会话]
-    D --> K[持久化存储<br>重启恢复]
-    E --> L[压缩存储<br>节省空间]
+    C --> J[Fast access<br>current session]
+    D --> K[Persistent storage<br>recover after restart]
+    E --> L[Compacted storage<br>saves space]
 ```
 
 
 
-#### Claude Code记忆：半自动记忆
+#### Claude Code Memory: Semi-Automatic Memory
 
-​	Claude Code的记忆系统是其Harness中最具工程巧思的部分，通过一套**四层架构**实现知识的半自动化管理。
+	Claude Code's memory system is the most ingeniously engineered part of its Harness, achieving semi-automatic knowledge management through a **four-layer architecture**.
 
-这套流程的核心由四个层次驱动：
+This process is driven by four layers:
 
-1. **Layer 1: 手动记忆 (`CLAUDE.md`)**：由用户手动维护，支持企业、用户、项目、本地四级作用域。它被当作特殊的`user`消息插入，不享受缓存优化。
-2. **Layer 2: 自动记忆 (Auto Memory)**：Agent自主决定写入跨会话知识，存储为Markdown文件，并分为**用户**、**反馈**、**项目**和**参考**四类。系统通过`MEMORY.md`索引文件管理记忆，但存在**200行**的硬性读取限制。
-3. **Layer 3: 会话记忆 (Session Memory)**：通过`autoCompact`、`snipCompact`和`contextCollapse`三种压缩策略对抗上下文窗口限制。
-4. **Layer 4: 后台整合 (Auto Dream)**：一个在用户空闲时运行的后台进程，负责整合、清理和固化记忆。
+1. **Layer 1: Manual Memory (`CLAUDE.md`)**: manually maintained by the user, supporting four scopes: enterprise, user, project, and local. It is inserted as a special `user` message and does not enjoy cache optimization.
+2. **Layer 2: Auto Memory**: the Agent autonomously decides to write cross-session knowledge, stored as Markdown files and divided into **user**, **feedback**, **project**, and **reference** categories. The system manages memory through a `MEMORY.md` index file, but there is a hard **200-line** read limit.
+3. **Layer 3: Session Memory**: counters context window limits through three compaction strategies: `autoCompact`, `snipCompact`, and `contextCollapse`.
+4. **Layer 4: Background Consolidation (Auto Dream)**: a background process that runs when the user is idle, responsible for organizing, cleaning up, and consolidating memory.
 
 
 
 ```mermaid
 flowchart TD
-    A[会话开始] --> B[加载手动记忆<br>CLAUDE.md]
-    B --> C[加载自动记忆索引<br>MEMORY.md]
-    C --> D[注入 System Prompt]
+    A[Session start] --> B[Load manual memory<br>CLAUDE.md]
+    B --> C[Load auto memory index<br>MEMORY.md]
+    C --> D[Inject into System Prompt]
     
-    D --> E[用户与 Agent 交互]
-    E --> F{上下文将满?}
-    F -- 是 --> G[触发会话压缩<br>autoCompact/snipCompact]
-    G --> H[压缩并更新<br>会话记忆]
+    D --> E[User interacts with Agent]
+    E --> F{Context nearly full?}
+    F -- Yes --> G[Trigger session compaction<br>autoCompact/snipCompact]
+    G --> H[Compact and update<br>session memory]
     H --> E
     
-    E --> I[Agent 决定写入记忆]
-    I --> J[生成 Markdown 笔记<br>分类存储]
-    J --> K[更新 MEMORY.md 索引]
-    K --> L[记忆文件目录<br>~/.claude/projects/.../memory/]
+    E --> I[Agent decides to write memory]
+    I --> J[Generate Markdown notes<br>store by category]
+    J --> K[Update MEMORY.md index]
+    K --> L[Memory files directory<br>~/.claude/projects/.../memory/]
     
-    subgraph BG [后台任务]
-        M[Auto Dream 进程] --> N[空闲时运行]
-        N --> O[整合与清理记忆文件]
+    subgraph BG [Background task]
+        M[Auto Dream process] --> N[Runs when idle]
+        N --> O[Consolidate and clean up memory files]
     end
     
     O --> L
@@ -3020,47 +3075,47 @@ flowchart TD
 
 
 
-#### OpenClaw记忆实践：以文件为“源”，向量为“索”的记忆系统
+#### OpenClaw Memory Practice: A Memory System with Files as the "Source" and Vectors as the "Index"
 
-OpenClaw采用**三级记忆架构**（短期日志、近端会话、长期知识），其核心创新在于**将记忆的“源数据”与“检索索引”彻底分离**。
+OpenClaw adopts a **three-tier memory architecture** (short-term logs, near-term sessions, long-term knowledge); its core innovation is **completely separating the memory's "source data" from its "retrieval index"**.
 
-- **记忆的“源”：人类可读的Markdown文件**
-  OpenClaw将记忆的“源数据”存储在明文Markdown文件中：
-  - `MEMORY.md`：存储长期、持久化的事实和偏好。
-  - `memory/YYYY-MM-DD.md`：按日记录的日志，作为短期记忆。
-  - `sessions/`目录：存储近端的完整会话存档。
-  - `USER.md` & `SOUL.md`：存储用户身份和Agent人格设定。
-- **记忆的“索引”：SQLite + 向量数据库**
-  OpenClaw维护一个SQLite数据库作为高效的索引层。
-  - `files`与`chunks`表：记录文件元数据和分块后的文本，并去重存储。
-  - `chunks_fts`虚拟表：使用FTS5实现全文搜索。
-  - `chunks_vec`虚拟表：使用sqlite-vec实现向量搜索。
-  - **优雅降级策略**：如果向量扩展未加载，系统会自动回退到JavaScript暴力计算。
+- **The memory "source": human-readable Markdown files**
+  OpenClaw stores memory's "source data" in plain-text Markdown files:
+  - `MEMORY.md`: stores long-term, persistent facts and preferences.
+  - `memory/YYYY-MM-DD.md`: daily logs serving as short-term memory.
+  - `sessions/` directory: stores complete near-term session archives.
+  - `USER.md` & `SOUL.md`: store user identity and Agent persona settings.
+- **The memory "index": SQLite + vector database**
+  OpenClaw maintains an SQLite database as an efficient index layer.
+  - `files` and `chunks` tables: record file metadata and chunked text, stored with deduplication.
+  - `chunks_fts` virtual table: uses FTS5 for full-text search.
+  - `chunks_vec` virtual table: uses sqlite-vec for vector search.
+  - **Graceful fallback strategy**: if the vector extension is not loaded, the system automatically falls back to brute-force computation in JavaScript.
 
 ```mermaid
 flowchart TD
-    A[AI Agent] -- 1. 读写记忆 --> B[Markdown 源文件<br>MEMORY.md / Daily Logs]
-    B -- 2. 作为源数据 --> C[内存/工作区]
+    A[AI Agent] -- 1. Read/write memories --> B[Markdown source files<br>MEMORY.md / Daily Logs]
+    B -- 2. As source data --> C[Memory/workspace]
     
-    subgraph INDEX [后台索引服务]
-        D[文件系统监控] -- 3. 检测变更 --> E[SQLite + sqlite-vec]
-        E -- 4. 创建索引 --> F[全文索引 FTS5]
-        E -- 5. 创建索引 --> G[向量索引 vec0]
+    subgraph INDEX [Background indexing service]
+        D[Filesystem watcher] -- 3. Detect changes --> E[SQLite + sqlite-vec]
+        E -- 4. Create index --> F[Full-text index FTS5]
+        E -- 5. Create index --> G[Vector index vec0]
     end
     
-    H[Agent 检索记忆] -- 6. 执行搜索 --> I[检索 API]
-    I -- 7. 全文查询 --> F
-    I -- 8. 向量查询 --> G
-    I -- 9. 返回路径/片段 --> B
+    H[Agent retrieves memories] -- 6. Run search --> I[Retrieval API]
+    I -- 7. Full-text query --> F
+    I -- 8. Vector query --> G
+    I -- 9. Return paths/snippets --> B
 ```
 
-#### Hermes：自我进化的闭环学习系统
+#### Hermes: A Self-Evolving Closed-Loop Learning System
 
-​	Hermes Agent的设计哲学是“会自我进化的AI Agent”，其记忆系统是一套**闭环学习机制**，能主动学习、沉淀知识、自我迭代。
+	The Hermes Agent's design philosophy is "an AI Agent that evolves itself"; its memory system is a **closed-loop learning mechanism** that can actively learn, accumulate knowledge, and iterate on itself.
 
-> 基于 `tools/memory_tool.py`（397 行）+ `tools/session_search_tool.py` 源码阅读。
+> Based on source-level reading of `tools/memory_tool.py` (397 lines) + `tools/session_search_tool.py`.
 
-**冻结快照机制**（`memory_tool.py` 模块 docstring 原文）：
+**Frozen snapshot mechanism** (original text from the `memory_tool.py` module docstring):
 
 ```python
 """Memory Tool - persistent curated memory (MEMORY.md = agent notes, USER.md = user
@@ -3069,213 +3124,213 @@ mid-session writes hit disk but never change the prompt (prefix cache intact).
 Single `memory` tool: add/replace/remove or a batch `operations` list."""
 ```
 
-| 设计 | 说明 |
+| Design | Description |
 |---|---|
-| **冻结快照** | MEMORY.md + USER.md 在会话开始时以**冻结快照**进 system prompt |
-| **会话中写入** | 落盘但**不改 prompt**——保 prefix cache 完整 |
-| **单一工具** | `memory` 工具：add / replace / remove，或批量 `operations` |
-| **字符硬限** | `memory_char_limit = 2200`（MEMORY.md）、`user_char_limit = 1375`（USER.md）|
-| **写审批门** | `write_approval` 三态：`allow` / `blocked` / `staged`（需审批的 op 暂存待批）|
-| **后台 review** | 无人值守的 review fork **只允许 add**，replace/remove 一律 staged |
+| **Frozen snapshot** | MEMORY.md + USER.md enter the system prompt as a **frozen snapshot** at session start |
+| **Mid-session writes** | Hit disk but **do not change the prompt** — keeps the prefix cache intact |
+| **Single tool** | The `memory` tool: add / replace / remove, or a batch `operations` list |
+| **Hard character limits** | `memory_char_limit = 2200` (MEMORY.md), `user_char_limit = 1375` (USER.md) |
+| **Write approval gate** | `write_approval` has three states: `allow` / `blocked` / `staged` (ops requiring approval are staged pending review) |
+| **Background review** | Unattended review forks are **only allowed to add**; replace/remove are always staged |
 
-**为什么冻结快照是关键**（对比 OpenCode）：OpenCode / OpenAI 的思路是"压缩 MEMORY.md 的索引节"来省 token；Hermes 是**按字符硬限 + 冻结前缀**——写盘不影响 prompt，缓存永远命中。两者都指向同一目标：**让记忆注入不破坏 prompt cache**。
+**Why the frozen snapshot is key** (compared with OpenCode): OpenCode / OpenAI's approach is to "compact the index section of MEMORY.md" to save tokens; Hermes uses **hard character limits + a frozen prefix** — writes to disk do not affect the prompt, so the cache always hits. Both point to the same goal: **memory injection must not break the prompt cache**.
 
-**四层记忆的源码对应**：
+**Source-level correspondence of the four memory layers**:
 
-| 层 | 实现 | 特点 |
+| Layer | Implementation | Characteristics |
 |---|---|---|
-| 提示记忆 | `MEMORY.md`（2200 字符）+ `USER.md`（1375 字符）| 会话开始加载，冻结快照 |
-| 会话归档 | SQLite + `session_search_tool.py`（784 行）| FTS5 BM25 检索，CJK 分词器 |
-| 技能记忆 | `curator.py`（1100 行）| 空闲触发（7 天间隔），只归档不删除 |
-| 可选建模层 | 外部插件（Mem0 / Honcho / Supermemory）| duck-typed provider |
+| Prompt memory | `MEMORY.md` (2200 characters) + `USER.md` (1375 characters) | Loaded at session start, frozen snapshot |
+| Session archive | SQLite + `session_search_tool.py` (784 lines) | FTS5 BM25 retrieval, CJK tokenizer |
+| Skill memory | `curator.py` (1100 lines) | Idle-triggered (7-day interval), archives only, never deletes |
+| Optional modeling layer | External plugins (Mem0 / Honcho / Supermemory) | duck-typed provider |
 
-其核心由四个层次驱动：
+Its core is driven by four layers:
 
-- **提示记忆**：由`MEMORY.md`（长期事实）和`USER.md`（用户画像）两个小文件组成，在会话开始时加载。
-- **会话归档**：使用SQLite数据库存储完整的对话历史，Agent可通过`session_search`工具主动检索。
-- **技能记忆**：Hermes最具差异化的能力。Agent完成复杂任务后，会**自动生成技能文档**，沉淀为可复用的“程序性记忆”。
-- **可选建模层**：对记忆进行更深度的结构化处理，以支持更复杂的推理。
+- **Prompt memory**: composed of two small files, `MEMORY.md` (long-term facts) and `USER.md` (user profile), loaded at session start.
+- **Session archive**: uses an SQLite database to store the complete conversation history; the Agent can actively retrieve it via the `session_search` tool.
+- **Skill memory**: Hermes' most differentiated capability. After completing a complex task, the Agent **automatically generates skill documentation**, settling it as reusable "procedural memory".
+- **Optional modeling layer**: performs deeper structuring of memory to support more complex reasoning.
 
 ```mermaid
 flowchart TD
-    A[用户与 Agent 交互] --> B{任务执行}
+    A[User interacts with Agent] --> B{Task execution}
     
-    B -- 执行成功 --> C[自动触发记忆提取]
-    B -- 上下文将满 --> D[预压缩记忆刷写]
+    B -- Success --> C[Auto-trigger memory extraction]
+    B -- Context nearly full --> D[Pre-compaction memory flush]
     
-    C --> E[调用 LLM 分析对话]
+    C --> E[Call LLM to analyze conversation]
     D --> E
     
-    E --> F[提取关键信息与流程]
-    F --> G[写入多层记忆]
+    E --> F[Extract key facts and procedures]
+    F --> G[Write into layered memory]
     
-    G --> H[提示记忆<br>MEMORY.md / USER.md]
-    G --> I[会话归档<br>SQLite + FTS5]
-    G --> J[技能记忆<br>Markdown 技能文档]
-    G --> K[可选建模层]
+    G --> H[Prompt memory<br>MEMORY.md / USER.md]
+    G --> I[Session archive<br>SQLite + FTS5]
+    G --> J[Skill memory<br>Markdown skill docs]
+    G --> K[Optional modeling layer]
     
-    H --> L[下次会话自动加载]
-    I --> M[通过 session_search 检索]
-    J --> N[沉淀为可复用技能]
+    H --> L[Auto-loaded next session]
+    I --> M[Retrieved via session_search]
+    J --> N[Consolidated into reusable skills]
     
-    N --> O[技能库增长]
-    O -- 正向循环 --> B
+    N --> O[Skill library grows]
+    O -- Positive feedback loop --> B
 ```
 
 ```python
-# Hermes“预压缩记忆刷写”实现闭环学习伪代码
+# Hermes "pre-compaction memory flush" closed-loop learning pseudocode
 class HermesMemoryManager:
     async def handle_context_threshold(self, session):
-        """上下文达到阈值时的处理"""
-        # 1. 在压缩前，先调用 LLM 提取关键记忆
+        """Handle the case when context reaches the threshold"""
+        # 1. Before compaction, first call LLM to extract key memories
         extracted = await self.extract_memory(session.get_conversation_history())
 
-        # 2. 判断是事实还是技能
+        # 2. Decide whether each item is a fact or a skill
         for item in extracted:
             if item.type == "skill":
                 await self.create_skill_document(item)
             else:
                 await self.update_memory_files(item)
 
-        # 3. 更新会话归档
+        # 3. Update session archive
         await self.archive_session(session)
 
-        # 4. 最后执行上下文压缩
+        # 4. Finally perform context compaction
         await self.compact_context(session)
 ```
 
 
 
-#### 总结工程实践原则
+#### Summary of Engineering Practice Principles
 
-1. **分层设计是基础**：无论是OpenCode的运行时分层，还是Claude Code/OpenClaw/Hermes的认知分层，都遵循了“关注点分离”的原则。
-2. **数据所有权是关键**：OpenCode和OpenClaw代表的**开放、自托管**模式，确保你的记忆数据不被锁定，具有长期的可维护性。
-3. **检索智能决定上限**：Claude Code的200行索引和关键词匹配是其瓶颈。**语义向量搜索**（如OpenClaw的`sqlite-vec`）或**全文检索**（如Hermes的FTS5）是解决“记忆召回”问题的工业界标准答案。
-4. **记忆生命周期需要主动维护**：一套健壮的“记忆新陈代谢”机制（如Claude Code的`Auto Dream`和`compact`，OpenClaw的“预压缩记忆刷写”）是构建长期可靠记忆系统的关键。
-5. **闭环学习是未来**：Hermes的“自动技能生成”代表了Agent记忆系统从“被动存储”走向“主动学习”的演化方向，让Agent能像人一样，从经验中抽象出可复用的方法论。
-
-
-
-### 自动学习与进化
-
-#### 地位和作用
-
-​	记忆的自动学习与进化是Agent Harness从“**能干活的机器**”蜕变为“**会成长的伙伴**”的核心驱动力。记忆系统的自动学习和进化本质上是在解决一个核心问题：**如何让AI Agent在交互中自主地“成长”，变得越用越懂你、越用越聪明？**
-
-​	而记忆的自动学习与进化在Harness中扮演多重关键角色，驱动Agent实现质的飞跃。
-
-- **赋予“经验”**：通过学习，Agent能记录成功流程与失败教训，为未来提供经验指导，摆脱“金鱼记忆”。
-- **实现“个性化”**：Agent在长期互动中，逐渐学习用户的偏好与习惯，从“通用工具”进化为“专属伙伴”。
-- **提升“效率”**：通过自动化技能沉淀和智能记忆检索，Agent能大幅减少重复工作，提升复杂任务的执行效率。
-- **突破“上下文限制”**：通过记忆压缩与整合，Agent能有效管理上下文，解决“上下文腐烂”问题，实现无限长度的有效交互。
-- **实现“自主成长”**：Hermes等先进系统已实现**闭环学习**，Agent能从每次任务中自主提炼知识，持续增强自身能力。
-
-#### 理论基础
-
-- **闭环学习循环 (Closed-Loop Learning Cycle)**：Agent在任务完成后，会自动复盘、提炼知识并固化，形成“越用越聪明”的正向飞轮。
-- **分层记忆巩固 (Hierarchical Memory Consolidation)**：借鉴人类记忆模型，Agent的记忆从短暂的工作记忆，到情景记忆，再到持久的语义和程序性记忆，实现信息的有效管理和压缩。
-- **自主技能演化 (Autonomous Skill Evolution)**：高级形态。当某个工作流被验证为高效通用时，Agent能将其自动提炼、封装为可复用的“技能(Skill)”，并持续优化。
-
-#### 自动学习、记忆保鲜、更新与遗忘的关系
-
-​	三者并非独立的功能模块，而是构成记忆生命循环的“三位一体”机制。三者共同构成了一套**主动代谢机制**，使得记忆系统不再是静态的存储仓库，而是一个活的、持续演化的认知器官。
-
-- **自动学习**负责记忆的“增长”——从交互中提取新知识、生成新技能。
-- **记忆保鲜**负责记忆的“健康”——确保留存的每一条记忆都是准确、有效、未被污染的。它包含三个维度：**准确性保鲜**（通过验证与冲突检测）、**时效性保鲜**（通过时间衰减算法）和**相关性保鲜**（通过访问频率加权）。
-- **更新与遗忘**负责记忆的“新陈代谢”——用新知识覆盖旧知识，并主动淘汰低价值或过时的信息。没有更新，Agent 会僵化；没有遗忘，Agent 会臃肿并产生“幻觉”。
+1. **Layered design is the foundation**: whether OpenCode's runtime layering or the cognitive layering of Claude Code/OpenClaw/Hermes, all follow the principle of "separation of concerns".
+2. **Data ownership is key**: the **open, self-hosted** model represented by OpenCode and OpenClaw ensures your memory data is not locked in and remains maintainable over the long term.
+3. **Retrieval intelligence determines the ceiling**: Claude Code's 200-line index and keyword matching are its bottleneck. **Semantic vector search** (e.g. OpenClaw's `sqlite-vec`) or **full-text search** (e.g. Hermes's FTS5) is the industry's standard answer to the "memory recall" problem.
+4. **Memory lifecycle requires active maintenance**: a robust "memory metabolism" mechanism (e.g. Claude Code's `Auto Dream` and `compact`, OpenClaw's "pre-compaction memory flush") is key to building a long-term reliable memory system.
+5. **Closed-loop learning is the future**: Hermes's "automatic skill generation" represents the direction in which Agent memory systems evolve from "passive storage" toward "active learning", enabling Agents to abstract reusable methodologies from experience, just like humans.
 
 
 
-#### Claude Code：Auto Memory & Auto Dream
+### Automatic Learning and Evolution
 
-##### 自动学习：Auto Memory
+#### Status and Role
 
-​	Claude Code 的自动学习通过 **Auto Memory (自动记忆)** 机制实现。Agent 在会话过程中会主动判断哪些信息值得保留，并自动生成 Markdown 笔记，分为**用户偏好、反馈、项目背景和参考指针**四类。
+	The automatic learning and evolution of memory is the core driving force behind the Agent Harness transforming from a "**capable machine**" into a "**growing companion**". The automatic learning and evolution of memory essentially solves one core question: **how can an AI Agent autonomously "grow" through interaction, becoming more attuned to you and smarter with use?**
 
-- **索引机制**：所有自动记忆通过`MEMORY.md`文件进行索引。该索引文件被设计为不超过200行，每行是一个简短的标题（≤150字符），指向一个详细的记忆文件。
-- **局限性**：自动记忆的索引被硬性限制为200行，且检索依赖精确关键词匹配。一旦记忆条目超过此限制或查询用词不一致，相关记忆就无法被找到。
+	In the Harness, automatic learning and evolution of memory plays multiple key roles, driving a qualitative leap for the Agent.
+
+- **Endowing "experience"**: through learning, the Agent can record successful workflows and failure lessons, providing experiential guidance for the future and escaping "goldfish memory".
+- **Achieving "personalization"**: through long-term interaction, the Agent gradually learns the user's preferences and habits, evolving from a "generic tool" into a "dedicated companion".
+- **Improving "efficiency"**: through automated skill accumulation and intelligent memory retrieval, the Agent can greatly reduce repetitive work and improve execution efficiency on complex tasks.
+- **Breaking "context limits"**: through memory compaction and consolidation, the Agent can effectively manage context, solve the "context rot" problem, and achieve effective interaction of unlimited length.
+- **Achieving "autonomous growth"**: advanced systems such as Hermes have achieved **closed-loop learning**; the Agent can autonomously distill knowledge from every task and continuously strengthen its own capabilities.
+
+#### Theoretical Foundations
+
+- **Closed-Loop Learning Cycle**: after task completion, the Agent automatically reviews, distills knowledge, and consolidates it, forming a positive flywheel of "getting smarter with use".
+- **Hierarchical Memory Consolidation**: drawing on human memory models, the Agent's memory moves from short-lived working memory to episodic memory, and then to durable semantic and procedural memory, achieving effective information management and compaction.
+- **Autonomous Skill Evolution**: the advanced form. When a workflow is validated as efficient and general, the Agent can automatically distill and encapsulate it into a reusable "Skill" and keep optimizing it.
+
+#### The Relationship Among Automatic Learning, Memory Freshness, Updating, and Forgetting
+
+	The three are not independent functional modules but a "trinity" mechanism forming the memory life cycle. Together they constitute a **proactive metabolism mechanism**, making the memory system no longer a static storage warehouse but a living, continuously evolving cognitive organ.
+
+- **Automatic learning** handles memory "growth" — extracting new knowledge from interactions and generating new skills.
+- **Memory freshness** handles memory "health" — ensuring every retained memory is accurate, valid, and unpolluted. It has three dimensions: **accuracy freshness** (via validation and conflict detection), **timeliness freshness** (via time-decay algorithms), and **relevance freshness** (via access-frequency weighting).
+- **Updating and forgetting** handle memory "metabolism" — overwriting old knowledge with new, and proactively retiring low-value or outdated information. Without updating, the Agent ossifies; without forgetting, the Agent bloats and produces "hallucinations".
+
+
+
+#### Claude Code: Auto Memory & Auto Dream
+
+##### Automatic Learning: Auto Memory
+
+	Claude Code's automatic learning is implemented through the **Auto Memory** mechanism. During a session, the Agent actively judges which information is worth keeping and automatically generates Markdown notes in four categories: **user preferences, feedback, project background, and reference pointers**.
+
+- **Index mechanism**: all auto memories are indexed through the `MEMORY.md` file. This index file is designed to stay within 200 lines, each line being a short title (≤150 characters) pointing to a detailed memory file.
+- **Limitations**: the auto memory index is hard-limited to 200 lines, and retrieval relies on exact keyword matching. Once memory entries exceed this limit or the query wording differs, the relevant memory cannot be found.
 
 ```mermaid
 flowchart TD
-    subgraph AutoMemory [Claude Code 自动记忆流程]
-        A[用户与 Agent 交互] --> B{Agent 判断<br>是否值得记忆?}
-        B -- 是 --> C[生成 Markdown 笔记]
-        C --> D[按类别分类:<br>用户/反馈/项目/参考]
-        D --> E[写入 memory/ 目录]
-        E --> F[更新 MEMORY.md 索引]
-        F --> G[索引文件限制: ≤200 行<br>每行 ≤150 字符]
+    subgraph AutoMemory [Claude Code auto memory flow]
+        A[User interacts with Agent] --> B{Agent decides<br>worth remembering?}
+        B -- Yes --> C[Generate Markdown note]
+        C --> D[Categorize:<br>user/feedback/project/reference]
+        D --> E[Write into memory/ directory]
+        E --> F[Update MEMORY.md index]
+        F --> G[Index file limits: ≤200 lines<br>≤150 chars per line]
     end
 ```
 
-##### 记忆保鲜：Auto Dream
+##### Memory Freshness: Auto Dream
 
-​	Claude Code 的保鲜机制主要通过 **Auto Dream(自动梦境)**后台进程实现。Auto Dream 是一个在用户空闲时运行的清理程序，负责整合陈旧的记忆、清理冗余信息。
+	Claude Code's freshness mechanism is mainly implemented through the **Auto Dream** background process. Auto Dream is a cleanup program that runs when the user is idle, responsible for consolidating stale memories and cleaning up redundant information.
 
-- **准确性保鲜**：Auto Dream 整合记忆时，LLM 被明确要求“消除矛盾、移除冗余”，新旧冲突时以最新信息为准，覆盖式更新。
-- **时效性保鲜**：通过整合过程间接实现——陈旧内容在合并过程中被新内容替代，自然“刮除”。
+- **Accuracy freshness**: when Auto Dream consolidates memories, the LLM is explicitly asked to "eliminate contradictions and remove redundancy"; when old and new conflict, the latest information prevails with overwriting updates.
+- **Timeliness freshness**: achieved indirectly through the consolidation process — stale content is replaced by new content during merging, naturally "scraped away".
 
-**Auto Dream 工作流程**:
+**Auto Dream workflow**:
 
 ```mermaid
 flowchart TD
-    A[会话结束/用户空闲] --> B{Auto Dream 门控检查}
+    A[Session end/user idle] --> B{Auto Dream gate checks}
     
-    B --> C[环境前置检查<br>isGateOpen]
-    C -->|通过| D["时间门控<br>距上次 >= 24h?"]
-    C -->|失败| E[结束]
+    B --> C[Environment pre-checks<br>isGateOpen]
+    C -->|Pass| D["Time gate<br>>= 24h since last?"]
+    C -->|Fail| E[End]
     
-    D -->|是| F["扫描节流<br>距上次扫描 >= 10min?"]
-    D -->|否| E
+    D -->|Yes| F["Scan throttle<br>>= 10min since last scan?"]
+    D -->|No| E
     
-    F -->|是| G["会话门控<br>新会话 >= 5个?"]
-    F -->|否| E
+    F -->|Yes| G["Session gate<br>>= 5 new sessions?"]
+    F -->|No| E
     
-    G -->|是| H[文件锁<br>获取分布式锁]
-    G -->|否| E
+    G -->|Yes| H[File lock<br>acquire distributed lock]
+    G -->|No| E
     
-    H -->|成功| I[启动 forked subagent<br>执行 /dream 技能]
-    H -->|失败| E
+    H -->|Success| I[Start forked subagent<br>run /dream skill]
+    H -->|Fail| E
     
-    I --> J[遍历历史会话日志<br>提炼、压缩、整合记忆]
-    J --> K[更新 memory/ 目录下<br>MEMORY.md 等长期记忆文件]
-    K --> L[完成]
+    I --> J[Iterate session history logs<br>distill, compact, consolidate memories]
+    J --> K[Update MEMORY.md and other<br>long-term memory files in memory/]
+    K --> L[Done]
 ```
 
 
 
 ```typescript
-// Claude Code v2.1.88 中 autoDream 的核心门控逻辑伪代码
-// 来源: src/services/autoDream/autoDream.ts
+// Pseudocode of autoDream's core gating logic in Claude Code v2.1.88
+// Source: src/services/autoDream/autoDream.ts
 
 async function checkAndRunAutoDream(): Promise<void> {
-    // 1. 环境检查
+    // 1. Environment checks
     if (getKairosActive() || getIsRemoteMode() || !isAutoMemoryEnabled()) {
         return;
     }
 
-    // 2. 时间门控: 距离上次整理是否超过24小时
+    // 2. Time gate: more than 24 hours since last consolidation
     const lastConsolidatedTime = await readLastConsolidatedAt();
     const hoursSince = (Date.now() - lastConsolidatedTime) / (1000 * 60 * 60);
     if (hoursSince < 24) return;
 
-    // 3. 扫描节流: 防止在短时间内频繁触发
+    // 3. Scan throttle: prevent frequent triggering within a short window
     const lastScanTime = await readLastScanAt();
     if (Date.now() - lastScanTime < 10 * 60 * 1000) return;
 
-    // 4. 会话门控: 是否积累了至少5个新会话
+    // 4. Session gate: at least 5 new sessions accumulated
     const newSessionCount = await countSessionsSince(lastConsolidatedTime);
     if (newSessionCount < 5) return;
 
-    // 5. 分布式锁: 确保同一时间只有一个dream进程在运行
+    // 5. Distributed lock: ensure only one dream process runs at a time
     const lockAcquired = await acquireConsolidationLock();
     if (!lockAcquired) return;
 
     try {
-        // 启动独立子代理执行 /dream 任务
+        // Start an independent subagent to run the /dream task
         const result = await runForkedAgent("/dream", { querySource: "auto_dream" });
         
         if (result.success) {
-            // 更新最后整合时间戳
+            // Update the last-consolidated timestamp
             await updateLastConsolidatedAt();
         }
     } finally {
@@ -3284,124 +3339,124 @@ async function checkAndRunAutoDream(): Promise<void> {
 }
 ```
 
-##### 更新与遗忘
+##### Updating and Forgetting
 
-- **更新**：通过 Auto Dream 的整合式更新实现。新旧记忆在整合过程中被合并为一条更准确的记忆，新内容覆盖旧文件。
-- **遗忘**：**间接淘汰**——陈旧/矛盾的记忆在合并时被新内容取代，无显式删除机制。索引的 200 行硬限制也是一种强制遗忘。
+- **Updating**: implemented through Auto Dream's consolidating updates. Old and new memories are merged into one more accurate memory during consolidation, with new content overwriting old files.
+- **Forgetting**: **indirect elimination** — stale/contradictory memories are replaced by new content during merging; there is no explicit deletion mechanism. The index's hard 200-line limit is also a form of enforced forgetting.
 
-​	Claude Code 通过 `Auto Dream` 后台进程实现了一种**静默的、批量式的记忆新陈代谢**。它不显式地“删除”记忆，而是通过**整合**来变相实现遗忘。
+	Claude Code implements a form of **silent, batch-wise memory metabolism** through the `Auto Dream` background process. It does not explicitly "delete" memories; instead, it achieves forgetting in disguise through **consolidation**.
 
 
 
 #### OpenClaw
 
-​	OpenClaw的记忆进化更偏向**系统化的“认知”过程**，它通过仿生学算法，系统性地将短期交互转化为长期认知。
+	OpenClaw's memory evolution leans toward a **systematic "cognitive" process**: through biomimetic algorithms, it systematically converts short-term interactions into long-term cognition.
 
-##### 自动学习：Dreaming（梦境）
+##### Automatic Learning: Dreaming
 
-​	OpenClaw 的自动学习通过 **Dreaming**（梦境）后台记忆整合系统实现。这是一套像素级复刻人类睡眠逻辑的记忆整理机制，将 Agent 的运行状态划分为三个协同阶段：
+	OpenClaw's automatic learning is implemented through the **Dreaming** background memory consolidation system. This is a memory-organizing mechanism that replicates human sleep logic down to the last detail, dividing the Agent's running state into three coordinated phases:
 
-1. **浅睡阶段(Light Sleep)**：扫描近期对话，去重并生成候选清单。
-2. **深睡阶段(Deep Sleep)**：通过加权评分机制（相关性30%、频率24%、多样性15%、时效性15%、整合度10%等），筛选出高价值信息写入长期记忆文件。
-3. **快速眼动阶段(REM)**：寻找信息间的关联，构建逻辑模式和反思摘要，提升决策能力。
+1. **Light Sleep phase**: scans recent conversations, deduplicates, and generates a candidate list.
+2. **Deep Sleep phase**: through a weighted scoring mechanism (relevance 30%, frequency 24%, diversity 15%, timeliness 15%, consolidation 10%, etc.), filters high-value information into long-term memory files.
+3. **REM phase**: looks for associations between pieces of information, building logical patterns and reflective summaries to improve decision-making.
 
->**Hook逻辑**：OpenClaw从“tools逻辑”（需要时再查）转向“hooks逻辑”（关键节点自动处理），记忆的保存和更新可在后台自动发生，无需Agent主动调用，极大提升了效率。
+>**Hook logic**: OpenClaw shifts from "tools logic" (look things up when needed) to "hooks logic" (automatic processing at key points); memory saving and updating can happen automatically in the background without the Agent actively invoking anything, greatly improving efficiency.
 
-**三阶段梦境 (Dreaming) 过程：**
+**The three-phase Dreaming process:**
 
 ```mermaid
 flowchart TD
-    A[每日凌晨3点自动触发<br>或手动 /dreaming on] --> B
+    A[Auto-triggered daily at 3am<br>or manual /dreaming on] --> B
     
-    subgraph B [Phase 1: Light Sleep 浅睡阶段]
-        B1[读取近期 daily memory 文件<br>与召回记录]
-        B2[Jaccard相似度去重]
-        B3[将候选记忆暂存至短期存储<br>记录信号，不写入 MEMORY.md]
+    subgraph B [Phase 1: Light Sleep]
+        B1[Read recent daily memory files<br>and recall records]
+        B2[Jaccard similarity dedup]
+        B3[Stage candidate memories in short-term storage<br>record signals, do not write MEMORY.md]
     end
 
     B --> C
     
-    subgraph C [Phase 2: REM Sleep 快速眼动阶段]
-        C1[分析过去7天的短期信号]
-        C2[提取高频主题与关联模式]
-        C3[生成反思性摘要<br>记录信号，不写入 MEMORY.md]
+    subgraph C [Phase 2: REM Sleep]
+        C1[Analyze short-term signals from the past 7 days]
+        C2[Extract high-frequency themes and association patterns]
+        C3[Generate reflective summary<br>record signals, do not write MEMORY.md]
     end
 
     C --> D
     
-    subgraph D [Phase 3: Deep Sleep 深睡阶段]
-        D1[获取所有候选记忆]
-        D2[应用六维加权评分模型进行排序]
-        D3[应用 Light 和 REM 阶段的信号加成]
-        D4[硬性门控过滤:<br>评分≥0.8, 召回≥3次, 来源≥3个查询]
-        D5[将合格记忆写入 MEMORY.md]
+    subgraph D [Phase 3: Deep Sleep]
+        D1[Collect all candidate memories]
+        D2[Rank with the six-dimension weighted scoring model]
+        D3[Apply Light and REM phase signal boosts]
+        D4[Hard gate filters:<br>score≥0.8, recalls≥3, sources≥3 queries]
+        D5[Write qualifying memories into MEMORY.md]
     end
 ```
 
-##### 记忆保鲜：六维加权评分模型
+##### Memory Freshness: Six-Dimension Weighted Scoring Model
 
-​	OpenClaw 的保鲜机制嵌入在深睡阶段的**六维加权评分模型**中，这是一套精准的“记忆质检”系统：
+	OpenClaw's freshness mechanism is embedded in the Deep Sleep phase's **six-dimension weighted scoring model**, a precise "memory quality inspection" system:
 
-| 评分维度       | 权重 | 核心作用                                         |
+| Scoring Dimension | Weight | Core Function                                    |
 | :------------- | :--- | :----------------------------------------------- |
-| **相关性**     | 30%  | 衡量信息被检索时的平均质量，是最核心的保鲜指标   |
-| **频率**       | 24%  | 统计条目积累的短期信号数量，高频意味着高价值     |
-| **查询多样性** | 15%  | 有多少种不同上下文涉及过该条目，多样性越高越稳固 |
-| **时效性**     | 15%  | 新鲜度衰减分数，昨天的指令比半年前的更重要       |
-| **整合度**     | 10%  | 跨多日重复出现的稳定程度                         |
-| **概念丰富度** | 6%   | 信息的语义密度                                   |
+| **Relevance**     | 30%  | Measures the average quality of the information when retrieved; the most core freshness indicator |
+| **Frequency**       | 24%  | Counts the short-term signals an entry has accumulated; high frequency means high value |
+| **Query diversity** | 15%  | How many different contexts have touched the entry; the higher the diversity, the more solid it is |
+| **Timeliness**     | 15%  | Freshness decay score; yesterday's instruction matters more than one from half a year ago |
+| **Consolidation**     | 10%  | The stability of recurring across multiple days |
+| **Conceptual richness** | 6%   | The semantic density of the information |
 
-​	在正式写入前，系统还会**重新从每日日志源文件读取最新内容**，确保不会将用户已编辑或删除的旧信息错误地固化为长期记忆。
+	Before formally writing, the system also **re-reads the latest content from the daily log source files**, ensuring it does not wrongly consolidate old information that the user has already edited or deleted into long-term memory.
 
-##### 更新与遗忘
+##### Updating and Forgetting
 
-- **更新**：**渐进晋升式更新**——新信息需先作为“短期信号”在浅睡阶段被标记，通过深睡阶段的高门槛筛选后才能正式写入 `MEMORY.md`。
-- **遗忘**：**显性门槛淘汰**——六维评分低于 0.8、召回次数不足 3 次、或来源查询不足 3 个的信息被直接丢弃，实现主动遗忘。
+- **Updating**: **progressive promotion updates** — new information must first be marked as a "short-term signal" in the Light Sleep phase, and only after passing the Deep Sleep phase's high-threshold filtering can it be formally written into `MEMORY.md`.
+- **Forgetting**: **explicit threshold elimination** — information with a six-dimension score below 0.8, fewer than 3 recalls, or fewer than 3 source queries is directly discarded, achieving active forgetting.
 
 
 
 #### Hermes
 
-​	Hermes代表了最彻底的进化路径。它将“自进化”视为架构的**核心刚需**，通过完整的闭环学习，实现了从记忆到技能的自主演化。
+	Hermes represents the most thorough evolutionary path. It treats "self-evolution" as a **core architectural requirement**, achieving autonomous evolution from memory to skill through complete closed-loop learning.
 
-​	Hermes Agent之所以可以做到“自进化”，最主要就是依赖于两条路径：一是日常的**自动Skill生成（Skill Generation）**，可以快速、轻量、即时生效；二是可以手动触发的**RL训练（Reinforcement Learning）**，从更深度、根本上改变模型本身的能力。这两种路径共同构成了Hermes Agent的“内外”双轮驱动的“**自进化闭环**”。
+	The main reason the Hermes Agent can achieve "self-evolution" is its reliance on two paths: one is the daily **automatic Skill Generation**, which is fast, lightweight, and takes effect immediately; the other is the manually triggerable **RL training (Reinforcement Learning)**, which changes the model's own capabilities more deeply and fundamentally. Together, these two paths form the Hermes Agent's "internal-external" dual-drive "**self-evolution loop**".
 
-![Hermes自进化双路进](./ref/Hermes自进化双路进.png)
+![Hermes self-evolution dual path](ref/hermes-self-evolution-dual-path.png)
 
-​	Hermes的自进化Self-Evo主要就是通过自动化动态生成 Skill 机制解决了“**即时纠错**”和“**沉淀复用**”的问题；以及RL训练闭环从本质上实现了“**智能提升**”的问题。两者结合，才构成了 Hermes 完整的“**自进化**”体系。
+	Hermes's Self-Evo mainly solves the problems of "**instant error correction**" and "**accumulation and reuse**" through its automated dynamic Skill generation mechanism, while the RL training loop essentially achieves "**intelligence improvement**". Only by combining the two does Hermes form its complete "**self-evolution**" system.
 
-##### 自动学习：Skill闭环自进化
+##### Automatic Learning: Skill Closed-Loop Self-Evolution
 
-Hermes 的Skill自动学习由以下关键机制驱动：
+Hermes's automatic skill learning is driven by the following key mechanisms:
 
-1. **周期性 Nudge**：每执行 10 个 turn，系统自动向 Agent 发送“该学习了”的信号，将学习从用户负担变成 Agent 的本能。
-2. **Background Review**：fork 独立的子 Agent 专门做异步复盘，以 daemon 线程方式运行，不阻塞主对话流程。
-3. **双文件存储 + Frozen Snapshot**：`MEMORY.md` 和 `USER.md` 作为长期记忆载体，每次启动时加载一致性快照。
+1. **Periodic Nudge**: every 10 turns, the system automatically sends the Agent an "time to learn" signal, turning learning from a user burden into the Agent's instinct.
+2. **Background Review**: forks an independent subagent dedicated to asynchronous review, running as a daemon thread without blocking the main conversation flow.
+3. **Dual-file storage + Frozen Snapshot**: `MEMORY.md` and `USER.md` serve as long-term memory carriers, loaded as a consistent snapshot at each startup.
 
-**核心机制：闭环学习循环：**
+**Core mechanism: closed-loop learning cycle:**
 
-- **智能体自主精选记忆**：主动复盘，筛选对话中有价值的信息进行保存。
-- **自主生成技能（skill）**：任务完成后，Agent会主动评估其复杂度与价值，决定是否生成可复用的技能文件。
-- **技能自改进**：技能文件存储后并非一成不变。Agent在使用过程中若发现更优路径，会通过**增量补丁(patch)** 的方式更新技能文件，保持其持续优化。
+- **Agent autonomously curates memory**: actively reviews and filters valuable information from conversations for preservation.
+- **Autonomous skill (skill) generation**: after task completion, the Agent proactively assesses its complexity and value, deciding whether to generate a reusable skill file.
+- **Skill self-improvement**: skill files are not static once stored. If the Agent discovers a better path during use, it updates the skill file via **incremental patches (patch)**, keeping it continuously optimized.
 
-**Hermes的Skill闭环学习循环：**
+**Hermes's skill closed-loop learning cycle:**
 
 ```mermaid
 flowchart TD
-    subgraph Hermes [Hermes 闭环学习循环]
-        A[用户任务执行] --> B[任务执行<br>工具调用等]
-        B --> C{任务完成后触发评估}
+    subgraph Hermes [Hermes closed-loop learning loop]
+        A[User task execution] --> B[Task execution<br>tool calls etc.]
+        B --> C{Trigger evaluation after task completes}
         
-        C -- 复杂/有价值 --> D[LLM 分析任务轨迹<br>提取成功路径与工作流]
-        C -- 简单/无价值 --> E[结束]
+        C -- Complex/valuable --> D[LLM analyzes task trace<br>extract successful paths and workflows]
+        C -- Simple/no value --> E[End]
         
-        D --> F[生成 Skill 文件<br>存储于 ~/.hermes/skills/]
-        F --> G[技能库扩充]
-        G --> H[未来相似任务被自动激活]
+        D --> F[Generate Skill file<br>stored in ~/.hermes/skills/]
+        F --> G[Skill library expands]
+        G --> H[Future similar tasks auto-activate it]
         
-        H --> I{技能执行中发现问题?}
-        I -- 是 --> J[触发技能自我改进模块<br>使用 patch 工具修复]
-        I -- 否 --> K[任务成功完成]
+        H --> I{Issues found during skill execution?}
+        I -- Yes --> J[Trigger skill self-improvement module<br>fix with patch tool]
+        I -- No --> K[Task completed successfully]
         
         J --> F
         K --> E
@@ -3409,262 +3464,262 @@ flowchart TD
 ```
 
 ```python
-# Hermes agent/skill_learning_loop.py 的核心逻辑
-# Hermes 技能生成与自改进伪代码
+# Core logic of Hermes agent/skill_learning_loop.py
+# Hermes skill generation and self-improvement pseudocode
 class SkillLearningLoop:
     async def process_task_completion(self, task_trajectory):
-        # 1. 评估任务复杂度
+        # 1. Assess task complexity
         if not self._is_task_valuable(task_trajectory):
             return None
 
-        # 2. 调用LLM分析轨迹，提取技能
+        # 2. Call LLM to analyze the trajectory and extract a skill
         skill_content = await self.llm.extract_skill(task_trajectory)
         
-        # 3. 生成技能文件 (遵循 agentskills.io 标准)
+        # 3. Generate skill file (following the agentskills.io standard)
         skill_path = f"~/.hermes/skills/{self._generate_skill_name(task_trajectory)}.md"
         await self._write_skill_file(skill_path, skill_content)
         
         return skill_path
 
     async def self_improve_skill(self, skill_path, feedback):
-        # 1. 识别需要改进的部分
+        # 1. Identify parts needing improvement
         patch_suggestion = await self.llm.suggest_improvements(skill_path, feedback)
         
-        # 2. 使用 patch 工具精准更新技能文件
+        # 2. Use the patch tool to precisely update the skill file
         await self._apply_patch(skill_path, patch_suggestion)
 ```
 
-​	当 Hermes 下次遇到类似问题的时候，Agent也就不再是从零开始探索，而是直接读取并复用已有的沉淀好的Skill。通过这种方式，Hermes 实现了真正的“**吃一堑，长一智**”。其他 Agent 可能会无休止地重复相同的错误，而 Hermes 则将每一次执行都转化为成长的“养分”，通过不断沉淀和优化 Skill，建立起属于自己的、动态增长的知识库。这也是 Hermes 在长期运行中，效果能够持续“**自进化**”的秘诀之一。
+	When Hermes encounters a similar problem next time, the Agent no longer explores from scratch — it directly reads and reuses the already consolidated Skill. In this way, Hermes achieves a genuine "**learn from every setback, grow wiser**". Other Agents may repeat the same mistakes endlessly, while Hermes turns every execution into "nourishment" for growth, continuously consolidating and optimizing Skills to build its own dynamically growing knowledge base. This is one of the secrets of Hermes' ability to sustain "**self-evolution**" over long-running operation.
 
-##### 自动学习：RL训练闭环：“权重内化”的终极“自进化”
+##### Automatic learning: RL training loop — the ultimate "self-evolution" of "weight internalization"
 
-​	虽然通过动态生成 Skill 沉淀实现的“外挂式”进化在**时效性**和**可解释性**上表现优异 。但是无论 Agent 积累了多少 Skill，其底层的“**模型权重**”始终没变。它只是在不断地检索外部知识库，而非将经验内化为自身的直觉与能力。因此，Hermes 引入了第二条更深层、更直接的进化路径：**基于强化学习（RL）的模型训练闭环。**如果说 Skill 生成是“**记笔记**”，那么 RL 训练就是“**练内功**”，它就是在通过改变模型权重，实现真正的能力“自进化”。
+	While the "bolt-on" evolution achieved by dynamically generating and consolidating Skills excels in **freshness** and **explainability**, no matter how many Skills an Agent accumulates, its underlying "**model weights**" never change. It merely keeps retrieving from an external knowledge base instead of internalizing experience into its own intuition and capability. Therefore, Hermes introduces a second, deeper and more direct evolution path: **a reinforcement learning (RL) based model training loop.** If Skill generation is "**taking notes**", then RL training is "**training the inner core**" — changing the model weights to achieve genuine capability self-evolution.
 
-​	Hermes 在项目的 README.md文件中有个说法是"**Research-Ready**"（研究就绪）的自动化训练框架。为什么不直接叫“Model Fine-Tuning”或者“Model Training”呢？这就恰恰反映出了 Hermes 的一个细节了，它是构建一套从**数据合成、质量筛选、RL训练环境构建、小规模实验、正式训练及自动化评估**的一个完整闭环，所以如果只强调是“模型训练”，反而把格局变小了。
+	In the project's README.md, Hermes describes itself as a "**Research-Ready**" automated training framework. Why not just call it "Model Fine-Tuning" or "Model Training"? This very detail reflects something about Hermes: it builds a complete closed loop spanning **data synthesis, quality screening, RL training environment construction, small-scale experimentation, formal training, and automated evaluation**. Emphasizing only "model training" would actually shrink its scope.
 
-​	整个RL训练过程分阶段来看，主要是下面几个部分：
+	Viewed in stages, the entire RL training process mainly consists of the following parts:
 
-- **任务定义：**用户可以指定具体的训练目标，例如“提升数学推理能力”或“优化特定业务问题”的成功率。系统会根据目标去选择可用的训练数据、Benchmark或者让用户提供相应数据集。
-- **轨迹捕获 & 批量数据合成：**Hermes 内置了批量处理模块batch_runner.py，能够自动去合成Agent的运行**轨迹（Trajectory）**，并且筛选过滤出高质量的数据集。然后将这些轨迹数据清洗并转换为标准的**ShareGPT**格式，为后续的模型训练提供高质量的“**原料**”。在这个过程中，Hermes 通常会利用最强的旗舰模型（如 Claude Opus 4.6）作为“教师模型”来生成初始的高质量示范数据，确立一个高起点的Baseline。随后，系统会自动创建隔离的RL训练环境，并配置相应的超参数。
-- **渐进式训练与自动评估：**为了降低试错成本，Hermes 采用“小步快跑”策略：先使用小规模数据集进行实验性训练，验证可行性后，再启动正式的大规模训练。训练结束后，系统会**自动评估（Evaluate）**，分析各项指标是否有显著提升。如果效果未达预期，反馈信号将指导下一轮的参数调整或数据优化；如果效果显著，则将该版本模型固化。
-- **领域内的局部最优解：**这套机制的价值在于，它能让通用大模型在特定领域（Domain-Specific）实现超越基座模型的表现。通过强化学习中的奖励机制（Reward Model），模型不再仅仅依赖通用的概率预测，而是针对特定场景下的正确行为获得正向反馈，从而逐渐“学会”该领域的专有逻辑，最终达到该场景下的**局部最优解**。
+- **Task definition:** Users can specify concrete training objectives, such as "improving mathematical reasoning" or the success rate of "optimizing a specific business problem". Based on the objective, the system selects available training data and benchmarks, or asks the user to provide a suitable dataset.
+- **Trajectory capture & batch data synthesis:** Hermes ships with a batch processing module, batch_runner.py, which automatically synthesizes Agent runtime **trajectories** and filters out high-quality datasets. These trajectory data are then cleaned and converted into the standard **ShareGPT** format, providing high-quality "**raw material**" for subsequent model training. In this process, Hermes typically uses the strongest flagship model (e.g., Claude Opus 4.6) as a "teacher model" to generate initial high-quality demonstration data, establishing a high-starting-point baseline. The system then automatically creates an isolated RL training environment and configures the corresponding hyperparameters.
+- **Progressive training and automatic evaluation:** To reduce trial-and-error cost, Hermes adopts a "small steps, fast pace" strategy: it first runs experimental training on a small-scale dataset, and only launches formal large-scale training after feasibility is verified. After training, the system **automatically evaluates (Evaluate)** whether each metric improved significantly. If results fall short of expectations, feedback signals guide the next round of parameter tuning or data optimization; if results are significant, that model version is consolidated.
+- **Domain-specific local optimum:** The value of this mechanism is that it lets a general-purpose large model surpass the base model's performance in a specific domain (Domain-Specific). Through the reward mechanism in reinforcement learning (Reward Model), the model no longer relies solely on generic probability prediction; it receives positive feedback for correct behavior in specific scenarios, gradually "learning" the domain's proprietary logic and ultimately reaching that scenario's **local optimum**.
 
-**RL训练意义：**
+**Significance of RL training:**
 
-* 降本增效且易合规，通过比如Claude Opus的大模型训练本地部署的Qwen小模型，可以节约大模型API成本，并且小模型推理快，响应速度也快。然后，有些场景下，收到安全合规的限制，不允许使用API调用，因为数据会走到外网，但本地模型数据不出机器，符合安全合规的要求。
-* 使开源模型垂直领域能力有机会接近或超过闭源大参数模型水平，然后再套上自动生成Skill的“自进化”系统，就能实现在具体场景更好的工作了。
+* Cost reduction, efficiency gain, and easier compliance: training a locally deployed small Qwen model with a large model like Claude Opus saves large-model API costs, and small models infer faster with quicker responses. Also, in some scenarios security and compliance restrictions forbid API calls because data would travel to the external network, whereas a local model keeps data on the machine, satisfying security and compliance requirements.
+* It gives open-source models a chance to approach or exceed the vertical-domain capability of closed-source large-parameter models; then, wrapped with the Skill auto-generation "self-evolution" system, they can work better in concrete scenarios.
 
-**Hermes的RL训练不直接从用户数据中学习：**
+**Hermes' RL training does not learn directly from user data:**
 
-​	RL的训练数据不是来自用户数据，而是通过Teacher Model做的数据合成或者是从Benchmark中进行了构造，因为做RL训练的真正目的不是“从用户那学东西”，而主要是先做知识蒸馏——把 Claude Opus 这种大模型的 Agent 能力"压缩"到如Qwen 3~4B 这种小模型里。原因：用户隐私，用户对话可能包含敏感数据；质量问题，用户对话质量参差不齐。
+	RL training data does not come from user data; it is synthesized via a Teacher Model or constructed from benchmarks, because the real purpose of RL training is not "learning things from users" but primarily knowledge distillation — "compressing" the Agent capability of large models like Claude Opus into small models such as Qwen 3~4B. Reasons: user privacy — user conversations may contain sensitive data; quality — user conversation quality is uneven.
 
-##### 记忆保鲜
+##### Memory freshness
 
-Hermes 的保鲜机制体现在以下层面：
+Hermes' freshness mechanisms show up at the following levels:
 
-- **准确性保鲜**：技能执行中若发现错误或更优路径，Agent 自动触发“技能自我改进模块”，通过 patch 工具精准修复。这是一种“从失败中学习并自我保鲜”的闭环。
-- **时效性与相关性保鲜**：通过 FTS5 全文检索实现“功能性遗忘”——海量历史对话全部存档并建立全文索引，Agent 按需检索和总结，无需全量加载。
+- **Accuracy freshness**: If errors or better paths are discovered during skill execution, the Agent automatically triggers the "skill self-improvement module" and repairs them precisely with the patch tool. This is a closed loop of "learning from failure and keeping itself fresh".
+- **Timeliness and relevance freshness**: FTS5 full-text search enables "functional forgetting" — massive historical conversations are fully archived and indexed for full-text search; the Agent retrieves and summarizes on demand without full loading.
 
-##### 更新与遗忘
+##### Update and forgetting
 
-- **更新**：**技能迭代更新**——记忆（尤其是成功的任务流程）被提炼为 Skill 文件。技能被再次使用时，若发现不足，Agent 主动用 patch 工具进行修复，技能持续进化。
-- **遗忘**：**功能性遗忘**——不主动删除历史数据，而是通过 SQLite FTS5 全文检索将海量原始数据“归档”。信息仍在，但不占用宝贵的上下文窗口。
+- **Update**: **Iterative skill updates** — memories (especially successful task flows) are distilled into Skill files. When a skill is reused and found lacking, the Agent proactively repairs it with the patch tool; the skill keeps evolving.
+- **Forgetting**: **Functional forgetting** — historical data is never actively deleted; instead, massive raw data is "archived" via SQLite FTS5 full-text search. The information is still there but no longer occupies the precious context window.
 
 
 
-#### 总结
+#### Summary
 
-Claude Code、OpenClaw和Hermes分别代表了记忆自动学习进化的三种核心范式：
+Claude Code, OpenClaw, and Hermes each represent one of three core paradigms of memory auto-learning and evolution:
 
-- **Claude Code** 证明了在专有生态内，一套精心设计的半自动记忆系统能带来流畅的用户体验，但其硬性索引限制和精确匹配检索也暴露了可扩展性瓶颈。
-- **OpenClaw** 通过仿生学的三阶段梦境算法，将记忆管理从“被动存储”提升到“主动认知”，六维加权评分让记忆的筛选有据可依。
-- **Hermes** 则跳出了“记与忘”的传统范畴，通过闭环学习循环，让 Agent 能主动将经验转化为可迭代的技能，实现真正的自我成长。
+- **Claude Code** proves that inside a proprietary ecosystem, a carefully designed semi-automatic memory system can deliver a smooth user experience, but its hard index limits and exact-match retrieval also expose scalability bottlenecks.
+- **OpenClaw** elevates memory management from "passive storage" to "active cognition" with its biomimetic three-stage dreaming algorithm; the six-dimension weighted score gives memory selection a solid basis.
+- **Hermes** steps outside the traditional "remember and forget" frame: through a closed-loop learning cycle, the Agent can proactively turn experience into iterable skills, achieving genuine self-growth.
 
-| 维度         | Claude Code                     | OpenClaw                           | Hermes                                  |
+| Dimension         | Claude Code                     | OpenClaw                           | Hermes                                  |
 | :----------- | :------------------------------ | :--------------------------------- | :-------------------------------------- |
-| **核心理念** | 半自动化、内嵌式                | 认知型、仿生学                     | 闭环学习、自我进化                      |
-| **自动学习** | Auto Memory（会话内自动记笔记） | Dreaming 三阶段（Light/REM/Deep）  | Learning Cycle（任务后主动复盘提炼）    |
-| **记忆保鲜** | 后台整合式（LLM 仲裁冲突）      | 六维加权评分 + 源头验证            | 技能自修复 + 功能性遗忘                 |
-| **更新机制** | 整合覆盖式（新内容覆盖旧文件）  | 渐进晋升式（通过门槛后写入）       | 技能迭代式（patch 精准更新）            |
-| **遗忘机制** | 间接淘汰（整合中自然淘汰）      | 显性门槛淘汰（评分不达标直接丢弃） | 功能性遗忘（FTS5 检索，不加载到上下文） |
-| **设计哲学** | 瑞士军刀：内聚、专有            | 操作系统：全面、系统               | 成长型大脑：主动、自主                  |
+| **Core philosophy** | Semi-automatic, embedded | Cognitive, biomimetic | Closed-loop learning, self-evolution |
+| **Automatic learning** | Auto Memory (in-session automatic note-taking) | Dreaming three stages (Light/REM/Deep) | Learning Cycle (proactive post-task review and distillation) |
+| **Memory freshness** | Background consolidation (LLM arbitrates conflicts) | Six-dimension weighted score + source verification | Skill self-repair + functional forgetting |
+| **Update mechanism** | Consolidation-overwrite (new content overwrites old files) | Progressive promotion (written after passing the threshold) | Skill iteration (precise patch updates) |
+| **Forgetting mechanism** | Indirect elimination (naturally phased out during consolidation) | Explicit threshold elimination (directly discarded when the score falls short) | Functional forgetting (FTS5 retrieval, never loaded into context) |
+| **Design philosophy** | Swiss Army knife: cohesive, proprietary | Operating system: comprehensive, systematic | Growing brain: proactive, autonomous |
 
 
 
-### 记忆持久化
+### Memory persistence
 
-​	记忆持久化（Memory Persistence）最基础根本的目标是Agent记忆跨越会话，跨越实践，在重启后继续存在。其包括“存储与索引”、“写入与提取”、“选择与检索”三大工程支柱
+	The most fundamental goal of memory persistence (Memory Persistence) is for Agent memory to survive across sessions, across practice, and after restarts. It comprises three engineering pillars: "storage and indexing", "writing and extraction", and "selection and retrieval".
 
-- **存储与索引**：决定了记忆“存在哪里、长什么样”。它构建了记忆的**物理骨架**，是后续所有操作的基础。
-- **写入与提取**：决定了记忆“如何产生、如何沉淀”。它实现了从原始交互数据到结构化知识的**提炼转化**，是记忆系统的“造血机制”。
-- **选择与检索**：决定了记忆“如何被找到、如何被使用”。它是连接记忆库与Agent决策的**神经网络**，决定了信息能否在关键时刻被精准召回。
+- **Storage and indexing**: determines "where memory lives and what it looks like". It builds the **physical skeleton** of memory and is the foundation of all subsequent operations.
+- **Writing and extraction**: determines "how memory is produced and consolidated". It realizes the **distillation and transformation** from raw interaction data into structured knowledge — the "blood-making mechanism" of the memory system.
+- **Selection and retrieval**: determines "how memory is found and used". It is the **neural network** connecting the memory store to Agent decisions, deciding whether information can be precisely recalled at critical moments.
 
 ```mermaid
 flowchart LR
-    subgraph Persistence [记忆持久化全链路]
-        A[交互数据] --> B[写入与提取]
-        B --> C[存储与索引]
-        C --> D[选择与检索]
-        D --> E[Agent 决策]
+    subgraph Persistence [Full memory persistence pipeline]
+        A[Interaction data] --> B[Write and extract]
+        B --> C[Store and index]
+        C --> D[Select and retrieve]
+        D --> E[Agent decisions]
     end
     
-    B -- "提炼并序列化" --> C
-    C -- "组织并索引" --> D
-    D -- "查询并反序列化" --> E
+    B -- "Distill and serialize" --> C
+    C -- "Organize and index" --> D
+    D -- "Query and deserialize" --> E
 ```
 
 
 
 #### Claude Code
 
-​	Claude Code 是以**文件系统为唯一真相源**的半自动方案，遵循“记忆是索引，不是存储”的核心原则——能从代码库重新推导的信息绝不存储。
+	Claude Code is a semi-automatic solution with **the file system as the single source of truth**, following the core principle "memory is an index, not storage" — information that can be re-derived from the codebase is never stored.
 
-**存储与索引：线性索引：**
+**Storage and indexing: linear index:**
 
-​	Claude Code 采用纯文件系统存储，记忆被组织为四类：**用户记忆**（角色、偏好）、**反馈记忆**（用户的修正）、**项目记忆**（决策与背景）和**参考记忆**（信息位置）。
+	Claude Code uses pure file-system storage, with memories organized into four categories: **user memory** (roles, preferences), **feedback memory** (user corrections), **project memory** (decisions and background), and **reference memory** (information locations).
 
-​	入口是一个名为 `MEMORY.md` 的索引文件，每行是一个指向具体记忆文件的简短标签（≤150字符）。Agent 在会话启动时读取索引，按需拉取相关文件。
+	The entry point is an index file named `MEMORY.md`, where each line is a short label (≤150 characters) pointing to a concrete memory file. The Agent reads the index at session start and pulls relevant files on demand.
 
->**核心局限**：
+>**Core limitations**:
 >
->- **200行硬性限制**：每次会话只加载索引前200行，超出部分对Agent“隐形”。
->- **仅支持精确关键词匹配**：查询“端口冲突”找不到写着“docker-compose映射”的笔记。
->- **记忆锁定于Claude Code**：数据格式专有，无法跨Agent迁移。
+>- **Hard 200-line limit**: only the first 200 lines of the index are loaded per session; anything beyond is "invisible" to the Agent.
+>- **Exact keyword matching only**: querying "port conflict" will not find a note that says "docker-compose mapping".
+>- **Memory locked to Claude Code**: the data format is proprietary and cannot migrate across Agents.
 
 ```mermaid
 flowchart TD
-    subgraph Storage [Claude Code 存储层]
+    subgraph Storage [Claude Code storage layer]
         A[~/.claude/projects/project-hash/]
-        A --> B[CLAUDE.md<br>手动静态规则]
+        A --> B[CLAUDE.md<br>manual static rules]
         A --> C[memory/]
-        C --> D[MEMORY.md<br>索引文件 ≤200行，每行≤150字符]
-        C --> E[user_role.md<br>用户记忆]
-        C --> F[feedback_testing.md<br>反馈记忆]
-        C --> G[project_auth_rewrite.md<br>项目记忆]
-        C --> H[reference_linear.md<br>参考记忆]
+        C --> D[MEMORY.md<br>index file ≤200 lines, ≤150 chars per line]
+        C --> E[user_role.md<br>user memory]
+        C --> F[feedback_testing.md<br>feedback memory]
+        C --> G[project_auth_rewrite.md<br>project memory]
+        C --> H[reference_linear.md<br>reference memory]
     end
     
-    D -- 指向 --> E
-    D -- 指向 --> F
-    D -- 指向 --> G
-    D -- 指向 --> H
+    D -- points to --> E
+    D -- points to --> F
+    D -- points to --> G
+    D -- points to --> H
 ```
 
-**写入和提取：Auto Memory + Auto Dream**
+**Writing and extraction: Auto Memory + Auto Dream**
 
-- **Auto Memory**：每轮对话后，后台启动“完美分叉代理”分析新消息并写入记忆。分叉代理与主对话共享系统提示和消息前缀，充分利用 prompt cache，最多5轮提取。
-- **Auto Dream**：在用户空闲时运行的后台进程，通过五层门控（环境检查、时间门控≥24h、扫描节流≥10min、会话门控≥5个新会话、分布式锁）触发。它会遍历历史会话日志，刮除陈旧内容、压缩合并新知识。
+- **Auto Memory**: after each conversation turn, a background "perfect fork agent" starts to analyze new messages and write memories. The fork agent shares the system prompt and message prefix with the main conversation, fully leveraging the prompt cache, with at most 5 extraction rounds.
+- **Auto Dream**: a background process that runs while the user is idle, triggered via five gating layers (environment check, time gate ≥24h, scan throttle ≥10min, session gate ≥5 new sessions, distributed lock). It traverses historical session logs, scraping away stale content, compacting and merging new knowledge.
 
-**选择与检索：按需拉取的被动模式**
+**Selection and retrieval: passive on-demand pull**
 
-- 会话启动时，系统加载 `MEMORY.md` 的前200行索引并注入上下文。
-- Agent 根据索引中的标题判断哪些文件可能相关，然后通过工具调用**拉取完整文件内容**。
+- At session start, the system loads the first 200 lines of the `MEMORY.md` index and injects them into context.
+- Based on the titles in the index, the Agent judges which files may be relevant, then uses a tool call to **pull the full file contents**.
 
 
 
 #### OpenClaw
 
-​	OpenClaw 的记忆系统设计哲学是 **“文件是真相源，数据库是加速器”** 。它将人类可读的 Markdown 文件与高效的 SQLite 向量索引彻底分离，实现了“透明度”与“检索能力”的双重保证。
+	OpenClaw's memory system design philosophy is **"files are the source of truth, the database is the accelerator"**. It completely separates human-readable Markdown files from the efficient SQLite vector index, delivering a dual guarantee of "transparency" and "retrieval capability".
 
-**存储与索引：双源结构 + 混合检索**
+**Storage and indexing: dual-source structure + hybrid retrieval**
 
-OpenClaw 将记忆分为三层数据源：
+OpenClaw divides memory into three tiers of data sources:
 
-- **短期记忆**：`memory/YYYY-MM-DD.md`（每日日志），新会话自动加载今天+昨天的日志，提供最近48小时的连续感。
-- **近端记忆**：`sessions/` 目录，完整的会话存档，压缩时关键信息冲刷到这里。
-- **长期记忆**：`MEMORY.md`，经过筛选的持久知识，每次私聊自动加载。
+- **Short-term memory**: `memory/YYYY-MM-DD.md` (daily logs); new sessions automatically load today's + yesterday's logs, providing a sense of continuity over the last 48 hours.
+- **Proximal memory**: the `sessions/` directory, a complete session archive; during compaction, key information is flushed here.
+- **Long-term memory**: `MEMORY.md`, curated persistent knowledge, automatically loaded for every private chat.
 
-​	索引层会监控 Markdown 源文件的变化，自动检测并重新索引。同时设计了**优雅降级**：如果 sqlite-vec 扩展未加载，自动回退到 JavaScript 暴力计算。
+	The index layer monitors changes to the Markdown source files, automatically detecting and re-indexing. It also implements **graceful fallback**: if the sqlite-vec extension is not loaded, it automatically falls back to brute-force computation in JavaScript.
 
 ```mermaid
 flowchart TD
-    subgraph Storage [OpenClaw 双源存储架构]
-        subgraph Source [真相源：Markdown 文件]
-            A1[MEMORY.md<br>长期持久事实]
-            A2[memory/YYYY-MM-DD.md<br>每日日志]
-            A3[sessions/xxx.jsonl<br>会话存档]
-            A4[USER.md + SOUL.md<br>身份与人格]
+    subgraph Storage [OpenClaw dual-source storage architecture]
+        subgraph Source [Source of truth: Markdown files]
+            A1[MEMORY.md<br>long-term durable facts]
+            A2[memory/YYYY-MM-DD.md<br>daily logs]
+            A3[sessions/xxx.jsonl<br>session archives]
+            A4[USER.md + SOUL.md<br>identity and persona]
         end
         
-        subgraph Index [加速层：SQLite 向量索引]
-            B1[files 表<br>文件元数据 + mtime]
-            B2[chunks 表<br>分块文本 + embedding]
-            B3[chunks_fts<br>FTS5 全文索引]
-            B4[chunks_vec<br>sqlite-vec 向量索引]
+        subgraph Index [Acceleration layer: SQLite vector index]
+            B1[files table<br>file metadata + mtime]
+            B2[chunks table<br>chunked text + embedding]
+            B3[chunks_fts<br>FTS5 full-text index]
+            B4[chunks_vec<br>sqlite-vec vector index]
         end
         
-        A1 --> C[文件监控<br>检测变更]
+        A1 --> C[File watcher<br>detect changes]
         A2 --> C
         A3 --> C
         A4 --> C
         
-        C -- 重新索引 --> B2
+        C -- reindex --> B2
         B2 --> B3
         B2 --> B4
     end
 ```
 
-**写入与提取：Memory Flush + Dreaming 三阶段**
+**Writing and extraction: Memory Flush + the three Dreaming stages**
 
-- **Memory Flush**：当上下文接近 token 限制时，系统在压缩前触发一个静默的 Agent 回合，明确指示 Agent 将重要信息写入 `memory/YYYY-MM-DD.md`，防止关键上下文在压缩中丢失。
-- **Dreaming 三阶段**（实验性功能）：
-  1. **Light Sleep**：扫描近期每日日志，Jaccard 相似度去重，暂存候选记忆。
-  2. **REM Sleep**：分析过去7天的短期信号，提取高频主题与关联，生成反思性摘要。
-  3. **Deep Sleep**：对候选记忆应用**六维加权评分模型**（相关性30%、频率24%、查询多样性15%、时效性15%、整合度10%、概念丰富度6%）。通过评分≥0.8、召回≥3次、来源≥3个查询的硬性门槛后，正式晋升至 `MEMORY.md`。
+- **Memory Flush**: when context approaches the token limit, the system triggers a silent Agent turn before compaction, explicitly instructing the Agent to write important information into `memory/YYYY-MM-DD.md`, preventing critical context from being lost during compaction.
+- **The three Dreaming stages** (experimental feature):
+  1. **Light Sleep**: scans recent daily logs, deduplicates by Jaccard similarity, and stages candidate memories.
+  2. **REM Sleep**: analyzes short-term signals from the past 7 days, extracts high-frequency themes and associations, and generates reflective summaries.
+  3. **Deep Sleep**: applies the **six-dimension weighted scoring model** to candidate memories (relevance 30%, frequency 24%, query diversity 15%, timeliness 15%, integration 10%, conceptual richness 6%). After passing the hard thresholds of score ≥0.8, recall ≥3 times, and sourced from ≥3 queries, a memory is formally promoted to `MEMORY.md`.
 
-**选择与检索：70/30 混合检索**
+**Selection and retrieval: 70/30 hybrid retrieval**
 
-​	OpenClaw 采用**加权混合检索**，默认配置为 **70% 向量 + 30% 全文**：
+	OpenClaw adopts **weighted hybrid retrieval**, with the default configuration **70% vector + 30% full-text**:
 
-​	**为什么 70/30？**：向量检索主导，因为 LLM 更擅长理解语义而非精确关键词；全文检索兜底，防止向量漂移（如“苹果”可能被理解为水果或公司）。
+	**Why 70/30?**: vector retrieval dominates because LLMs are better at understanding semantics than exact keywords; full-text search serves as the backstop, guarding against vector drift (e.g., "Apple" may be interpreted as the fruit or the company).
 
 #### Hermes
 
-​	Hermes 将“记忆”提升为 Harness 的**核心刚需**，设计了一套高度结构化的四层记忆架构。它不仅是存储，更是一套让 Agent 自主成长的“认知操作系统”。
+	Hermes elevates "memory" to a **core hard requirement** of the Harness, with a highly structured four-layer memory architecture. It is not merely storage but a "cognitive operating system" that lets the Agent grow autonomously.
 
-**存储与索引：四层分离 + FTS5 冷召回**
+**Storage and indexing: four-layer separation + FTS5 cold recall**
 
-- **Layer 1 - Prompt Memory（热记忆）**：`MEMORY.md`（持久事实，约800 tokens）和 `USER.md`（用户画像，约500 tokens），在会话启动时作为**冻结快照**加载到系统提示中。冻结设计是为了保持 LLM prefix cache 的稳定性。
-- **Layer 2 - Session Archive（冷召回）**：所有 CLI 和消息会话存储在 SQLite 数据库（`~/.hermes/state.db`）中，辅以 FTS5 全文索引。Agent 通过 `session_search` 工具按需检索历史对话。
-- **Layer 3 - Skills（程序记忆）**：Agent 完成任务后自动生成的 Markdown 技能文档，可被检索并在后续任务中直接调用，支持自我改进。
-- **Layer 4 - External Provider（可选）**：可插拔的外部记忆提供商（如 Mem0），增加结构化提取、实体解析和跨会话持久化能力。
+- **Layer 1 - Prompt Memory (hot memory)**: `MEMORY.md` (persistent facts, ~800 tokens) and `USER.md` (user profile, ~500 tokens), loaded into the system prompt as a **frozen snapshot** at session start. The frozen design preserves LLM prefix cache stability.
+- **Layer 2 - Session Archive (cold recall)**: all CLI and message sessions are stored in a SQLite database (`~/.hermes/state.db`), supplemented by an FTS5 full-text index. The Agent retrieves historical conversations on demand via the `session_search` tool.
+- **Layer 3 - Skills (procedural memory)**: Markdown skill documents automatically generated after the Agent completes tasks; they can be retrieved and invoked directly in later tasks, supporting self-improvement.
+- **Layer 4 - External Provider (optional)**: pluggable external memory providers (e.g., Mem0) that add structured extraction, entity resolution, and cross-session persistence.
 
 ```mermaid
 flowchart TD
-    subgraph Storage [Hermes 四层记忆架构]
-        L1[Layer 1: Prompt Memory 热记忆]
-        L1 --> L1A[MEMORY.md<br>~2,200字符，约800 tokens]
-        L1 --> L1B[USER.md<br>~1,375字符，约500 tokens]
+    subgraph Storage [Hermes Four-Layer Memory Architecture]
+        L1[Layer 1: Prompt Memory Hot Memory]
+        L1 --> L1A[MEMORY.md<br>~2,200 chars, ~800 tokens]
+        L1 --> L1B[USER.md<br>~1,375 chars, ~500 tokens]
         
-        L2[Layer 2: Session Archive 冷召回]
-        L2 --> L2A[state.db / sessions 表<br>会话元数据]
-        L2 --> L2B[state.db / messages 表<br>消息内容]
-        L2 --> L2C[FTS5 全文索引]
+        L2[Layer 2: Session Archive Cold Recall]
+        L2 --> L2A[state.db / sessions table<br>session metadata]
+        L2 --> L2B[state.db / messages table<br>message content]
+        L2 --> L2C[FTS5 full-text index]
         
-        L3[Layer 3: Skills 程序记忆]
-        L3 --> L3A[~/.hermes/skills/*.md<br>可复用技能文档]
+        L3[Layer 3: Skills Procedural Memory]
+        L3 --> L3A[~/.hermes/skills/*.md<br>reusable skill docs]
         
-        L4[Layer 4: External Provider 可选]
-        L4 --> L4A[Mem0 / 向量数据库<br>结构化提取与跨会话持久化]
+        L4[Layer 4: External Provider Optional]
+        L4 --> L4A[Mem0 / vector database<br>structured extraction and cross-session persistence]
     end
 ```
 
-**写入和提取：Nudge 提醒 + 技能自生成**
+**Writing and extraction: Nudge reminders + skill self-generation**
 
-- **Nudge 机制**：系统定期（可配置的 `nudge_interval`）向 Agent 发送内部提示，询问会话中是否有值得保存的内容。这种主动提醒机制显著提高了记忆写入的覆盖率。
-- **技能自生成**：任务完成后，Agent 评估其复杂性和价值，决定是否将成功经验提炼为可复用的 Skill 文件。技能以 Markdown 格式存储，包含名称、描述、工具使用和成功步骤。
-- **Memory Flush**：在 Gateway 模式下，空闲超时前主动触发记忆冲刷，确保关键信息在压缩前被保护。
-- **Auxiliary Models**：独立的辅助模型模块，专门处理图像分析、网页提取、Skill 匹配和记忆处理等“侧任务”，避免阻塞主对话流。
+- **Nudge mechanism**: the system periodically (configurable `nudge_interval`) sends the Agent an internal prompt asking whether the session contains anything worth saving. This proactive reminder mechanism significantly improves memory write coverage.
+- **Skill self-generation**: after a task completes, the Agent evaluates its complexity and value and decides whether to distill the successful experience into a reusable Skill file. Skills are stored in Markdown, containing name, description, tool usage, and successful steps.
+- **Memory Flush**: in Gateway mode, a memory flush is proactively triggered before the idle timeout, ensuring critical information is protected before compaction.
+- **Auxiliary Models**: an independent auxiliary model module dedicated to "side tasks" such as image analysis, web extraction, Skill matching, and memory processing, keeping the main conversation flow unblocked.
 
-**选择与检索：分层召回策略**
+**Selection and retrieval: layered recall strategy**
 
-Hermes 采用**分层召回策略**，根据信息的重要性和使用频率分配合适的检索方式：
+Hermes adopts a **layered recall strategy**, assigning the appropriate retrieval method based on each piece of information's importance and usage frequency:
 
-- **热路径 - 提示记忆**：`MEMORY.md` 和 `USER.md` 在会话启动时全量加载到系统提示中，无需检索，即时可用。
-- **温路径 - 会话搜索**：Agent 通过 `session_search` 工具调用 FTS5 全文检索，按需查询历史对话。检索结果由 LLM 进行摘要后再注入上下文，避免全量加载。
-- **冷路径 - 外部提供商**：通过可插拔的外部提供商（如 Mem0）实现语义向量检索，适用于大规模、跨会话的记忆召回。
+- **Hot path - prompt memory**: `MEMORY.md` and `USER.md` are fully loaded into the system prompt at session start — no retrieval needed, instantly available.
+- **Warm path - session search**: the Agent invokes FTS5 full-text search through the `session_search` tool to query historical conversations on demand. Retrieval results are summarized by the LLM before being injected into context, avoiding full loading.
+- **Cold path - external providers**: semantic vector retrieval via pluggable external providers (e.g., Mem0), suited to large-scale, cross-session memory recall.
 
-这种分层设计的核心优势在于：**架构决定访问方式，而非 Agent 的主观判断**。提示记忆始终在上下文中，会话存档只在显式调用时访问，技能可在任务匹配时被激活。设计上保持了系统提示的精简和缓存稳定性，同时支持丰富的历史召回。
+The core advantage of this layered design: **the architecture determines the access method, not the Agent's subjective judgment**. Prompt memory is always in context, session archives are accessed only when explicitly invoked, and skills can be activated when a task matches. The design keeps the system prompt lean and the cache stable while still supporting rich historical recall.
 
 
 
@@ -3673,44 +3728,44 @@ Hermes 采用**分层召回策略**，根据信息的重要性和使用频率分
 
 ---
 
-### Codex 两阶段记忆管线（自进化最重的实现）
+### Codex two-stage memory pipeline (the heaviest self-evolution implementation)
 
-![Codex 两阶段记忆管线](ref/codex-memory-archify.png)
+![Codex two-stage memory pipeline](ref/codex-memory-archify.png)
 
-> 🖱️ [交互式版本](diagrams/codex-memory.dataflow.html)。五段数据流：会话源 →（四条件门控）→ Phase 1 并行抽取 → secret 红action → state DB 中转 → Phase 2 串行固化（全局单锁）→ memories root 工件 + workspace diff。
+> 🖱️ [Interactive version](diagrams/codex-memory.dataflow.html). Five-segment data flow: session source → (four-condition gating) → Phase 1 parallel extraction → secret redaction → state DB relay → Phase 2 serial consolidation (global single lock) → memories root artifacts + workspace diff.
 
-> 基于 `codex-rs/memories/README.md`（157 行设计文档）+ `memories/write/src/phase1.rs` / `phase2.rs` 源码阅读。
+> Based on `codex-rs/memories/README.md` (a 157-line design document) plus source-level reading of `memories/write/src/phase1.rs` / `phase2.rs`.
 
-**触发条件**（4 个全部满足才运行）：
+**Trigger conditions** (runs only when all 4 are met):
 
 ```
-根会话启动时触发，异步后台执行，Phase 1 → Phase 2 顺序：
-  ✓ 会话不是 ephemeral（临时）
-  ✓ memory feature 已启用
-  ✓ 不是 sub-agent 会话
-  ✓ state DB 可用
+Triggered at root session startup, runs async in background, Phase 1 → Phase 2 in order:
+  ✓ Session is not ephemeral (temporary)
+  ✓ memory feature is enabled
+  ✓ Not a sub-agent session
+  ✓ state DB is available
 ```
 
 ```mermaid
 flowchart TD
-    subgraph P1["Phase 1：逐线程抽取（可扩展到多个 rollout）"]
-        C1["从 state DB 认领有界 rollout 作业<br/>（startup claim）"] --> F1["过滤出记忆相关响应项"]
-        F1 --> M1["并行发模型<br/>（固定并发上限）"]
-        M1 --> O1["产出 raw_memory + rollout_summary<br/>+ 可选 rollout_slug"]
-        O1 --> R1["secret 红action"]
-        R1 --> S1["写回 state DB<br/>stage1_outputs 表"]
+    subgraph P1["Phase 1: Per-thread extraction (scales to multiple rollouts)"]
+        C1["Claim bounded rollout jobs from state DB<br/>(startup claim)"] --> F1["Filter memory-relevant response items"]
+        F1 --> M1["Dispatch to model in parallel<br/>(fixed concurrency cap)"]
+        M1 --> O1["Produce raw_memory + rollout_summary<br/>+ optional rollout_slug"]
+        O1 --> R1["secret redaction"]
+        R1 --> S1["Write back to state DB<br/>stage1_outputs table"]
     end
 
-    subgraph P2["Phase 2：全局固化（串行，单锁）"]
-        L2["认领单个全局 phase-2 锁"] --> SEL2["按规则选 top-N<br/>① last_usage 在 max_unused_days 窗口内<br/>② 无 last_usage 回退 generated_at<br/>③ 按 usage_count 优先排序"]
-        SEL2 --> SYNC2["同步工件到 memories root<br/>raw_memories.md + rollout_summaries/"]
-        SYNC2 --> PRUNE2["剪枝过期 summaries<br/>+ 过期扩展资源"]
-        PRUNE2 --> DIFF2["生成 phase2_workspace_diff.md<br/>（git 式 diff）"]
-        DIFF2 --> CHK2{"workspace 有变更?"}
-        CHK2 -- 无 --> SUCCESS2["标记成功并退出<br/>（不调子代理）"]
-        CHK2 -- 有 --> AGENT2["spawn 固化子代理<br/>无审批 / 无网络 / 仅本地写<br/>禁用 collab 防递归委派"]
-        AGENT2 --> UPD2["更新 MEMORY.md<br/>+ memory_summary.md + skills/"]
-        UPD2 --> RESET2["重置 git 基线<br/>（先删 diff 文件，防删除内容残留）"]
+    subgraph P2["Phase 2: Global consolidation (serial, single lock)"]
+        L2["Claim the single global phase-2 lock"] --> SEL2["Select top-N by rules<br/>① last_usage within max_unused_days window<br/>② fall back to generated_at when last_usage is absent<br/>③ prioritize by usage_count"]
+        SEL2 --> SYNC2["Sync artifacts to memories root<br/>raw_memories.md + rollout_summaries/"]
+        SYNC2 --> PRUNE2["Prune expired summaries<br/>+ expired extended resources"]
+        PRUNE2 --> DIFF2["Generate phase2_workspace_diff.md<br/>(git-style diff)"]
+        DIFF2 --> CHK2{"Any workspace changes?"}
+        CHK2 -- No --> SUCCESS2["Mark success and exit<br/>(no subagent spawned)"]
+        CHK2 -- Yes --> AGENT2["Spawn consolidation subagent<br/>no approvals / no network / local writes only<br/>collab disabled to prevent recursive delegation"]
+        AGENT2 --> UPD2["Update MEMORY.md<br/>+ memory_summary.md + skills/"]
+        UPD2 --> RESET2["Reset git baseline<br/>(delete diff file first to avoid residue of deleted content)"]
     end
 
     P1 --> P2
@@ -3720,66 +3775,66 @@ flowchart TD
     style SUCCESS2 fill:#2E7D32,color:#fff
 ```
 
-**Phase 1 的 5 条认领规则**（README 原文）：
+**The 5 claim rules of Phase 1** (verbatim from the README):
 
 ```
-Eligible rollouts 从 state DB 用 startup claim rules 选择：
-  ① 来自允许的交互式 session 来源
-  ② 在配置的 age window 内
-  ③ idle 足够久（避免总结仍活跃/新鲜的 rollout）
-  ④ 未被其他 in-flight phase-1 worker 占用
-  ⑤ 在 startup scan/claim limits 内（每次启动有界工作量）
+Eligible rollouts are selected from the state DB via startup claim rules:
+  ① From allowed interactive session sources
+  ② Within the configured age window
+  ③ Idle long enough (avoids summarizing still-active/fresh rollouts)
+  ④ Not already claimed by other in-flight phase-1 workers
+  ⑤ Within startup scan/claim limits (bounded work per startup)
 ```
 
-**并发协调的三个关键设计**：
+**Three key designs for concurrency coordination**:
 
-| 设计 | 目的 |
+| Design | Purpose |
 |---|---|
-| **Job 租约**（leased/claimed in DB）| 防止并发 worker/启动间的重复工作 |
-| **并发上限**（fixed cap）| Phase 1 可并行处理多个 rollout |
-| **失败退避**（retry backoff）| 失败作业标记退避，稍后重试而非热循环 |
+| **Job lease** (leased/claimed in DB) | Prevents duplicate work between concurrent workers/launches |
+| **Concurrency cap** (fixed cap) | Phase 1 can process multiple rollouts in parallel |
+| **Failure backoff** (retry backoff) | Failed jobs are marked for backoff and retried later instead of hot-looping |
 
-**Phase 2 的 workspace diff 机制**（最精妙的设计）：
+**Phase 2's workspace diff mechanism** (the most ingenious design):
 
 ```
-memories/ 根目录本身是一个 git 基线目录（~/.codex/memories/.git）
-  → 每次 Phase 2 生成相对上次成功基线的 git 式 diff
-  → 让固化子代理看到"新增/修改/删除"三类变更
-  → 子代理基于 diff 更新 MEMORY.md / memory_summary.md / skills/
-  → 成功后重置基线
+The memories/ root is itself a git baseline directory (~/.codex/memories/.git)
+  → Each Phase 2 generates a git-style diff against the last successful baseline
+  → Lets the consolidation subagent see three change types: "added/modified/deleted"
+  → The subagent updates MEMORY.md / memory_summary.md / skills/ based on the diff
+  → Baseline is reset after success
 ```
 
-> **为什么用 git 而不是 DB watermark 做脏检查**（README 原文）：
+> **Why git instead of a DB watermark for dirty checks** (verbatim from the README):
 > "The global phase-2 lock does not use DB watermarks as a dirty check; **git workspace dirtiness decides whether an agent needs to run.**"
-> —— DB watermark 只做簿记（避免记录回退），**实际是否需要跑子代理由 git 工作区是否脏决定**。
+> — The DB watermark is only for bookkeeping (avoiding record rollbacks); **whether the subagent actually needs to run is decided by git workspace dirtiness**.
 
-**Selection 的稳定性设计**：
+**Stability design of Selection**:
 
 ```
-raw_memories.md 按 stable ascending thread-id order 渲染
-  → 避免 usage-rank churn（使用排名波动导致的 diff 噪音）
+raw_memories.md is rendered in stable ascending thread-id order
+  → Avoids usage-rank churn (diff noise from usage-rank fluctuations)
   
-selected_for_phase2 = 1 标记已消费的快照
-  → Phase 1 upsert 保留上次的 selected_for_phase2 基线
-  → 直到下次成功 Phase 2 才重写
+selected_for_phase2 = 1 marks consumed snapshots
+  → Phase 1 upserts preserve the previous selected_for_phase2 baseline
+  → Not rewritten until the next successful Phase 2
 ```
 
-**存储与读取**：
+**Storage and reading**:
 
-| 层 | 实现 |
+| Layer | Implementation |
 |---|---|
-| **存储** | SQLite（`stage1_outputs` + `jobs` 任务队列）+ `~/.codex/memories/` 文件工件（**git 基线化**）|
-| **读取** | 记忆以 **developer instruction** 注入，带引用解析（`citations.rs`）+ 使用遥测分类（`usage.rs`）|
-| **闭环** | 读取行为回写 `usage_count` / `last_usage` → 形成**使用驱动排序** |
+| **Storage** | SQLite (`stage1_outputs` + `jobs` task queue) + `~/.codex/memories/` file artifacts (**git-baselined**) |
+| **Reading** | Memories injected as **developer instructions**, with citation resolution (`citations.rs`) + usage telemetry classification (`usage.rs`) |
+| **Closed loop** | Read behavior writes back `usage_count` / `last_usage` → forming **usage-driven ranking** |
 
-**两个 crate 的职责切分**：
+**Responsibility split between the two crates**:
 
 ```
-codex-memories-read  → 读路径：developer-instruction 注入、引用解析、使用遥测分类
-codex-memories-write → 写路径：Phase 1/2 prompt 渲染、文件工件、workspace diff、扩展资源剪枝
+codex-memories-read  → Read path: developer-instruction injection, citation resolution, usage telemetry classification
+codex-memories-write → Write path: Phase 1/2 prompt rendering, file artifacts, workspace diff, extended resource pruning
 ```
 
-**为什么拆两阶段**（README 原文）：
+**Why split into two phases** (verbatim from the README):
 
 - **Phase 1** scales across many rollouts and produces normalized per-rollout memory records
 - **Phase 2** serializes global consolidation so the shared memory artifacts are updated safely and consistently
@@ -3787,90 +3842,90 @@ codex-memories-write → 写路径：Phase 1/2 prompt 渲染、文件工件、wo
 
 ---
 
-### OpenCode记忆系统架构（源码级）
+### OpenCode memory system architecture (source-level)
 
-**存储**：FTS5 (BM25) 虚拟表 `memory_fts`（SQLite），位于 `~/.opencode/memory/`
+**Storage**: FTS5 (BM25) virtual table `memory_fts` (SQLite), at `~/.opencode/memory/`
 
-**数据模型**：
+**Data model**:
 ```sql
 memory_fts (id, path, scope, scope_id, type, body, fingerprint,
             file_created_at, file_modified_at, last_ref_at)
 ```
 
-**服务层**：
+**Service layer**:
 
-| Service | 方法 |
+| Service | Methods |
 |---|---|
 | `Memory` (`@opencode/Memory`) | `search()` FTS BM25, `reconcile()`, `evictOverflow()`, `recentFiles()` |
-| `ExtractMemories` (`@opencode/ExtractMemories`) | `triggerExtract()` — 压缩时同步提取（YAML，最多 5 条/次）|
+| `ExtractMemories` (`@opencode/ExtractMemories`) | `triggerExtract()` — synchronous extraction during compaction (YAML, at most 5 entries per run) |
 
-**记忆分类**：user / feedback / project / reference
-**作用域**：projects（项目级）/ global（全局）/ cc（Claude Code 索引）
+**Memory categories**: user / feedback / project / reference
+**Scopes**: projects (project-level) / global (global) / cc (Claude Code index)
 
-**注入策略**：MEMORY.md 索引节通过 `collapseIndexForPrompt` 折叠为一行提示，需要时 FTS5 检索。
+**Injection strategy**: the MEMORY.md index section is folded into a one-line prompt via `collapseIndexForPrompt`, with FTS5 retrieval when needed.
 
-## **6. Tool Integration System（工具系统）**
+## **6. Tool Integration System (Tool System)**
 
-​	在整个 Harness 架构中，工具系统是唯一能够“触碰”外部世界的组件。它承接着 LLM 的“决策”，将抽象的文本指令转化为具体的系统操作，并将执行结果反馈回上下文，形成“感知-决策-执行”的闭环。
+	Within the entire Harness architecture, the tool system is the only component that can "touch" the external world. It takes the LLM's "decisions", converts abstract text instructions into concrete system operations, and feeds execution results back into context, forming a closed loop of "perception - decision - execution".
 
 ```mermaid
 flowchart LR
     subgraph Harness [Agent Harness]
         direction TB
-        LLM[大模型<br>推理引擎]
-        Tools[工具系统<br>执行层]
-        Context[上下文系统<br>信息层]
-        Memory[记忆系统<br>持久层]
+        LLM[LLM<br>inference engine]
+        Tools[Tool System<br>execution layer]
+        Context[Context System<br>information layer]
+        Memory[Memory System<br>persistence layer]
     end
 
-    User[用户] --> LLM
-    LLM -- "1. 决定调用什么工具" --> Tools
-    Tools -- "2. 与外部世界交互" --> World[外部世界<br>文件系统 / Shell / API / 浏览器]
-    World -- "3. 返回结果" --> Tools
-    Tools -- "4. 结果注入上下文" --> Context
+    User[User] --> LLM
+    LLM -- "1. Decides which tool to call" --> Tools
+    Tools -- "2. Interacts with the external world" --> World[External World<br>Filesystem / Shell / API / Browser]
+    World -- "3. Returns results" --> Tools
+    Tools -- "4. Results injected into context" --> Context
     Context --> LLM
     Memory <--> Context
 ```
 
-**工具系统的三大核心职责：**
+**The three core responsibilities of the tool system:**
 
-| 职责               | 说明                                                         | 核心挑战                               |
+| Responsibility | Description | Core challenge |
 | :----------------- | :----------------------------------------------------------- | :------------------------------------- |
-| **能力的“外部化”** | 将模型不具备的操作能力（如读写文件、执行命令、调用 API）以工具的形式“外挂”到 Agent 上。 | 如何定义清晰、可扩展的工具接口？       |
-| **安全的“守门人”** | 在所有工具执行前进行权限校验，防止模型越权或恶意操作。       | 如何在“可用性”与“安全性”之间找到平衡？ |
-| **执行的“协调者”** | 管理工具的生命周期（注册、调度、执行、清理），处理并发、超时、错误等复杂情况。 | 如何保证工具执行的可靠性与效率？       |
+| **"Externalization" of capability** | Attaches to the Agent, in tool form, operational capabilities the model lacks (reading/writing files, executing commands, calling APIs). | How to define clear, extensible tool interfaces? |
+| **"Gatekeeper" of security** | Performs permission checks before every tool execution, preventing the model from unauthorized or malicious operations. | How to strike a balance between "usability" and "security"? |
+| **"Coordinator" of execution** | Manages the tool lifecycle (registration, dispatch, execution, cleanup), handling concurrency, timeouts, errors, and other complex situations. | How to guarantee tool execution reliability and efficiency? |
 
-**模型决定“尝试什么”，工具系统决定“允许什么”，二者在架构上完全分离。**
+**The model decides "what to try"; the tool system decides "what is allowed" — the two are completely separated at the architectural level.**
 
 
 
-### 工具注册与发现
+### Tool registration and discovery
 
-#### Claude Code：自包含的模块化工具注册
+#### Claude Code: self-contained modular tool registration
 
-​	Claude Code 的每个工具都是一个**自包含的模块**，拥有独立的输入模式（Input Schema）、权限模型和执行业务逻辑。整个工具系统的基类定义超过 29,000 行 TypeScript，其中大量代码用于严格的模式验证、权限执行和错误处理。
+	Each Claude Code tool is a **self-contained module** with its own input schema, permission model, and execution business logic. The base class definitions of the entire tool system exceed 29,000 lines of TypeScript, much of it devoted to strict schema validation, permission enforcement, and error handling.
 
 ```mermaid
 flowchart TD
-    subgraph Registry [Claude Code 工具注册中心]
+    subgraph Registry [Claude Code Tool Registry]
         T1[BashTool] --> Schema1["Zod Schema<br>command: string<br>timeout?: number"]
         T2[FileReadTool] --> Schema2["Zod Schema<br>path: string<br>offset?: number<br>limit?: number"]
         T3[FileEditTool] --> Schema3[Zod Schema<br>path: string<br>old_string: string<br>new_string: string]
         T4[AgentTool] --> Schema4["Zod Schema<br>prompt: string<br>worktree?: string"]
         
-        T1 --> Perm1[权限级别: 高]
-        T2 --> Perm2[权限级别: 低]
-        T3 --> Perm3[权限级别: 中]
-        T4 --> Perm4[权限级别: 继承]
+        T1 --> Perm1[Permission level: high]
+        T2 --> Perm2[Permission level: low]
+        T3 --> Perm3[Permission level: medium]
+        T4 --> Perm4[Permission level: inherited]
     end
     
-    Model[模型] -- 调用 --> Dispatch[工具调度器]
-    Dispatch -- 根据 name 查找 --> Registry
-    Registry -- 返回工具实例 --> Dispatch
+    Model[Model] -- call --> Dispatch[Tool Dispatcher]
+    Dispatch -- looks up by name --> Registry
+    Registry -- returns tool instance --> Dispatch
 ```
 
 ```typescript
-// Claude Code 工具注册伪代码
+// Claude Code tool registration pseudocode
 import { z } from 'zod';
 
 abstract class BaseTool {
@@ -3911,27 +3966,27 @@ class BashTool extends BaseTool {
 }
 ```
 
->​	OpenCode的工具注册跟Cladue Code比较类似，其工具系统采用**插件化模块化设计**，所有工具都实现 `BaseTool` 接口。
+>	OpenCode's tool registration is quite similar to Claude Code's; its tool system adopts a **pluggable, modular design** where all tools implement the `BaseTool` interface.
 
 
 
-#### OpenClaw：以 MCP 为核心的插件化工具接入
+#### OpenClaw: MCP-centric pluggable tool integration
 
-​	OpenClaw 的工具注册哲学与 Claude Code 截然不同：**它不内置大量工具，而是通过 MCP 协议将“工具接入”本身变成一种可扩展的能力**。
+	OpenClaw's tool registration philosophy is fundamentally different from Claude Code's: **it does not bundle a large set of tools; instead, it turns "tool integration" itself into an extensible capability via the MCP protocol**.
 
 ```mermaid
 flowchart TD
     subgraph OpenClaw [OpenClaw Gateway]
         Core[OpenClaw Core]
-        MCPorter[MCPorter 中间层<br>协议转换与服务管理]
-        ToolRouter[Tool Router<br>工具发现与路由]
+        MCPorter[MCPorter Middleware<br>protocol conversion and service management]
+        ToolRouter[Tool Router<br>tool discovery and routing]
     end
     
-    subgraph MCP_Servers [MCP 服务生态]
-        S1[钉钉 MCP Server<br>消息 / 审批 / 文档]
-        S2[TAPD MCP Server<br>需求 / 缺陷 / 任务]
-        S3[ClawLink MCP Server<br>设备注册与通信]
-        S4[自定义 MCP Server<br>内部系统对接]
+    subgraph MCP_Servers [MCP Service Ecosystem]
+        S1[DingTalk MCP Server<br>messages / approvals / docs]
+        S2[TAPD MCP Server<br>requirements / defects / tasks]
+        S3[ClawLink MCP Server<br>device registration and communication]
+        S4[Custom MCP Server<br>internal system integration]
     end
     
     Core --> MCPorter
@@ -3944,71 +3999,71 @@ flowchart TD
     ToolRouter --> MCPorter
 ```
 
-#### Hermes：工具调用与技能系统的深度融合
+#### Hermes: deep fusion of tool calls and the skill system
 
-​	Hermes Agent 是一个开源自主 AI 智能体框架，主打**自进化、持久记忆、多工具调用**。其工具系统的独特之处在于**与技能（Skill）系统的深度融合**。
+​	Hermes Agent is an open-source autonomous AI agent framework focused on **self-evolution, persistent memory, and multi-tool calls**. What makes its tool system unique is its **deep fusion with the skill system**.
 
-​	Hermes 内置了 40+ 技能（MLOps、GitHub、文件编辑、网页搜索等），并支持 Agent 在完成任务后**自动生成新的技能**。这种设计使得工具系统不再是静态的，而是随着 Agent 的使用不断进化和丰富。
+​	Hermes ships with 40+ built-in skills (MLOps, GitHub, file editing, web search, etc.) and supports **automatic generation of new skills** after the Agent completes tasks. This design keeps the tool system from being static; it keeps evolving and enriching as the Agent is used.
 
 ```mermaid
 flowchart TD
-    subgraph Hermes [Hermes Agent 工具系统]
-        T[工具层] --> T1[终端执行]
-        T --> T2[文件读写]
-        T --> T3[浏览器自动化]
-        T --> T4[定时任务]
+    subgraph Hermes [Hermes Agent Tool System]
+        T[Tool Layer] --> T1[Terminal execution]
+        T --> T2[File read/write]
+        T --> T3[Browser automation]
+        T --> T4[Scheduled tasks]
         
-        S[技能层] --> S1[内置 40+ 技能]
-        S --> S2[自动生成技能]
-        S --> S3[社区共享技能]
+        S[Skill Layer] --> S1[40+ built-in skills]
+        S --> S2[Auto-generated skills]
+        S --> S3[Community-shared skills]
         
-        L[学习循环] --> S2
+        L[Learning loop] --> S2
         S2 --> S
     end
     
     Agent[Hermes Agent] --> T
     Agent --> S
-    S -- 调用底层能力 --> T
+    S -- invokes underlying capabilities --> T
 ```
 
-### Skill和MCP
+### Skill and MCP
 
 #### Skill
 
-**Skill的作用和地位：**
+**The role and position of Skill:**
 
-​	在 Agent Harness 的架构中，Skill（技能）是介于“原子工具”与“自主 Agent”之间的**中粒度能力单元**。如果说工具系统为 Agent 提供了触碰世界的能力，那么 Skill 则为 Agent 提供了 **“知道如何做事”的程序性知识**。
+​	In the Agent Harness architecture, Skill is a **medium-granularity capability unit** sitting between "atomic tools" and "autonomous Agents". If the tool system gives the Agent the ability to touch the world, Skill gives the Agent **the procedural knowledge of "how to get things done"**.
 
-​	Skill 的核心价值在于将**隐性的专家知识显性化、模块化和可复用化**，从而将 Agent 从“每次都从零开始思考”的状态解放出来，使其能够遵循经过验证的最佳实践来执行特定领域的任务。
+​	The core value of Skill lies in making **implicit expert knowledge explicit, modular, and reusable**, freeing the Agent from "thinking from scratch every time" so that it can follow proven best practices to perform domain-specific tasks.
 
-> **Skill 本质上是一份包含特定指令的 Markdown 文件**，它定义了一项任务的名称、描述以及具体的执行步骤。通过这种方式，AI 代理能够在需要时发现并加载技能，无需在每次对话中都重新定义复杂的工作流。
+> **A Skill is essentially a Markdown file containing specific instructions**, defining a task's name, description, and concrete execution steps. This way, the AI agent can discover and load skills when needed, without redefining complex workflows in every conversation.
 
-##### Skill的工程实现
+##### Engineering implementation of Skill
 
-* **Skill的标准结构：**
+* **Standard structure of Skill:**
 
-​	根据 Anthropic 发布的 Agent Skills 规范，一个标准的 Skill 是一个文件夹，其中必须包含 `SKILL.md` 文件，并可选的包含辅助资源：
+​	According to the Agent Skills specification published by Anthropic, a standard Skill is a folder that must contain a `SKILL.md` file and optionally includes auxiliary resources:
 
 ```
 skill-name/
-├── SKILL.md              # 必需：元数据 + 指令
-└── bundled-resources/    # 可选
-    ├── scripts/          # 可执行脚本（Python、JS 等）
-    ├── references/       # 参考文档
-    └── assets/           # 模板、字体、图片等
+├── SKILL.md              # required: metadata + instructions
+└── bundled-resources/    # optional
+    ├── scripts/          # executable scripts (Python, JS, etc.)
+    ├── references/       # reference docs
+    └── assets/           # templates, fonts, images, etc.
 ```
 
-* **SKILL.md文件格式：*
+* **SKILL.md file format: *
 
-  `SKILL.md` 由两部分组成：**YAML Frontmatter**（元数据）和 **Markdown 正文**（指令内容）。
+  `SKILL.md` consists of two parts: **YAML Frontmatter** (metadata) and **Markdown body** (instruction content).
 
-  **规范要求**：
+  **Specification requirements**:
 
-  - `name` 必须为 1-64 字符，仅限小写字母、数字和连字符，且必须与文件夹名一致
+  - `name` must be 1-64 characters, limited to lowercase letters, digits, and hyphens, and must match the folder name
 
-  - `description` 必须为 1-1024 字符，应清晰说明功能和使用时机
+  - `description` must be 1-1024 characters and should clearly state what it does and when to use it
 
-  - Markdown 正文应保持在 500 行以内，超过部分应移至 `references/` 文件夹
+  - The Markdown body should stay within 500 lines; anything beyond should be moved to the `references/` folder
 
 
 ```yaml
@@ -4035,26 +4090,26 @@ Use this when you are preparing a tagged release. Ask clarifying questions if th
 4. Suggest the next version number based on SemVer
 ```
 
-* **渐进式披露（Progressive Disclosure）：**
+* **Progressive Disclosure:**
 
-​	Skill 的核心设计理念是 **三层渐进式披露**，这是一种上下文优化策略，只有与当前任务相关的 Skill 才会被完整加载，旨在在“信息完整性”与“Token 经济性”之间取得平衡：
+​	The core design philosophy of Skill is **three-level progressive disclosure**, a context optimization strategy in which only Skills relevant to the current task are fully loaded, aiming to balance "information completeness" and "token economy":
 
 ```mermaid
 flowchart TD
-    subgraph Level1 [第一层：元数据 ～100词]
+    subgraph Level1 [Level 1: Metadata ~100 words]
         A1[name + description]
-        A2[始终在上下文中]
+        A2[Always in context]
     end
     
-    subgraph Level2 [第二层：SKILL.md 正文 <500行]
-        B1[详细指令]
-        B2[触发时加载]
+    subgraph Level2 [Level 2: SKILL.md body <500 lines]
+        B1[Detailed instructions]
+        B2[Loaded on trigger]
     end
     
-    subgraph Level3 [第三层：资源文件 无大小限制]
-        C1[scripts/ 脚本]
-        C2[references/ 参考文档]
-        C3[assets/ 模板素材]
+    subgraph Level3 [Level 3: Resource files no size limit]
+        C1[scripts/ executables]
+        C2[references/ reference docs]
+        C3[assets/ templates and materials]
     end
     
     A1 --> B1
@@ -4064,12 +4119,12 @@ flowchart TD
 ```
 
 ```typescript
-// Skill 渐进式加载核心逻辑伪代码
+// Skill progressive loading core logic pseudocode
 class SkillProgressiveLoader {
     private skillMetadata: Map<string, SkillMetadata> = new Map();
     private loadedSkills: Set<string> = new Set();
     
-    // 启动时：只加载元数据（第一层）
+    // At startup: load metadata only (Level 1)
     async discoverSkills(): Promise<void> {
         const skillDirs = await this.scanSkillDirectories([
             '~/.claude/skills/',
@@ -4085,11 +4140,11 @@ class SkillProgressiveLoader {
             });
         }
         
-        // 将元数据注入系统提示词（始终在上下文中）
+        // Inject metadata into the system prompt (always in context)
         await this.injectMetadataToContext();
     }
     
-    // 运行时：按需加载完整 Skill（第二层）
+    // At runtime: load the full Skill on demand (Level 2)
     async loadFullSkill(skillName: string, context: ExecutionContext): Promise<Skill> {
         if (this.loadedSkills.has(skillName)) {
             return this.getCachedSkill(skillName);
@@ -4098,17 +4153,17 @@ class SkillProgressiveLoader {
         const metadata = this.skillMetadata.get(skillName);
         if (!metadata) throw new Error(`Skill ${skillName} not found`);
         
-        // 读取 SKILL.md 正文
+        // Read the SKILL.md body
         const fullContent = await fs.readFile(`${metadata.path}/SKILL.md`, 'utf-8');
         
-        // 注入到当前上下文
+        // Inject into the current context
         context.appendContext(`<skill name="${skillName}">\n${fullContent}\n</skill>`);
         
         this.loadedSkills.add(skillName);
         return { ...metadata, content: fullContent };
     }
     
-    // 按需加载资源（第三层）
+    // Load resources on demand (Level 3)
     async loadSkillResource(skillName: string, resourcePath: string): Promise<string> {
         const metadata = this.skillMetadata.get(skillName);
         const fullPath = `${metadata.path}/${resourcePath}`;
@@ -4119,26 +4174,26 @@ class SkillProgressiveLoader {
 
 
 
-##### 生产级Agent在Skill实现上对比
+##### Comparison of Skill implementations across production-grade Agents
 
-**Claude Code 的 Skill 实现：**
+**Claude Code's Skill implementation:**
 
-​	Claude Code 官方将技能定义为**由指令、脚本和资源组成的模块化功能包**，能够扩展 Claude 智能体的能力。这些技能存放在特定目录下（每个技能一个文件夹），当 Claude 判断某个技能与当前用户请求相关时，便会自动加载相应技能来完成任务。
+​	Claude Code officially defines skills as **modular capability packages composed of instructions, scripts, and resources** that extend the Claude agent's capabilities. These skills live in specific directories (one folder per skill); when Claude judges a skill relevant to the current user request, it automatically loads that skill to complete the task.
 
 ```mermaid
 flowchart TD
-    subgraph Skills [Claude Code Skills 生命周期]
-        A[用户请求] --> B{Claude 判断<br>技能相关?}
-        B -- 是 --> C[从技能库加载 SKILL.md]
-        B -- 否 --> D[使用通用工具]
+    subgraph Skills [Claude Code Skills Lifecycle]
+        A[User request] --> B{Claude decides<br>skill relevant?}
+        B -- Yes --> C[Load SKILL.md from skill library]
+        B -- No --> D[Use general tools]
         
-        C --> E[解析技能指令]
-        E --> F[按步骤执行技能]
-        F --> G[调用底层工具<br>bash / 文件编辑 / 网络等]
-        G --> H[返回结果]
+        C --> E[Parse skill instructions]
+        E --> F[Execute skill step by step]
+        F --> G[Invoke underlying tools<br>bash / file editing / network etc.]
+        G --> H[Return results]
     end
     
-    subgraph Storage [技能存储结构]
+    subgraph Storage [Skill Storage Structure]
         I[~/.claude/skills/]
         I --> J[skill-1/SKILL.md]
         I --> K[skill-2/SKILL.md]
@@ -4146,88 +4201,88 @@ flowchart TD
     end
 ```
 
-**OpenCode 的 Skill 实现：**
+**OpenCode's Skill implementation:**
 
-​	OpenCode 的Skill系统其设计遵循 Anthropic Agent Skills 规范，但进行了差异化扩展。Skill 文件以 Markdown 格式存储，Agent 通过原生的 `skill` 工具按需加载——代理可以查看可用技能，并在需要时加载完整内容。
+​	OpenCode's skill system follows the Anthropic Agent Skills specification with differentiated extensions. Skill files are stored in Markdown format, and the Agent loads them on demand via the native `skill` tool—the agent can list available skills and load their full content when needed.
 
-​	OpenCode 会在特定路径下搜索 `SKILL.md` 文件，这些路径分为**项目本地**和**全局**两种。此外，OpenCode 提供了基于模式匹配的权限系统，可以精细化地控制 Agent 对 Skill 的访问。
+​	OpenCode searches for `SKILL.md` files in specific paths, which fall into **project-local** and **global** categories. In addition, OpenCode provides a pattern-matching-based permission system that finely controls the Agent's access to Skills.
 
-##### 共同点
+##### Commonalities
 
-| 共同点                  | 说明                                                         |
+| Commonality             | Description                                                  |
 | :---------------------- | :----------------------------------------------------------- |
-| **遵循 Anthropic 规范** | CC、OC、OpenClaw、Hermes个项目都以 `SKILL.md` 为核心，采用 YAML Frontmatter + Markdown 正文的结构 |
-| **渐进式披露**          | 都采用“元数据常驻 + 正文按需加载”的机制来节省上下文窗口      |
-| **目录结构兼容**        | 都支持 `~/.claude/skills/` 和 `.claude/skills/` 等路径，便于 Skill 跨项目共享 |
-| **自动发现**            | 启动时自动扫描预定义路径，发现所有可用 Skill                 |
-| **模型自主决策**        | Agent 基于 Skill 的 `description` 字段自主判断何时使用哪个 Skill |
+| **Follows the Anthropic specification** | CC, OC, OpenClaw, and Hermes all center on `SKILL.md`, adopting a YAML Frontmatter + Markdown body structure |
+| **Progressive disclosure** | All adopt a "metadata always resident + body loaded on demand" mechanism to save the context window |
+| **Compatible directory structure** | All support paths such as `~/.claude/skills/` and `.claude/skills/`, making cross-project Skill sharing easy |
+| **Automatic discovery** | All scan predefined paths at startup to discover every available Skill |
+| **Model autonomous decision-making** | The Agent autonomously decides when to use which Skill based on its `description` field |
 
 
 
-##### Hermes 的 Skill 自动创建与学习进化
+##### Hermes's automatic Skill creation and learning evolution
 
-​	Hermes Agent 在 Skill 系统上做出了根本性的突破：**将技能的生产权从开发者交给了 Agent 自身**。这使其成为首个实现“自我进化”的 Agent 框架，核心突破了传统 Agent 必须依赖人工编写 Skill 的痛点。
+​	Hermes Agent makes a fundamental breakthrough in its Skill system: **handing the production of skills from developers to the Agent itself**. This makes it the first Agent framework to achieve "self-evolution", resolving the pain point that traditional Agents must rely on hand-written Skills.
 
-**核心创新：学习闭环：**
+**Core innovation: the learning loop:**
 
-Hermes 设计了一套完整的**学习闭环**，由五个环节组成的持续运转的自我改进飞轮：
+Hermes designed a complete **learning loop**, a continuously running self-improvement flywheel made of five stages:
 
 ```mermaid
 flowchart TD
-    subgraph LearningLoop [Hermes 学习闭环]
-        L1[策划记忆] --> L2[自主创建 Skill]
-        L2 --> L3[Skill 自改进]
-        L3 --> L4[FTS5 跨会话召回]
-        L4 --> L5[Honcho 用户建模<br>可选]
+    subgraph LearningLoop [Hermes Learning Loop]
+        L1[Curate memory] --> L2[Autonomously create Skill]
+        L2 --> L3[Skill self-improvement]
+        L3 --> L4[FTS5 cross-session recall]
+        L4 --> L5[Honcho user modeling<br>optional]
         L5 -.-> L1
     end
     
-    L1 --> L1A[每轮对话后主动决定<br>哪些信息值得存入 SQLite]
-    L2 --> L2A[完成复杂任务后<br>自动提炼可复用技能]
-    L3 --> L3A[根据使用反馈<br>自动修改 Skill 文件]
-    L4 --> L4A[全文检索历史记忆<br>按需加载相关片段]
+    L1 --> L1A[After each conversation turn, proactively decide<br>what info is worth storing in SQLite]
+    L2 --> L2A[After completing complex tasks,<br>automatically distill reusable skills]
+    L3 --> L3A[Automatically modify Skill files<br>based on usage feedback]
+    L4 --> L4A[Full-text search historical memory<br>load relevant snippets on demand]
 ```
 
-**技能自动生成机制：**
+**Automatic skill generation mechanism:**
 
-​	每当主 Agent 完成对用户的回复后，对于用户而言，交互似乎就此结束。但在后台，Hermes 通过_spawn_background_review会在后台异步启动一个**审查 Agent**。这是一个异步处理机制，系统会立即 Fork 出一个新的轻量级 Agent 实例，专门负责对刚刚结束的对话进行**深度复盘**。这个后台 Agent 不会干扰前台的用户体验，而是从三个维度对此次交互进行全方位审查的Prompt：
+​	After the main Agent finishes replying to the user, the interaction appears to be over from the user's perspective. But in the background, Hermes asynchronously launches a **review Agent** via _spawn_background_review. This is an asynchronous processing mechanism: the system immediately forks a new lightweight Agent instance dedicated to an **in-depth retrospective** of the conversation that just ended. This background Agent does not disturb the foreground user experience; instead, it reviews the interaction comprehensively across three dimensions via these prompts:
 
-- **记忆审查**（_MEMORY_REVIEW_PROMPT）：这段对话有什么值得记住的经验？判断这段对话中是否蕴含值得长期保留的关键经验或事实，提炼初长期记忆，存入 Agent 的记忆库
-- **技能审查**（_SKILL_REVIEW_PROMPT）：这个任务模式是否值得变成Skill？分析当前的任务解决路径是否具有通用性，是否值得被抽象并固化为一个可复用的Skill
-- **综合审查**（_COMBINED_REVIEW_PROMPT）：有什么可以改进的？反思整个执行过程中是否存在优化空间或潜在的错误模式。
+- **Memory review** (_MEMORY_REVIEW_PROMPT): What experiences in this conversation are worth remembering? Determine whether the conversation contains key experiences or facts worth long-term retention, distill them into long-term memory, and store them in the Agent's memory bank
+- **Skill review** (_SKILL_REVIEW_PROMPT): Is this task pattern worth turning into a Skill? Analyze whether the current task-solving path is generalizable and worth abstracting and consolidating into a reusable Skill
+- **Combined review** (_COMBINED_REVIEW_PROMPT): What can be improved? Reflect on whether the whole execution process has room for optimization or potential error patterns.
 
-Hermes 的技能自动生成由以下条件触发：
+Hermes's automatic skill generation is triggered by the following conditions:
 
-| 触发条件         | 说明                             |
+| Trigger condition | Description                     |
 | :--------------- | :------------------------------- |
-| **任务复杂度高** | 完成 5 次以上工具调用的任务      |
-| **从错误中恢复** | Agent 在任务中遇到错误并成功修复 |
-| **用户修正**     | 用户对 Agent 的输出进行过纠正    |
-| **工作流可复用** | Agent 识别出任务流程具有通用价值 |
+| **High task complexity** | Tasks completed with more than 5 tool calls |
+| **Recovery from errors** | The Agent hit an error during the task and fixed it successfully |
+| **User correction** | The user corrected the Agent's output |
+| **Reusable workflow** | The Agent identified generalizable value in the task flow |
 
 ```python
-# Hermes 技能自动生成核心逻辑伪代码
+# Hermes skill auto-generation core logic pseudocode
 class SkillAutoGenerator:
-    TOOL_CALL_THRESHOLD = 5  # 触发技能生成的最小工具调用次数
+    TOOL_CALL_THRESHOLD = 5  # minimum tool calls to trigger skill generation
     
     async def evaluate_and_generate(self, task_trajectory: List[Message]) -> Optional[str]:
-        # 1. 评估任务价值
+        # 1. Evaluate task value
         if not self._should_generate_skill(task_trajectory):
             return None
         
-        # 2. 调用 LLM 分析轨迹，提取工作流
+        # 2. Call LLM to analyze trajectory and extract workflow
         skill_content = await self.llm.extract_skill({
             "trajectory": task_trajectory,
             "instruction": """
-            分析以上任务执行轨迹，提取以下内容：
-            1. 成功路径和关键步骤
-            2. 使用的工具及其参数模式
-            3. 遇到的错误及解决方案
-            4. 可复用的最佳实践
+            Analyze the task execution trajectory above and extract the following:
+            1. Success paths and key steps
+            2. Tools used and their parameter patterns
+            3. Errors encountered and how they were resolved
+            4. Reusable best practices
             """
         })
         
-        # 3. 调用 skill_manage 工具创建技能
+        # 3. Call skill_manage tool to create the skill
         skill_path = await self.skill_manage.create({
             "name": self._generate_skill_name(task_trajectory),
             "description": skill_content.description,
@@ -4235,7 +4290,7 @@ class SkillAutoGenerator:
             "category": self._infer_category(task_trajectory)
         })
         
-        # 4. 记录生成日志，用于后续进化追踪
+        # 4. Log generation for later evolution tracking
         await self.log_skill_creation(skill_path, task_trajectory.id)
         
         return skill_path
@@ -4252,54 +4307,54 @@ class SkillAutoGenerator:
 
 
 
-**技能自我进：**
+**Skill self-evolution:**
 
-​	生成的技能并非一成不变，Agent 在使用过程中会主动检测技能的过时、残缺或错误问题，并通过 `patch` 动作精准修复：
+​	Generated skills are not frozen in place. During use, the Agent proactively detects skills that are outdated, incomplete, or wrong, and precisely repairs them via the `patch` action:
 
 ```mermaid
 flowchart TD
-    A[技能被调用] --> B[执行技能步骤]
-    B --> C{执行结果}
+    A[Skill invoked] --> B[Execute skill steps]
+    B --> C{Execution result}
     
-    C -- 成功 --> D[记录成功指标]
-    C -- 失败/异常 --> E[触发自改进]
+    C -- Success --> D[Record success metrics]
+    C -- Failure/exception --> E[Trigger self-improvement]
     
-    E --> F[LLM 分析失败原因]
-    F --> G[生成 patch 补丁]
-    G --> H[应用补丁更新技能]
-    H --> I[技能版本 +1]
+    E --> F[LLM analyzes failure cause]
+    F --> G[Generate patch]
+    G --> H[Apply patch to update skill]
+    H --> I[Skill version +1]
     
-    D --> J[更新技能使用统计]
+    D --> J[Update skill usage stats]
     I --> J
 ```
 
 ```python
-# Hermes 技能自改进核心逻辑伪代码
+# Hermes skill self-improvement core logic pseudocode
 class SkillSelfImprover:
     async def detect_and_improve(self, skill_name: str, execution_result: ExecutionResult):
         if execution_result.success:
-            # 成功执行，只更新统计
+            # Successful execution, update stats only
             await self._update_success_stats(skill_name)
             return
         
-        # 执行失败，触发自改进
+        # Execution failed, trigger self-improvement
         skill = await self.skill_manage.get(skill_name)
         
-        # 1. LLM 分析失败原因并生成补丁
+        # 1. LLM analyzes failure cause and generates a patch
         patch = await self.llm.generate_skill_patch({
             "skill": skill,
             "error": execution_result.error,
             "context": execution_result.context,
             "instruction": """
-            分析技能执行失败的原因，生成一个补丁来修复问题。
-            补丁应该采用模糊匹配替换机制，能容忍轻微的格式差异。
+            Analyze why the skill execution failed and generate a patch that fixes the problem.
+            The patch should use fuzzy-match replacement and tolerate minor formatting differences.
             """
         })
         
-        # 2. 应用补丁（模糊匹配替换）
+        # 2. Apply patch (fuzzy-match replacement)
         updated_content = self._apply_fuzzy_patch(skill.content, patch)
         
-        # 3. 保存新版本
+        # 3. Save new version
         await self.skill_manage.update(skill_name, {
             "content": updated_content,
             "version": skill.version + 1,
@@ -4307,8 +4362,8 @@ class SkillSelfImprover:
         })
         
     def _apply_fuzzy_patch(self, content: str, patch: Patch) -> str:
-        # 使用模糊匹配查找要替换的位置
-        # 容忍轻微的空格和换行差异
+        # Use fuzzy matching to locate the segment to replace
+        # Tolerate minor whitespace and line-break differences
         match = self._fuzzy_find(content, patch.old_string, threshold=0.85)
         if match:
             return content[:match.start] + patch.new_string + content[match.end:]
@@ -4317,25 +4372,25 @@ class SkillSelfImprover:
 
 
 
-​	Hermes 的技能进化不仅服务于当前 Agent，还通过完整记录任务执行轨迹（包括工具调用、推理过程、执行结果与反馈评分），为大模型微调与强化学习提供高质量的合成数据。这形成了从 Agent 能力到模型性能的**反向赋能闭环**。
+​	Hermes's skill evolution not only serves the current Agent but also feeds high-quality synthetic data to LLM fine-tuning and reinforcement learning by fully recording task execution trajectories (including tool calls, reasoning processes, execution results, and feedback scores). This forms a **reverse-empowerment loop** from Agent capability to model performance.
 
 #### MCP
 
-​	**MCP（Model Context Protocol）** 是一个开放协议，它标准化了应用程序向 LLM 提供上下文的方式。它让 AI 助手能够通过标准化的协议来发现和调用外部工具，本质上是一个“标准 USB 接口”，彻底解决了 N 个大模型对接 M 个数据源的 N×M 灾难。
+​	**MCP (Model Context Protocol)** is an open protocol that standardizes how applications provide context to LLMs. It lets AI assistants discover and call external tools through a standardized protocol—essentially a "standard USB interface" that completely solves the N×M disaster of N LLMs integrating with M data sources.
 
 ```mermaid
 flowchart LR
-    subgraph Client [MCP 客户端]
+    subgraph Client [MCP Client]
         Agent[AI Agent]
         ClientCore[MCP Client Core]
     end
     
-    subgraph Server [MCP 服务器]
+    subgraph Server [MCP Server]
         ServerCore[MCP Server Core]
-        T1[工具 A]
-        T2[工具 B]
-        R1[资源 A]
-        R2[资源 B]
+        T1[Tool A]
+        T2[Tool B]
+        R1[Resource A]
+        R2[Resource B]
     end
     
     Agent --> ClientCore
@@ -4346,241 +4401,241 @@ flowchart LR
     ServerCore --> R2
 ```
 
-   **Skill与MCP的关系：**
+   **Relationship between Skill and MCP:**
 
-​	Skill 与 MCP 工具的关系可以概括为：**MCP 定义了“工具怎么接入”，Skill 定义了“任务怎么做”**。MCP 提供的是标准化的工具接口，而 Skill 封装的是使用这些工具来完成特定任务的方法论。二者协同工作：Skill 在其指令中引导 Agent 何时、如何调用 MCP 工具或其他内置工具来完成任务。
+​	The relationship between Skill and MCP tools can be summarized as: **MCP defines "how tools plug in", Skill defines "how tasks are done"**. MCP provides standardized tool interfaces, while Skill encapsulates the methodology for using those tools to accomplish specific tasks. The two work in concert: Skill's instructions guide the Agent on when and how to call MCP tools or other built-in tools to complete a task.
 
-##### Claude Code 的 MCP 集成
+##### Claude Code's MCP integration
 
-​	Claude Code 通过 MCP 协议扩展其工具能力。用户可以在配置文件中定义 MCP 服务器，Claude 会自动发现并集成这些服务器提供的工具。
+​	Claude Code extends its tool capabilities through the MCP protocol. Users can define MCP servers in configuration files, and Claude automatically discovers and integrates the tools those servers provide.
 
-##### OpenCode 的 MCP 集成
+##### OpenCode's MCP integration
 
-​	OpenCode 同时支持本地和远程 MCP 服务器，新增后 MCP 工具会自动与内置工具一起提供给 LLM 使用。
+​	OpenCode supports both local and remote MCP servers; once added, MCP tools are automatically offered to the LLM alongside built-in tools.
 
-##### OpenClaw 的 MCP 深度集成
+##### OpenClaw's deep MCP integration
 
-OpenClaw 原生不支持直接加载 MCP 服务，必须通过官方推荐的 **MCPorter** 作为中间层完成协议转换与能力转发。MCPorter 负责：
+OpenClaw does not natively support loading MCP services directly; it must go through the officially recommended **MCPorter** as an intermediate layer for protocol conversion and capability forwarding. MCPorter is responsible for:
 
-1. 连接并管理多个 MCP Server 的生命周期
-2. 发现每个 MCP Server 暴露的工具列表
-3. 将 MCP 工具转换为 OpenClaw 可识别、可调度的执行单元
+1. Connecting to and managing the lifecycle of multiple MCP Servers
+2. Discovering the tool list exposed by each MCP Server
+3. Converting MCP tools into execution units that OpenClaw can recognize and dispatch
 
-### 权限与安全控制
+### Permission and security control
 
-![工具权限决策流水线](ref/permission-archify.png)
+![Tool permission decision pipeline](ref/permission-archify.png)
 
-> 🖱️ [交互式版本](diagrams/permission.workflow.html)。Claude Code 四层决策流水线：静态规则 → acceptEdits → 只读白名单 → ML 分类器，边界情况降级为用户确认；deny 命中即拦。
+> 🖱️ [Interactive version](diagrams/permission.workflow.html). Claude Code's four-layer decision pipeline: static rules → acceptEdits → read-only whitelist → ML classifier, with edge cases falling back to user confirmation; a deny hit blocks immediately.
 
-​	在 Agent Harness 中，**权限与安全控制是决定系统“可用”与“可信”的核心分水岭**。它不仅仅是一个功能模块，而是一套贯穿系统设计始终的哲学和工程实践。
+​	In an Agent Harness, **permission and security control is the core dividing line that decides whether the system is "usable" and "trustworthy"**. It is not merely a functional module but a philosophy and set of engineering practices that runs through the entire system design.
 
-#### 基于规则的策略引擎（Rule-based Policy Engine）
+#### Rule-based policy engine
 
-​	基于规则的策略引擎通过预先定义、人类可读的“规则”，精确地规定了Agent在何时、对何种资源可以执行何种操作，其严谨、确定和可解释的特性，使其成为Agent Harness工具系统的安全基石
+​	A rule-based policy engine uses predefined, human-readable "rules" to precisely specify when the Agent may perform which operations on which resources; its rigor, determinism, and explainability make it the security cornerstone of the Agent Harness tool system
 
-**权限决策：allow/ask/deny：**
+**Permission decisions: allow/ask/deny:**
 
-​	几乎所有现代Agent Harness的规则引擎都采用了`allow` (允许)、`ask` (询问)和`deny` (拒绝)这三种原子操作，为工具调用设定了明确的权限边界。
+​	Almost all modern Agent Harness rule engines adopt the three atomic operations `allow`, `ask`, and `deny`, setting clear permission boundaries for tool calls.
 
-​	典型的工具调用请求在权限引擎中会经过如下处理流程：
+​	A typical tool call request goes through the following processing flow in the permission engine:
 
 ```mermaid
 flowchart TD
-    A[Agent发起工具调用] --> B[Harness拦截请求]
-    B --> C[策略引擎解析请求<br>提取工具名、参数、上下文]
-    C --> D{规则评估与匹配}
-    D -- 匹配 deny 规则 --> E[操作被阻止<br>返回拒绝原因]
-    D -- 匹配 allow 规则 --> F[操作被允许<br>直接执行]
-    D -- 匹配 ask 规则或无匹配 --> G[触发权限提示<br>等待用户审批]
-    G --> H{用户决策}
-    H -- 允许 --> F
-    H -- 拒绝 --> E
+    A[Agent initiates tool call] --> B[Harness intercepts request]
+    B --> C[Policy engine parses request<br>extracts tool name, params, context]
+    C --> D{Rule evaluation and matching}
+    D -- matches deny rule --> E[Operation blocked<br>returns denial reason]
+    D -- matches allow rule --> F[Operation allowed<br>executes directly]
+    D -- matches ask rule or no match --> G[Permission prompt triggered<br>awaits user approval]
+    G --> H{User decision}
+    H -- Allow --> F
+    H -- Deny --> E
 ```
 
-**权限规则的设计：**
+**Design of permission rules:**
 
-* 权限规则的定义：
+* Definition of permission rules:
 
-​	规则通常由**对象**（工具、资源等）、**模式**（用于匹配对象，如glob pattern）和**动作**（`allow`, `ask`, `deny`）三要素构成。例如，`{ "tool": "read", "pattern": "./src/**", "action": "allow" }` 表示允许读取`src`目录下的所有文件。
+​	A rule usually consists of three elements: **object** (tool, resource, etc.), **pattern** (used to match the object, e.g. a glob pattern), and **action** (`allow`, `ask`, `deny`). For example, `{ "tool": "read", "pattern": "./src/**", "action": "allow" }` means all files under the `src` directory may be read.
 
-* 权限规则的匹配：
+* Matching of permission rules:
 
-  **权限匹配**是连接“抽象规则”与“具体请求”的核心桥梁。它的任务简单而关键：**判断一个具体的工具调用请求，是否“命中”了某条权限规则**。
+  **Permission matching** is the core bridge connecting "abstract rules" and "concrete requests". Its task is simple yet critical: **determining whether a specific tool call request "hits" a permission rule**.
 
-  **规则匹配优先级：**
+  **Rule matching priority:**
 
-  * 在同一个规则集内部，最后匹配的规则胜出；
+  * Within the same ruleset, the last matching rule wins;
 
-  * 在不同优先级的规则集之间，高优先级的规则集会覆盖低优先级的规则集；
+  * Between rulesets of different priorities, higher-priority rulesets override lower-priority rulesets;
 
-  * **deny 永远胜出**，这是所有框架的共同原则。无论 `allow` 规则多么具体，只要有一条 `deny` 规则匹配，操作就必须被阻止；
+  * **deny always wins** — the common principle across all frameworks. No matter how specific an `allow` rule is, as long as one `deny` rule matches, the operation must be blocked;
 
 ```json
-// OpenCode权限规则例子
+// OpenCode permission rule example
 {
   "permission": {
     "edit": {
-      "*": "ask",                     // 规则 1: 兜底规则
-      "./src/**/*.test.ts": "allow",  // 规则 2: 允许修改测试文件
-      "./src/secrets/**": "deny"      // 规则 3: 拒绝修改 secrets 目录下的文件
+      "*": "ask",                     // rule 1: fallback rule
+      "./src/**/*.test.ts": "allow",  // rule 2: allow editing test files
+      "./src/secrets/**": "deny"      // rule 3: deny editing files under the secrets directory
     }
   }
 }
-// 规则 1 (*: ask)：首先被评估，此时匹配任何编辑操作，临时决策为 ask。
-// 规则 2 (./src/**/*.test.ts: allow)：接着被评估。如果操作路径匹配此模式，它会覆盖规则1的决策，此操作现在被允许（allow）。
-// 规则 3 (./src/secrets/** : deny)：最后被评估。如果路径匹配此模式，它会再次覆盖，将决策变为拒绝（deny）。这确保了即使 secrets 目录在 src 下，对它的编辑也会被拦截。
+// Rule 1 (*: ask): evaluated first; it matches any edit operation, so the tentative decision is ask.
+// Rule 2 (./src/**/*.test.ts: allow): evaluated next. If the operation path matches this pattern, it overrides Rule 1's decision and the operation is now allowed (allow).
+// Rule 3 (./src/secrets/** : deny): evaluated last. If the path matches this pattern, it overrides again, changing the decision to deny (deny). This ensures edits to the secrets directory are blocked even when it sits under src.
 ```
 
-#### Claude Code在权限与安全控制上工程实现
+#### Claude Code's engineering implementation of permission and security controls
 
-##### deny → ask → allow 规则链
+##### The deny → ask → allow rule chain
 
-​	Claude Code 的权限系统核心是一个**规则管道**，按 `deny → ask → allow` 的优先级顺序评估——`deny` 永远胜出，即使模型“花言巧语”试图绕过，Harness 也不关心模型的论证，规则是铁定的。
+​	Claude Code's permission system centers on a **rule pipeline** evaluated in `deny → ask → allow` priority order — `deny` always wins. Even if the model "sweet-talks" trying to bypass it, the Harness does not care about the model's reasoning; the rules are ironclad.
 
 ```mermaid
 flowchart TD
-    A[模型请求调用工具] --> B{权限模式?}
+    A[Model requests tool call] --> B{Permission mode?}
     
-    B -- default/acceptEdits --> C[规则管道评估]
-    B -- bypassPermissions --> D[直接允许<br>仅限可信环境]
-    B -- planMode --> E[仅生成计划<br>不实际执行]
-    B -- autoMode --> F[ML 分类器评估]
+    B -- default/acceptEdits --> C[Rule pipeline evaluation]
+    B -- bypassPermissions --> D[Allow directly<br>trusted environments only]
+    B -- planMode --> E[Generate plan only<br>no actual execution]
+    B -- autoMode --> F[ML classifier evaluation]
     
-    C --> G{deny 规则匹配?}
-    G -- 是 --> H[阻止]
-    G -- 否 --> I{ask 规则匹配?}
-    I -- 是 --> J[询问用户]
-    I -- 否 --> K{allow 规则匹配?}
-    K -- 是 --> L[允许]
-    K -- 否 --> J
+    C --> G{deny rule matched?}
+    G -- Yes --> H[Block]
+    G -- No --> I{ask rule matched?}
+    I -- Yes --> J[Ask user]
+    I -- No --> K{allow rule matched?}
+    K -- Yes --> L[Allow]
+    K -- No --> J
     
-    F --> M[两阶段分类器<br>评估风险等级]
-    M --> N{分类器决策}
-    N -- 安全 --> L
-    N -- 危险 --> H
-    N -- 边界情况 --> J
+    F --> M[Two-stage classifier<br>evaluates risk level]
+    M --> N{Classifier decision}
+    N -- Safe --> L
+    N -- Dangerous --> H
+    N -- Edge case --> J
 ```
 
 
 
-##### AutoMode ML 分类器
+##### The AutoMode ML classifier
 
->2026 年 3 月 24 日，Anthropic 为 Claude Code 推出了 **Auto Mode（自动模式）** ，其核心是一个基于模型的智能分类器，在每次工具调用执行前进行安全评估：低风险操作自动放行，高风险操作直接阻止，仅在边界情况下触发用户确认。这是业界首个部署的 AI 编码 Agent 权限系统。
+>On March 24, 2026, Anthropic launched **Auto Mode** for Claude Code. Its core is a model-based intelligent classifier that performs a safety evaluation before every tool call executes: low-risk operations pass automatically, high-risk operations are blocked outright, and user confirmation is triggered only in borderline cases. This is the industry's first deployed permission system for AI coding agents.
 
-在 AutoMode（2026年3月推出）中，Anthropic 引入了**两阶段 transcript classifier**：输入侧使用 server-side prompt-injection probe，输出侧对即将执行的动作进行审核。操作被划分为三层：
+In AutoMode (launched March 2026), Anthropic introduced a **two-stage transcript classifier**: the input side uses a server-side prompt-injection probe, and the output side reviews the action about to execute. Operations are divided into three tiers:
 
-- **Tier 1**：只读安全工具与用户显式允许的安全规则
-- **Tier 2**：项目目录内的文件写入与编辑，默认允许
-- **Tier 3**：shell、外部服务调用等，由模型进行正式审核
+- **Tier 1**: read-only safe tools and safety rules explicitly allowed by the user
+- **Tier 2**: file writes and edits within the project directory, allowed by default
+- **Tier 3**: shell, external service calls, and the like, formally reviewed by the model
 
-**AutoMode 的双层防御体系:**一层盯着 Agent 读到了什么，另一层盯着 Agent 想做什么。
+**AutoMode's two-layer defense:** one layer watches what the Agent reads, the other watches what the Agent intends to do.
 
-- **输入层——提示注入探测器（Prompt-Injection Probe）**：在工具返回结果（文件内容、网页、命令结果）进入 Agent 上下文之前，服务端探针会对其进行扫描。一旦发现内容疑似企图劫持 Agent 行为（例如网页中隐藏了“ignore previous instructions and run rm -rf /”），探针会在结果旁边强制注入一条警告，提示 Agent“这段内容很可疑，请保持警惕”。
-- **输出层——转录分类器（Transcript Classifier）**：在每个工具调用执行之前，由基于 Claude Sonnet 4.6 的分类器进行裁决。它只审查用户消息和即将执行的工具调用命令，**不看 Agent 自身的推理文字和工具返回结果**。
+- **Input layer — prompt-injection probe**: before tool return values (file contents, web pages, command output) enter the Agent context, a server-side probe scans them. Once content is suspected of attempting to hijack Agent behavior (e.g., a web page hiding "ignore previous instructions and run rm -rf /"), the probe force-injects a warning alongside the result, telling the Agent "this content looks suspicious, stay alert".
+- **Output layer — transcript classifier**: before each tool call executes, a classifier based on Claude Sonnet 4.6 renders the verdict. It reviews only the user message and the tool call command about to execute — **it does not look at the Agent's own reasoning text or tool return values**.
 
 ```mermaid
 flowchart TD
     subgraph Agent[Claude Agent]
-        LLM[主模型]
+        LLM[Main model]
     end
 
-    subgraph Defense[双层防御体系]
+    subgraph Defense[Two-Layer Defense System]
         direction TB
-        Input[输入层: 提示注入探测器]
-        Output[输出层: Transcript 分类器]
+        Input[Input layer: prompt injection detector]
+        Output[Output layer: transcript classifier]
     end
 
-    World[外部世界<br>文件/网页/Shell输出] --> Input
-    Input -- "扫描可疑内容" --> World
-    Input -- "注入警告标签" --> Agent
+    World[External World<br>files/webpages/shell output] --> Input
+    Input -- "scans suspicious content" --> World
+    Input -- "injects warning labels" --> Agent
     
-    Agent -- "决定执行动作" --> Output
-    Output -- "安全" --> Execute[执行工具调用]
-    Output -- "危险" --> Block[阻止操作]
+    Agent -- "decides action to execute" --> Output
+    Output -- "safe" --> Execute[Execute tool call]
+    Output -- "dangerous" --> Block[Block operation]
     Execute --> World
 ```
 
-**四层决策流水线:**
+**The four-tier decision pipeline:**
 
-​	AutoMode 并不是每个工具调用都直接走分类器，而是一条**四层决策流水线**，只有前三层都无法判断时才调用分类器。
+​	AutoMode does not send every tool call straight to the classifier; instead it runs a **four-tier decision pipeline**, calling the classifier only when the first three tiers all fail to decide.
 
 ```mermaid
 flowchart TD
-    A[Agent 发起工具调用] --> B[第一层: 检查已有权限规则]
-    B -- 命中 --> Allow1[直接允许]
-    B -- 未命中 --> C[第二层: 模拟 acceptEdits 模式]
-    C -- 通过 --> Allow2[直接允许]
-    C -- 未通过 --> D[第三层: 检查只读工具白名单]
-    D -- 命中 --> Allow3[直接允许]
-    D -- 未命中 --> E[第四层: 调用 AI 分类器]
-    E --> F{分类器决策}
-    F -- 安全 --> Allow4[允许执行]
-    F -- 危险 --> Block[阻止操作]
-    F -- 边界情况 --> Prompt[降级为手动确认]
+    A[Agent initiates tool call] --> B[Layer 1: check existing permission rules]
+    B -- hit --> Allow1[Allow directly]
+    B -- miss --> C[Layer 2: simulate acceptEdits mode]
+    C -- pass --> Allow2[Allow directly]
+    C -- fail --> D[Layer 3: check read-only tool whitelist]
+    D -- hit --> Allow3[Allow directly]
+    D -- miss --> E[Layer 4: invoke AI classifier]
+    E --> F{Classifier decision}
+    F -- Safe --> Allow4[Allow execution]
+    F -- Dangerous --> Block[Block operation]
+    F -- Edge case --> Prompt[Fall back to manual confirmation]
 ```
 
-##### Bash安全检测：AST 语法解析
+##### Bash safety detection: AST syntax parsing
 
-​	Bash 工具是 Agent 工具系统中能力最强、风险最高的组件。简单的权限校验无法有效校验Bash工具的安全性，需要深入分析Bash执行内容，分析其语义，判断其是否安全。
+​	The Bash tool is the most capable and highest-risk component of an Agent's tool system. Simple permission checks cannot effectively verify Bash tool safety; you must deeply analyze what Bash executes, examine its semantics, and judge whether it is safe.
 
-​	**使用AST语法分析原因：**它不依赖运行时环境，仅通过解析命令本身的语法结构即可判定风险等级。
+​	**Why AST syntax analysis:** it does not depend on any runtime environment; parsing the command's own syntactic structure alone determines the risk level.
 
->为什么需要 AST 而不是正则？
+>Why AST instead of regex?
 >
->传统正则表达式匹配面临严重的绕过问题。AST 将命令字符串解析为有类型、有层次结构的语法树，每个节点都有明确的语义角色（命令名、参数、重定向、管道等）。安全分析可以精确地针对不同节点类型应用不同的检测规则，而不是在扁平的字符串上瞎猜。
+>Traditional regex matching faces serious bypass problems. AST parses the command string into a typed, hierarchical syntax tree where every node has a clear semantic role (command name, arguments, redirection, pipe, etc.). Security analysis can precisely apply different detection rules to different node types instead of blindly guessing on flat strings.
 
-**AST 解析的工作流程：**
+**AST parsing workflow:**
 
 ```mermaid
 flowchart LR
-    A[原始命令字符串] --> B[词法分析<br>Tokenization]
-    B --> C[语法分析<br>Tree-sitter-bash]
-    C --> D[生成 CST]
-    D --> E[简化为 AST]
-    E --> F[遍历 AST 节点]
-    F --> G{节点类型}
+    A[Raw command string] --> B[Lexical analysis<br>Tokenization]
+    B --> C[Syntax analysis<br>Tree-sitter-bash]
+    C --> D[Generate CST]
+    D --> E[Simplify to AST]
+    E --> F[Traverse AST nodes]
+    F --> G{Node type}
     
-    G -- 命令节点 --> H[提取命令名 + 参数]
-    G -- 重定向节点 --> I[检查目标路径]
-    G -- 管道节点 --> J[递归分析两侧]
-    G -- 命令替换 --> K[递归分析内部命令]
-    G -- 变量赋值 --> L[追踪变量引用链]
+    G -- command node --> H[Extract command name + args]
+    G -- redirect node --> I[Check target path]
+    G -- pipe node --> J[Recursively analyze both sides]
+    G -- command substitution --> K[Recursively analyze inner command]
+    G -- variable assignment --> L[Trace variable reference chain]
     
-    H --> M[安全规则匹配]
+    H --> M[Security rule matching]
     I --> M
     J --> M
     K --> M
     L --> M
     
-    M --> N[输出: 安全/危险/需确认]
+    M --> N[Output: safe/dangerous/needs confirmation]
 ```
 
 
 
-**核心技术：Tree-sitter-bash 解析器**
+**Core technology: the Tree-sitter-bash parser**
 
-​	在所有主流 Agent Harness 中，Bash 的 AST 解析都是基于 **tree-sitter-bash** 完成的。tree-sitter 是一个通用的增量解析框架，其核心优势包括：
+​	Across all mainstream Agent Harnesses, Bash AST parsing is done on top of **tree-sitter-bash**. tree-sitter is a general-purpose incremental parsing framework whose core advantages include:
 
-| 特性                | 说明                                                   | 对安全分析的价值                                             |
+| Feature | Description | Value for security analysis |
 | :------------------ | :----------------------------------------------------- | :----------------------------------------------------------- |
-| **增量解析**        | 修改命令后只重新解析变化部分                           | 支持实时交互式命令分析                                       |
-| **容错解析**        | 语法错误时仍生成可用的语法树                           | 不因拼写错误而完全失效                                       |
-| **CST 与 AST 分离** | 先构建完整的具体语法树（CST），再提取抽象语法树（AST） | CST 保留所有 token 信息，适合精确模式匹配；AST 去掉噪音，适合语义分析 |
-| **多语言绑定**      | 支持 TypeScript、Python、Rust、Go 等                   | 可嵌入到任何技术栈的 Harness 中                              |
+| **Incremental parsing** | After a command changes, only the changed part is re-parsed | Enables real-time interactive command analysis |
+| **Error-tolerant parsing** | Still produces a usable syntax tree in the presence of syntax errors | Does not fail entirely because of typos |
+| **CST/AST separation** | Builds the complete concrete syntax tree (CST) first, then extracts the abstract syntax tree (AST) | The CST keeps all token information, suited to precise pattern matching; the AST removes noise, suited to semantic analysis |
+| **Multi-language bindings** | Supports TypeScript, Python, Rust, Go, and more | Can be embedded into a Harness on any tech stack |
 
-#### 跨项目权限模型对比（源码级）
+#### Cross-project permission model comparison (source-level)
 
-五个项目对"工具该不该执行"给出了五种回答，架构不变量却高度一致：**fail-closed、规则可覆盖、动作三态**。
+Five projects give five answers to "should this tool execute?", yet their architectural invariants are highly consistent: **fail-closed, overridable rules, three-state actions**.
 
-| 项目 | 评估对象 | 核心机制 | 默认行为 |
+| Project | Evaluation target | Core mechanism | Default behavior |
 |---|---|---|---|
-| Claude Code | 命令 AST + 动作语义 | 6 模式 + 规则管道 + AutoMode ML 分类器（上文） | 边界情况 → ask |
-| OpenCode/OpenCode | 规则前缀字符串 | 三层 Ruleset，`findLast` 后匹配者胜 | 无匹配 → `ask` |
-| DSH | 调用 + 结果全生命周期 | 守卫瀑布 + 单调 ToolGuard（见本章 DSH 守卫流水线小节） | 未授权 → deny |
-| Codex | 进程级行为 | Approval 策略与 Sandbox 两层**相互独立**（见本章 Codex 安全模型小节） | 越界 → 阻断 |
-| Pi | ——（无审批管线） | 安全全部下沉到执行环境边界 | 环境外 → 不可达 |
+| Claude Code | Command AST + action semantics | 6 modes + rule pipeline + AutoMode ML classifier (above) | Borderline case → ask |
+| OpenCode/OpenCode | Rule prefix strings | Three-layer Rulesets; with `findLast` the later match wins | No match → `ask` |
+| DSH | Full call + result lifecycle | Guard waterfall + monotonic ToolGuard (see the DSH guard pipeline section in this chapter) | Unauthorized → deny |
+| Codex | Process-level behavior | Approval policy and Sandbox as two **independent** layers (see the Codex security model section in this chapter) | Out of bounds → block |
+| Pi | —— (no approval pipeline) | Security fully sinks to the execution environment boundary | Outside the environment → unreachable |
 
-**OpenCode/OpenCode：15 行完成权限求值**（`permission/evaluate.ts`，全文 15 行）：
+**OpenCode/OpenCode: permission evaluation in 15 lines** (`permission/evaluate.ts`, 15 lines total):
 
 ```ts
 export function evaluate(permission: string, pattern: string, ...rulesets: Rule[][]): Rule {
@@ -4588,168 +4643,168 @@ export function evaluate(permission: string, pattern: string, ...rulesets: Rule[
   const match = rules.findLast(
     (rule) => Wildcard.match(permission, rule.permission) && Wildcard.match(pattern, rule.pattern),
   )
-  return match ?? { action: "ask", permission, pattern: "*" }   // ★ fail-closed 默认
+  return match ?? { action: "ask", permission, pattern: "*" }   // ★ fail-closed default
 }
 ```
 
-精巧之处不在这 15 行，而在它周围的四条纪律（`permission/index.ts`）：
+The elegance is not in those 15 lines but in the four disciplines around them (`permission/index.ts`):
 
-1. **多层叠加、后匹配者胜**：配置规则 → 用户会话中 "always" 批准的运行时规则 → 追加进同一数组按 `findLast` 求值——后写入的层自然覆盖先写入的层，无需显式优先级声明。
-2. **Bash 前缀归一**：shell 命令先经 `BashArity.prefix(tokens)` 提取人类可读的命令前缀再匹配模式——`git push --force` 与 `git status` 不共享同一条规则。
-3. **回复三态**：`once` / `always`（规则化沉淀）/ `reject`；且 **reject 级联**——拒绝一个请求会同时拒绝同 session 全部挂起请求，防止用户逐个点掉的疲劳攻击。
-4. **循环自检也是权限**：3 次完全相同的连续工具调用触发 `doom_loop` 权限（默认 `ask`，`DOOM_LOOP_THRESHOLD = 3` 见 `session/processor.ts:32`，检测与 ask 在 :639-657）——把"行为异常"统一进权限模型而非另起一套监控系统。
+1. **Layered stacking, later match wins**: config rules → runtime rules from the user's in-session "always" approvals → appended into the same array and evaluated by `findLast` — later layers naturally override earlier ones, no explicit priority declaration needed.
+2. **Bash prefix normalization**: shell commands first pass through `BashArity.prefix(tokens)` to extract a human-readable command prefix before pattern matching — `git push --force` and `git status` do not share the same rule.
+3. **Three-state replies**: `once` / `always` (consolidated into rules) / `reject`; plus **reject cascading** — rejecting one request simultaneously rejects all pending requests in the same session, preventing fatigue attacks where a user clicks them away one by one.
+4. **Loop self-checking is also a permission**: 3 fully identical consecutive tool calls trigger the `doom_loop` permission (default `ask`; `DOOM_LOOP_THRESHOLD = 3` at `session/processor.ts:32`, detection and ask at :639-657) — folding "abnormal behavior" into the permission model instead of building a separate monitoring system.
 
-**Pi 的反面样本**：全仓库搜不到任何审批管线，`permission_denied` 只是 `FileSystem` 错误码之一（`harness/types.ts:135`），与 `not_found`、`is_directory` 并列。Pi 的安全观是**机制下沉**——工具运行在 `ExecutionEnv` 后端抽象之上（nodejs / 容器等），越界行为在环境层面就不可达，Harness 内部无需再问一遍。代价是丢失了"会话中动态调整信任"的能力：要么环境允许，要么不允许，没有 ask 的中间态。
-
----
-
+**Pi as the counter-example**: no approval pipeline exists anywhere in the repo; `permission_denied` is merely one of the `FileSystem` error codes (`harness/types.ts:135`), listed alongside `not_found` and `is_directory`. Pi's security philosophy is **sinking mechanisms down** — tools run on the `ExecutionEnv` backend abstraction (nodejs / containers, etc.), out-of-bounds behavior is unreachable at the environment level, and the Harness never needs to ask again internally. The cost is losing the ability to "dynamically adjust trust within a session": either the environment allows it or it does not — there is no intermediate ask state.
 
 ---
 
-### DSH Skill 系统：三段渐进披露
 
-> 基于 `packages/skill/skill/src/index.ts`（868 行）源码阅读。
+---
 
-1. **目录注入**：只列 `name` + `description`（截断 500 字符），不含正文
-2. **按需加载**：模型调 `skill(name)` 才读全文，渲染为 `<skill_content>` 块
-3. **双通道调用**：`SkillInvocationPolicy { modelInvocable, userInvocable }` 分开控制
+### The DSH Skill system: three-stage progressive disclosure
 
-**Skill 来源类型**（`index.ts:39`）：
+> Based on a source-level read of `packages/skill/skill/src/index.ts` (868 lines).
+
+1. **Directory injection**: only `name` + `description` are listed (truncated to 500 characters), no body text
+2. **On-demand loading**: the full text is read only when the model calls `skill(name)`, rendered as a `<skill_content>` block
+3. **Dual-channel invocation**: `SkillInvocationPolicy { modelInvocable, userInvocable }` controlled separately
+
+**Skill source types** (`index.ts:39`):
 
 ```typescript
 export type SkillSource = 
-  | 'project-dsh'    // .dsh/skills/（项目级）
+  | 'project-dsh'    // .dsh/skills/ (project-level)
   | 'project-agents' // .agents/skills/
-  | 'runtime'        // 运行时动态注入
+  | 'runtime'        // dynamically injected at runtime
   | 'user-dsh'       // ~/.dsh/skills/
   | 'user-agents'    // ~/.agents/skills/
   | 'custom'
-  | 'bundled'        // 预打包
+  | 'bundled'        // pre-bundled
 ```
 
-**rank 表**（`index.ts:27`）：
+**Rank table** (`index.ts:27`):
 
 ```typescript
-export const BUNDLED_SKILL_RANK = 600  // bundled 优先级最高
+export const BUNDLED_SKILL_RANK = 600  // bundled has the highest priority
 ```
 
-> 合并策略：`SkillRegistry` 按 rank + providerOrder + localOrder 排序，重名时高 rank 覆盖低 rank。同级按 insertion 顺序。
+> Merge strategy: `SkillRegistry` sorts by rank + providerOrder + localOrder; on name collisions, higher rank overrides lower rank. Same rank follows insertion order.
 
-支持 **chokidar 热监控**——skill 可在会话中被 agent 边写边生效。**`invoked_skills` attachment 保留已用 skill 的内容**（vs 重注入完整 skill_listing ~4K tokens），节省 cache_creation。
+Supports **chokidar hot watching** — skills written by the agent take effect live mid-session. The **`invoked_skills` attachment retains the content of already-used skills** (vs re-injecting the full skill_listing at ~4K tokens), saving cache_creation.
 
 
 ---
 
-### DSH 工具执行守卫流水线
+### The DSH tool execution guard pipeline
 
-![DSH 工具执行守卫瀑布](ref/dsh-guard-excalidraw.png)
+![DSH tool execution guard waterfall](ref/dsh-guard-excalidraw.png)
 
 ```
-JSON 参数快照 deepFreeze
-→ tools/pre-execute 瀑布：allow | deny | ask
-→ 单调 ToolGuard（只有 deny 权没有 allow 权，拒绝不可翻回放行）
-→ tools/execute around 瀑布（超时/重试/指标）
-→ 工具体（并发安全组内重叠，默认上限 10）
-→ tools/post-execute 瀑布：accept（可替换内容）/ block（纠错反馈变错误结果）
-→ tools/result（冻结快照）→ 追加日志
+JSON argument snapshot deepFreeze
+→ tools/pre-execute cascade: allow | deny | ask
+→ Monotonic ToolGuard (only deny power, no allow power; a rejection cannot be flipped back to allow)
+→ tools/execute around cascade (timeout/retry/metrics)
+→ Tool body (concurrency-safe overlap within a group, default cap 10)
+→ tools/post-execute cascade: accept (content may be replaced) / block (corrective feedback becomes an error result)
+→ tools/result (frozen snapshot) → append log
 ```
 
-**权限三档预设**：`read-only` / `workspace-write`（默认）/ `danger-full-access`
+**Three permission presets**: `read-only` / `workspace-write` (default) / `danger-full-access`
 
-**沙箱**：bwrap / Landlock（原生 addon）/ Seatbelt + Windows ACL
+**Sandbox**: bwrap / Landlock (native addon) / Seatbelt + Windows ACL
 
-#### Guard 实例 1：`repeat-tool-reminder`（233 行，advisory 型防死循环守卫）
+#### Guard instance 1: `repeat-tool-reminder` (233 lines, advisory anti-infinite-loop guard)
 
-源码：`packages/guard/repeat-tool-reminder/src/index.ts`。这是 DSH"守卫只劝说、不独裁"哲学的最佳样本——**它从不 veto、从不改写调用，只在 post-execute 决策上附加一条模型可见的提醒**。
+Source: `packages/guard/repeat-tool-reminder/src/index.ts`. This is the best specimen of DSH's "guards persuade, never dictate" philosophy — **it never vetoes, never rewrites a call; it only attaches a model-visible reminder to the post-execute decision**.
 
-**核心机制（源码级）**：
+**Core mechanism (source-level)**:
 
 ```ts
-// 1. 链键 = 工具名 + 规范化参数的完整字符串（不是预览！）
-const canonical = canonicalize(exec.arguments)          // 深度 key 排序后 JSON.stringify
+// 1. Chain key = tool name + full canonicalized argument string (not a preview!)
+const canonical = canonicalize(exec.arguments)          // JSON.stringify after deep key sorting
 const key = JSON.stringify([exec.name, canonical])
-const count = chain?.key === key ? chain.count + 1 : 1  // 同键累加，异键归 1
+const count = chain?.key === key ? chain.count + 1 : 1  // same key increments, different key resets to 1
 
-// 2. 命中阈值才发声：thresholds[0] 温和版，其余阈值详细版
+// 2. Speak only at thresholds: thresholds[0] gentle version, other thresholds detailed version
 if (count === thresholds[0]) return GENTLE_REMINDER     // "analyze the previous result…"
-return detailedReminder(name, count, preview(canonical, 500))  // 点名工具+次数+参数
+return detailedReminder(name, count, preview(canonical, 500))  // names tool + count + args
 ```
 
-四个设计决策值得注意：
+Four design decisions worth noting:
 
-| 决策 | 源码依据 | 为什么 |
+| Decision | Source evidence | Why |
 |---|---|---|
-| **规范化比较**（deep key-sort 后 stringify） | `sortJsonValue()` :89-100 | 参数对象仅属性顺序不同时视为同一次调用，避免假阴性漏检 |
-| **计数挂在 post-execute 而非 pre-execute** | `observe()` 注释 :181-188 | 被拒调用也流经同一瀑布（`ToolRuntime.execute` 把 deny 路由进同一管线）——**模型反复锤一个被拒的调用恰恰是最值得打断的死循环** |
-| **提醒骑在 `additionalContexts` 上，block 与放行两种决策变体都带** | :213-224 | 下游守卫即使 block 了这个调用，提醒照样送达——防循环与纠错正交 |
-| **用户插话即清链**（`agent/pre-step` 钩子） | :229-232 | 用户干预改变了上下文，跨越插话的重复不算循环（纯 reset 钩子，永远 delegate） |
+| **Canonical comparison** (deep key-sort then stringify) | `sortJsonValue()` :89-100 | Argument objects differing only in property order count as the same call, avoiding false-negative misses |
+| **Counting hooked on post-execute rather than pre-execute** | `observe()` comment :181-188 | Rejected calls also flow through the same waterfall (`ToolRuntime.execute` routes deny into the same pipeline) — **a model repeatedly hammering a rejected call is precisely the loop most worth interrupting** |
+| **The reminder rides on `additionalContexts`, attached in both the block and allow decision variants** | :213-224 | Even if a downstream guard blocks the call, the reminder still gets delivered — loop prevention and correction are orthogonal |
+| **User interjection clears the chain** (`agent/pre-step` hook) | :229-232 | User intervention changes the context; repetition spanning an interjection does not count as a loop (a pure reset hook, always delegates) |
 
-**配置 fail-loud 契约**：空 `thresholds`、非整数、值 <2、重复值、`argumentsPreviewChars <1` ——任一违规在**插件加载时抛错**，绝不静默回退（`validateThresholds()` :128-141）。`include`/`exclude` 是 `*` 通配符谓词（编译为锚定 RegExp，其余元字符字面匹配），匹配不到任何已注册工具也合法——`exclude: [mcp_*]` 在没加载 MCP 工具的部署里必须不报错。
+**Fail-loud configuration contract**: empty `thresholds`, non-integers, values <2, duplicate values, `argumentsPreviewChars <1` — any violation **throws at plugin load time**, never silently falls back (`validateThresholds()` :128-141). `include`/`exclude` are `*` wildcard predicates (compiled to anchored RegExps, with other metacharacters matched literally); matching no registered tool is also legal — `exclude: [mcp_*]` must not error in deployments without MCP tools loaded.
 
-**溯源标签是承重结构**：每条提醒都盖 `{ kind:'plugin', plugin:'repeat-tool-reminder', form:'notice', summary: "bash × 5" }` 源戳（:57, :205）。没有这个标签，注入的上下文在派生历史（fork/replay）里会被渲染成用户 prompt——这正是 §2 DSH 事件溯源日志 "Model-visible ⟺ logged" 不变量在单条消息粒度上的体现。
+**Provenance tags are load-bearing**: every reminder is stamped with the `{ kind:'plugin', plugin:'repeat-tool-reminder', form:'notice', summary: "bash × 5" }` provenance tag (:57, :205). Without that tag, injected context would be rendered as a user prompt in derived histories (fork/replay) — exactly the §2 DSH event-sourcing log invariant "Model-visible ⟺ logged" expressed at single-message granularity.
 
-**状态存储**：`WeakMap<Agent, Chain>`（:173）——链状态随 Agent 实例被 GC 自动回收，无需显式清理；直接调 `ctx.tools.execute()` 的调用方（无 agent）直接跳过（:192），守卫只观测 agent-loop 发起的调用。
+**State storage**: `WeakMap<Agent, Chain>` (:173) — chain state is garbage-collected automatically with the Agent instance, no explicit cleanup needed; callers that call `ctx.tools.execute()` directly (no agent) are simply skipped (:192); the guard observes only agent-loop-initiated calls.
 
-#### Guard 实例 2：`timeout-policy`（81 行，协作式超时守卫）
+#### Guard instance 2: `timeout-policy` (81 lines, cooperative timeout guard)
 
-源码：`packages/guard/timeout-policy/src/index.ts`。**协作式**是指：工具自己声明 `timeoutMs` 并承诺响应 `exec.signal` 中止，守卫只负责"上表 + 归因"，不强行杀掉工具 Promise。
+Source: `packages/guard/timeout-policy/src/index.ts`. **Cooperative** means: the tool itself declares `timeoutMs` and promises to honor aborts on `exec.signal`; the guard only handles "arming the timer + attribution" and never force-kills the tool Promise.
 
 ```ts
 ctx.on('tools/execute', async (exec, next) => {
   const timeoutMs = ctx.tools.get(exec.name, exec.agent)?.timeoutMs
-  if (timeoutMs === undefined) return next()          // 未声明预算 → 原样放行
+  if (timeoutMs === undefined) return next()          // no budget declared → pass through unchanged
 
-  using d = deadline(exec.signal, timeoutMs, TOOL_TIMEOUT)   // 显式资源管理，自动释放
+  using d = deadline(exec.signal, timeoutMs, TOOL_TIMEOUT)   // explicit resource management, auto-release
   const upstream = exec.signal
-  exec.signal = d.signal                              // 派生信号换给工具
+  exec.signal = d.signal                              // hand the derived signal to the tool
   try {
     const result = await next()
-    if (timeoutOf(d.signal, TOOL_TIMEOUT) !== undefined)     // 是"我的"定时器先响的吗？
-      return toolTimeoutResult(timeoutMs)             // → 替换为结构化 TOOL_TIMEOUT 结果
+    if (timeoutOf(d.signal, TOOL_TIMEOUT) !== undefined)     // did "my" timer fire first?
+      return toolTimeoutResult(timeoutMs)             // → replace with a structured TOOL_TIMEOUT result
     return result
   } finally {
-    exec.signal = upstream                            // 还原上游信号
+    exec.signal = upstream                            // restore the upstream signal
   }
 })
 ```
 
-两个精度细节：
+Two precision details:
 
-1. **`TOOL_TIMEOUT` 码双重用途**（:25）：既是内部 `deadline` 的归因码，又是替换结果里 `error.code` 的结构化错误码——后续重试/沙箱插件和 replay 都能按码路由。
-2. **嵌套 deadline 消歧**：`timeoutOf(d.signal, TOOL_TIMEOUT)` 按码做作用域判定——若外层另一个 `tools/execute` 包装器的定时器先响，在这里读出来是 `undefined`，被当作普通上游取消处理，**不会误判成本插件的超时**（:69-74 注释明说了这个场景）。
-3. **信号还原纪律**（:77-79）：`finally` 里还原 `exec.signal`，保证 post-execute 监听者永远看不到这个（可能已 abort 的）超时信号——守卫的内部机制不泄漏到流水线下游。
+1. **The `TOOL_TIMEOUT` code does double duty** (:25): it is both the attribution code for the internal `deadline` and the structured `error.code` in the replacement result — later retry/sandbox plugins and replay can all route by code.
+2. **Nested deadline disambiguation**: `timeoutOf(d.signal, TOOL_TIMEOUT)` scopes by code — if another outer `tools/execute` wrapper's timer fires first, reading here yields `undefined`, treated as an ordinary upstream cancellation, **never misattributed to this plugin's timeout** (the :69-74 comment spells out this scenario).
+3. **Signal restoration discipline** (:77-79): `exec.signal` is restored in `finally`, ensuring post-execute listeners never see this (possibly already aborted) timeout signal — the guard's internal mechanics do not leak downstream through the pipeline.
 
-超时的模型可见面是一句 `Error: tool call timed out after 30000ms` + `isError: true` + `ToolTimeoutError` 结构化错误——**超时变成一条普通工具结果回流给模型**，模型可以决定换参数重试，而不是整个 turn 崩掉。这与 Codex 的 `TurnAbort` 中断式超时（见本章 Codex 安全模型小节）形成对照：DSH 选软着陆，Codex 选硬中断。
+The model-visible face of a timeout is a single `Error: tool call timed out after 30000ms` + `isError: true` + a structured `ToolTimeoutError` error — **the timeout flows back to the model as an ordinary tool result**, and the model can decide to retry with different arguments instead of the whole turn crashing. This contrasts with Codex's `TurnAbort` interrupt-style timeout (see the Codex security model section in this chapter): DSH chooses a soft landing, Codex a hard interrupt.
 
 
 ---
 
-### DSH Code Mode：`run_code`
+### DSH Code Mode: `run_code`
 
-`code` 模式下模型只能调 **`run_code`** 一个保留工具，其余工具以生成的 TypeScript/Python SDK 形式出现在 prompt 的 `tools:sdk` section，程序内子调用重新进入完整守卫流水线——**OpenCode 无等价物**。
+In `code` mode the model can call only one reserved tool, **`run_code`**; all other tools appear in the prompt's `tools:sdk` section as a generated TypeScript/Python SDK, and in-program sub-calls re-enter the full guard pipeline — **OpenCode has no equivalent**.
 
-### Codex 安全模型：Approval 与 Sandbox 两层独立
+### The Codex security model: Approval and Sandbox as two independent layers
 
-- **Approval**（逻辑允许）：是否需要用户确认
-- **Sandbox Policy**（执行边界）：文件系统/网络/进程隔离
-- 两者独立配置、独立执行——"允许但不隔离"或"隔离但不需要确认"都合法
+- **Approval** (logical allowance): whether user confirmation is required
+- **Sandbox Policy** (execution boundary): filesystem/network/process isolation
+- The two are configured and enforced independently — "allowed but not sandboxed" or "sandboxed without confirmation" are both legal
 
-## 7. Agent 自进化：从 Skill 到模型权重（Harness Engineering for Self-Improvement）
+## 7. Agent self-evolution: from Skill to model weights (Harness Engineering for Self-Improvement)
 
-> 本章框架来自翁荔（Lilian Weng，前 OpenAI 安全副总裁、Thinking Machines Lab 联创）2026-07 博客《Harness Engineering for Self-Improvement》，结合 DeepSeek 崔添翼的转发附议与本书 §2~§6 的六项目源码事实。核心判断：**自进化不一定从模型改写自己权重开始，先从 Harness 开始**——模型优化自己"获得答案的方式"，比优化"自己"更可行。
+> This chapter's framework comes from Lilian Weng's (former OpenAI VP of Safety, co-founder of Thinking Machines Lab) July 2026 blog post "Harness Engineering for Self-Improvement", combined with DeepSeek's Cui Tianyi's reposting endorsement and the source-level facts of the six projects in §2~§6 of this book. Core judgment: **self-evolution need not start with a model rewriting its own weights — start with the Harness first** — for a model, optimizing "how it obtains answers" is more feasible than optimizing "itself".
 
-### 7.1 翁荔框架：RSI 从 Harness 层开始
+### 7.1 The Lilian Weng framework: RSI starts from the Harness layer
 
-![Agent 自进化三层路径全景](ref/self-evolution-archify.png)
+![Full view of the three-layer agent self-evolution paths](ref/self-evolution-archify.png)
 
-> 🖱️ [交互式版本](diagrams/self-evolution.architecture.html)。三层路径全景：Context Engineering（ACE/MCE）→ Workflow Design（ADAS/AFlow）→ Self-Improving Harness（Self-Harness/DGM）；权限与安全层必须留在循环之外。
+> 🖱️ [Interactive version](diagrams/self-evolution.architecture.html). Full view of the three-layer paths: Context Engineering (ACE/MCE) → Workflow Design (ADAS/AFlow) → Self-Improving Harness (Self-Harness/DGM); the permission and security layers must stay outside the loop.
 
-**RSI**（Recursive Self-Improvement，递归自我改进）最早带强 AGI 色彩：智能系统改进产生自身智能的机制。翁荔把它工程化拆解——在今天的 AI 系统里，自我改进未必是模型直接改写权重，也可能是**改进训练流程、研究流程和部署系统**，帮助下一代系统在真实任务中表现更好。Harness 是部署系统里最关键的一层：决定模型如何观察环境、如何行动、如何管理上下文、如何保存状态、如何评估结果——也决定模型能不能在长任务里持续迭代。
+**RSI** (Recursive Self-Improvement) originally carried a strong AGI flavor: intelligent systems improving the mechanisms that produce their own intelligence. Lilian Weng breaks it down in engineering terms — in today's AI systems, self-improvement need not mean the model directly rewriting its weights; it can also mean **improving training pipelines, research workflows, and deployment systems**, helping the next generation of systems perform better on real tasks. The Harness is the most critical layer of a deployment system: it decides how the model observes the environment, acts, manages context, persists state, and evaluates results — and whether the model can keep iterating on long tasks.
 
 ```mermaid
 flowchart LR
-    A["RSI 递归自我改进"] --> B["模型方向<br>改写权重（RL/蒸馏）"]
-    A --> C["Harness 方向<br>优化获得答案的方式"]
+    A["RSI Recursive Self-Improvement"] --> B["Model direction<br>rewrite weights (RL/distillation)"]
+    A --> C["Harness direction<br>optimize how answers are obtained"]
     C --> C1["Context Engineering"]
     C --> C2["Workflow Design"]
     C --> C3["Self-Improving Harness"]
@@ -4757,9 +4812,9 @@ flowchart LR
     style C fill:#C8102E,color:#fff
 ```
 
-**崔添翼（DeepSeek）附议**：Harness 方向的自进化和模型方向一样，都是非常可能出成果的方向；**Skill 是 Harness 自进化中比较初级的形式——从 prompt 层面进行自进化**。这与本书 §5 的 Hermes 技能闭环（10 轮 Nudge 自动生成 SKILL.md）、§6 的 DSH Skill 系统形成印证。
+**Cui Tianyi (DeepSeek) concurs**: Harness-direction self-evolution is just as likely to produce results as the model direction; **Skill is a relatively primitive form of Harness self-evolution — self-evolution at the prompt level**. This cross-validates Hermes's skill closed loop in §5 of this book (SKILL.md auto-generated over 10 Nudge rounds) and the DSH Skill system in §6.
 
-### 7.2 递进链条：优化对象一步步深入
+### 7.2 The progressive chain: optimization targets go deeper step by step
 
 ```mermaid
 flowchart LR
@@ -4770,139 +4825,139 @@ flowchart LR
     style D fill:#C8102E,color:#fff
 ```
 
-模型越强，能被优化的对象越抽象、越通用：从调单个提示词，到结构化上下文，到工作流，到 Harness 代码本身，最后到"优化器代码"（生成优化策略的代码）。三层代表性工作按此排列：Context Engineering（ACE/MCE）→ Workflow Design（AI Scientist/ADAS/AFlow）→ Self-Improving Harness（Self-Harness/DGM）。
+The stronger the model, the more abstract and general the optimizable target: from tuning a single prompt, to structured context, to workflows, to Harness code itself, and finally to "optimizer code" (code that generates optimization strategies). The three layers of representative work line up accordingly: Context Engineering (ACE/MCE) → Workflow Design (AI Scientist/ADAS/AFlow) → Self-Improving Harness (Self-Harness/DGM).
 
-### 7.3 两个层级：非参数化与参数化
+### 7.3 Two tiers: non-parametric and parametric
 
-| 层级 | 进化对象 | 时效 | 可逆性 |
+| Tier | Evolution target | Latency | Reversibility |
 |---|---|---|---|
-| **非参数化** | Skill / Harness / Memory / Workflow | 即时 | 可逆 |
-| **参数化** | 模型权重（RL） | 慢 | 需回滚 |
+| **Non-parametric** | Skill / Harness / Memory / Workflow | Immediate | Reversible |
+| **Parametric** | Model weights (RL) | Slow | Requires rollback |
 
-翁荔的三层路径全部落在**非参数化**一侧——这正是"先从 Harness 开始"的含义。参数化路线（RL 内化）见效慢、难回滚，但长期看 Harness 的改进可能被"内化"进模型行为——就像提示词工程的手动技巧随模型指令跟随能力变强而失色。**但"说清楚目标、约束、上下文、评估标准"这件事本身从未消失。**
+Lilian Weng's three-layer paths all fall on the **non-parametric** side — that is exactly what "start with the Harness first" means. The parametric route (RL internalization) is slow to show results and hard to roll back, but in the long run Harness improvements may be "internalized" into model behavior — just as manual prompt engineering tricks faded as models' instruction-following grew stronger. **But the act of "spelling out goals, constraints, context, and evaluation criteria" itself never goes away.**
 
-### 7.4 第一层：Context Engineering 自进化（ACE / MCE）
+### 7.4 Layer 1: Context Engineering self-evolution (ACE / MCE)
 
-把 §4 的"上下文压缩/缓存"再往前推一步：上下文本身成为可进化对象。
+Push §4's "context compaction/cache" one step further: context itself becomes an evolvable object.
 
-- **ACE**（Agentic Context Engineering）：上下文不是越堆越长的提示词，而是一本**持续更新的操作手册**。三角色配合：**Generator** 生成任务轨迹 → **Reflector** 从成功与失败轨迹中提炼要点 → **Curator** 把要点整理成结构化条目、增量更新进手册。对应到生产实现：Hermes 的预压缩记忆刷写（§5）就是手写版 Reflector+Curator。
-- **MCE**（Meta Context Engineering）：更进一步的双层优化——**外层进化"管理上下文的技能"，内层用该技能优化具体任务的上下文**。ACE 还需要人工设计更新规则，MCE 连更新规则本身也进入进化，朝"自我管理的记忆"迈进。
+- **ACE** (Agentic Context Engineering): context is not an ever-lengthening pile of prompts but a **continuously updated playbook**. Three roles cooperate: the **Generator** produces task trajectories → the **Reflector** distills key points from successful and failed trajectories → the **Curator** organizes the key points into structured entries and incrementally updates the playbook. Mapped to production: Hermes's pre-compaction memory flush (§5) is a hand-written Reflector+Curator.
+- **MCE** (Meta Context Engineering): a further step of two-level optimization — **the outer level evolves "the skill of managing context", and the inner level uses that skill to optimize the context of concrete tasks**. ACE still needs humans to design update rules; in MCE even the update rules themselves enter evolution, moving toward "self-managing memory".
 
-### 7.5 第二层：Workflow Design（AI Scientist / ADAS / AFlow）
+### 7.5 Layer 2: Workflow Design (AI Scientist / ADAS / AFlow)
 
-解决"模型该怎么干活"：
+Solving "how should the model do its work":
 
-| 工作 | 思路 | 递进意义 |
+| Work | Approach | Progressive significance |
 |---|---|---|
-| **AI Scientist** | 提出想法→写代码→跑实验→分析→写论文→同行评审的完整流水线 | 人类把任务流程工程化 |
-| **ADAS** | 把"设计 Agent 工作流"本身当可搜索的优化问题，元智能体不断提出新工作流并评估 | 模型参与设计流程 |
-| **AFlow** | 工作流表示为图，蒙特卡洛树搜索（MCTS）寻找更优图结构 | 流程结构本身进入搜索空间 |
+| **AI Scientist** | A complete pipeline: propose ideas → write code → run experiments → analyze → write papers → peer review | Humans engineering the task process |
+| **ADAS** | Treating "designing Agent workflows" itself as a searchable optimization problem, with a meta-agent continuously proposing and evaluating new workflows | The model joins the design process |
+| **AFlow** | Workflows represented as graphs; Monte Carlo Tree Search (MCTS) finds better graph structures | Process structure itself enters the search space |
 
-对应本书：§3 的四大协作模式（Workflow/Supervisor/Hierarchical/Swarm）是人工设计的静态答案；ADAS/AFlow 让这个选择本身自动化。
+Mapped to this book: §3's four collaboration patterns (Workflow/Supervisor/Hierarchical/Swarm) are human-designed static answers; ADAS/AFlow automate that choice itself.
 
-### 7.6 第三层：Self-Improving Harness 与进化搜索（Self-Harness / DGM）
+### 7.6 Layer 3: Self-Improving Harness and evolutionary search (Self-Harness / DGM)
 
-模型不只使用 Harness，而是**分析 Harness 哪里不好、提出对 Harness 的修改**。Self-Harness 的三步循环：
+The model does not just use the Harness — it **analyzes where the Harness falls short and proposes modifications to the Harness**. Self-Harness's three-step loop:
 
 ```mermaid
 flowchart TD
-    A["① Weakness Mining 弱点挖掘<br>收集轨迹：工具调用/错误日志/失败结果/验证器反馈<br>挖出反复出现的失败模式"] --> B["② Harness Proposal 提案<br>小范围 + 可验证<br>输入：可改位置 + 失败模式 + 必须保留的正确行为 + 已试过的修改"]
-    B --> C["③ Proposal Validation 验证<br>测试验证：确有提升且无回归才合入"]
-    C -->|下一版 Harness| A
+    A["① Weakness Mining<br>collect trajectories: tool calls/error logs/failed results/verifier feedback<br>surface recurring failure patterns"] --> B["② Harness Proposal<br>small-scope + verifiable<br>inputs: changeable spots + failure patterns + correct behaviors that must be preserved + already-tried changes"]
+    B --> C["③ Proposal Validation<br>test-verified: merge only with real improvement and no regression"]
+    C -->|next Harness version| A
     style A fill:#C8102E,color:#fff
     style B fill:#C8102E,color:#fff
     style C fill:#C8102E,color:#fff
 ```
 
-典型失败模式：某类任务总遗漏文件、测试失败后总重复无效修复、上下文变长后总丢掉关键约束。**效果实证**：MiniMax M2.5、Qwen3.5、GLM-5 在 Terminal-Bench-2 上跑这套循环，学出了针对各自薄弱点、互不相同的 Harness 配置——Harness 配置开始呈现"模型个性"。**翁荔同时点破隐患**：允许程序自改系统层代码，抽象边界有被打破的风险，**权限控制和安全层必须留在循环之外**（对应 §6 的 fail-closed 纪律），reward hacking 老问题依然存在。
+Typical failure modes: a class of tasks keeps missing files, keeps repeating ineffective fixes after test failures, keeps dropping key constraints as context grows. **Effect evidence**: MiniMax M2.5, Qwen3.5, and GLM-5 ran this loop on Terminal-Bench-2 and learned Harness configurations targeting their own weak points, all different from one another — Harness configurations began to show "model personality". **Lilian Weng also flags the hazard**: letting programs modify system-level code risks breaking abstraction boundaries, **permission control and the security layer must stay outside the loop** (corresponding to §6's fail-closed discipline), and the old reward hacking problem persists.
 
-**Evolutionary Search 把 Harness 变成可搜索对象**——自然选择逻辑：生成多候选 → 基于已有版本修改 → benchmark/验证器评估 → 留优汰劣 → 下一轮。代表作 **DGM**（Darwin Gödel Machine）：让 coding agent 修改自己的 Harness 代码仓库，Claude 3.5 Sonnet 基座下 SWE-bench Verified 从 20%→50%，Polyglot 从 14.2%→30.7%，达到甚至超过人工设计的 agent。**适用边界**：代码/算法/GPU kernel 等可自动评估的任务；科研品味、产品长期质量、组织协作的评估慢且模糊，此路暂不通。
+**Evolutionary Search turns the Harness into a searchable object** — natural selection logic: generate multiple candidates → modify based on existing versions → evaluate with benchmarks/verifiers → keep the best, cull the rest → next round. The landmark work is **DGM** (Darwin Gödel Machine): letting a coding agent modify its own Harness code repository; on a Claude 3.5 Sonnet base, SWE-bench Verified went from 20%→50% and Polyglot from 14.2%→30.7%, matching or exceeding human-designed agents. **Applicability boundary**: tasks that can be automatically evaluated, such as code/algorithms/GPU kernels; research taste, long-term product quality, and organizational collaboration are slow and fuzzy to evaluate — this route does not work there yet.
 
-### 7.7 非参数化：Skill 动态沉淀
+### 7.7 Non-parametric: dynamic Skill consolidation
 
-- **Trace2Skill**：200 条 50+ 轮轨迹 <2 小时 → 并行子 Agent 提补丁 → 分层合并
-- **EvoSkill**：Executor / Proposer / Builder 三子 Agent 分工
-- **触发条件**（Hermes）：5+ 次工具调用 / 错误恢复 / 用户修正 / 工作流可复用
+- **Trace2Skill**: 200 trajectories of 50+ turns in <2 hours → parallel subagents propose patches → layered merging
+- **EvoSkill**: Executor / Proposer / Builder three-subagent division of labor
+- **Trigger conditions** (Hermes): 5+ tool calls / error recovery / user correction / reusable workflow
 
-> Hermes 技能生成与自改进的完整伪代码见 §5"自动学习与进化"；DSH 的 Skill 三段渐进披露（按需加载而非自动生成）见 §6——同一对象的两条路线：**Hermes 让 Skill 自己长出来，DSH 让 Skill 精准被读到**。
+> For the full pseudocode of Hermes skill generation and self-improvement, see §5 "Automated learning and evolution"; for DSH's three-stage progressive Skill disclosure (on-demand loading rather than auto-generation), see §6 — two routes to the same object: **Hermes lets Skills grow on their own, DSH lets Skills be read precisely when needed**.
 
-### 7.8 记忆进化：从静态存储到自管理记忆
+### 7.8 Memory evolution: from static storage to self-managing memory
 
-![记忆进化五档阶梯](ref/memory-evolution-ladder-excalidraw.png)
+![The five-tier memory evolution ladder](ref/memory-evolution-ladder-excalidraw.png)
 
-六项目的记忆实现恰好排成一条进化阶梯（细节均见 §5）：
+The memory implementations of the six projects line up exactly as an evolution ladder (details all in §5):
 
-| 档位 | 代表 | 机制 | 自进化程度 |
+| Tier | Representative | Mechanism | Degree of self-evolution |
 |---|---|---|---|
-| L1 手写 | CLAUDE.md / AGENTS.md | 人类维护，Agent 只读 | 无 |
-| L2 目录化 | Claude Code memdir | 文件目录 + MEMORY.md 索引 + Sonnet 选 5 注入 | 半自动 |
-| L3 检索化 | OpenCode/OpenCode | FTS5 BM25 + 压缩时同步提取（ExtractMemories） | 事件触发式 |
-| L4 自动刷写 | Hermes | 预压缩刷写 + autoDream 定时固化（24h/5 会话门控） | 定时自动 |
-| L5 自管理 | ACE / MCE（研究前沿） | Generator/Reflector/Curator 增量更新；MCE 连管理技能本身也进化 | 完全自管理 |
+| L1 Hand-written | CLAUDE.md / AGENTS.md | Maintained by humans, read-only for the Agent | None |
+| L2 Directory-based | Claude Code memdir | File directory + MEMORY.md index + Sonnet picks 5 to inject | Semi-automatic |
+| L3 Retrieval-based | OpenCode/OpenCode | FTS5 BM25 + extraction synchronized with compaction (ExtractMemories) | Event-triggered |
+| L4 Auto-flush | Hermes | Pre-compaction flush + autoDream scheduled consolidation (24h/5-session gating) | Scheduled automatic |
+| L5 Self-managing | ACE / MCE (research frontier) | Generator/Reflector/Curator incremental updates; MCE evolves even the management skill itself | Fully self-managing |
 
-翁荔的判断：任务越自主、越独立，需要管理的记忆越多，**记忆生命周期问题未来可能成为智能本身的一部分**，而不只是软件系统层面的事。L1→L4 是工程现状，L5 是方向。
+Lilian Weng's judgment: the more autonomous and independent the task, the more memory needs managing — **the memory lifecycle problem may in the future become part of intelligence itself**, not just a matter at the software-systems level. L1→L4 is the engineering status quo; L5 is the direction.
 
-### 7.9 参数化：RL 训练闭环
+### 7.9 Parametric: the RL training loop
 
-- **GRPO**（DeepSeek R1）：8~16 采样组内相对比较，免 Reward Model
-- **GiGPO**：Anchor State 哈希聚合 + Step-level Advantage 50/50 加权——解决 50+ 步稀疏奖励
-- **关键约束**：不用用户对话训练（隐私+质量），真实目的是知识蒸馏
+- **GRPO** (DeepSeek R1): relative comparison within sampling groups of 8–16, no Reward Model needed
+- **GiGPO**: Anchor State hash aggregation + Step-level Advantage 50/50 weighting — solving sparse rewards over 50+ steps
+- **Key constraint**: no training on user conversations (privacy + quality); the real purpose is knowledge distillation
 
-> Hermes 的 RL 双路径（curator + GRPO + 蒸馏）完整闭环见 §5。
+> For Hermes's complete RL dual-path closed loop (curator + GRPO + distillation), see §5.
 
-### 7.10 六项目自进化对比
+### 7.10 Self-evolution comparison of the six projects
 
-| 项目 | 能力 | 机制 |
+| Project | Capability | Mechanism |
 |---|---|---|
-| **Hermes** | ✅ 最完整 | Skill 生成（10 轮 Nudge）+ RL（GRPO + 蒸馏）|
-| **Codex** | ✅ 最工程化 | 两阶段管线 + 固化子代理 |
-| **Claude Code** | ✅ 半自动 | autoDream（24h/5 会话门控）|
-| **OpenCode/OpenCode** | ⚠️ 有限 | MEMORY.md + ExtractMemories |
-| **DSH** | ❌ 刻意不做 | 押注可组合性 |
-| **Pi** | ❌ 无 | 极简取向 |
+| **Hermes** | ✅ Most complete | Skill generation (10 Nudge rounds) + RL (GRPO + distillation)|
+| **Codex** | ✅ Most engineered | Two-stage pipeline + consolidation subagent |
+| **Claude Code** | ✅ Semi-automatic | autoDream (24h/5-session gating)|
+| **OpenCode/OpenCode** | ⚠️ Limited | MEMORY.md + ExtractMemories |
+| **DSH** | ❌ Deliberately not doing it | Betting on composability |
+| **Pi** | ❌ None | Minimalist orientation |
 
-对照翁荔框架：生产项目集中在 **L1~L2 档（prompt/Skill 层自进化）**，研究前沿在 L3~L4（context/workflow 层），Self-Harness/DGM 的 harness-code 层自进化尚无生产落地——这也是 DSH"刻意不做"与 Pi"无"的另一种解读：**在评估器成熟之前，不做比做错安全。**
+Against Lilian Weng's framework: production projects cluster at **L1~L2 (prompt/Skill-level self-evolution)**, the research frontier sits at L3~L4 (context/workflow layers), and harness-code-level self-evolution in Self-Harness/DGM has no production adoption yet — which is another reading of DSH's "deliberately not doing it" and Pi's "none": **before evaluators mature, not doing it is safer than doing it wrong.**
 
-### 7.11 边界与风险：RSI 的七个瓶颈
+### 7.11 Boundaries and risks: the seven bottlenecks of RSI
 
-翁荔逐一列出的实现障碍，每一条都是 Harness 工程师的设计约束：
+The implementation obstacles Lilian Weng lists one by one — each one is a design constraint for Harness engineers:
 
-1. **评估器太弱太模糊**：能跑通自我改进循环的基本都是有明确、快速、客观反馈的任务（写代码/解数学）；研究品味、创新性、长期价值几乎无法量化。
-2. **上下文与记忆生命周期**：任务越自主需要管理的记忆越多（见 7.8 L5 方向）。
-3. **负面结果被忽视**：研究者天然偏好发表成功结果，模型在海量成功案例数据上训练，不擅长判断何时该放弃假设、如实报告失败。
-4. **多样性坍缩**：进化/RL 循环反复利用已知高回报模式，无额外机制则种群坍缩成同一方案的变体。
-5. **Reward hacking**：循环会优化任何给定信号——奖励是单元测试就过拟合测试，是评委模型就学讨好评委，是榜单就利用榜单漏洞。
-6. **长期健康 vs 短期成功**：coding agent 优化"眼前任务做完"，不保护"百人共护代码库"的长期健康——可维护性、权责边界、迁移成本、未来调试负担，沙盒训练照顾不到。
-7. **人类角色**：人类不会被踢出循环，而是**往"环外"移动**——在合适的时机、合适的抽象层级提供监督，这是系统设计时就要想清楚的问题。
+1. **Evaluators are too weak and too fuzzy**: self-improvement loops basically only run on tasks with clear, fast, objective feedback (coding/solving math); research taste, novelty, and long-term value are almost impossible to quantify.
+2. **Context and memory lifecycle**: the more autonomous the task, the more memory needs managing (see 7.8's L5 direction).
+3. **Negative results get ignored**: researchers naturally prefer publishing successful results; models trained on massive success-case data are poor at judging when to abandon a hypothesis and report failure honestly.
+4. **Diversity collapse**: evolution/RL loops repeatedly exploit known high-reward patterns; without extra mechanisms the population collapses into variants of the same solution.
+5. **Reward hacking**: the loop will optimize any given signal — if the reward is unit tests it overfits the tests, if it is a judge model it learns to flatter the judge, if it is a leaderboard it exploits leaderboard loopholes.
+6. **Long-term health vs short-term success**: coding agents optimize "finish the task at hand" and do not protect the long-term health of "a codebase co-maintained by a hundred people" — maintainability, ownership boundaries, migration costs, and future debugging burdens are beyond what sandboxed training can care for.
+7. **The human role**: humans will not be kicked out of the loop; they will **move "outside the loop"** — providing supervision at the right moments and the right abstraction levels, something to think through at system design time.
 
-**总判断**：Harness 不是替代模型训练，而是**互相强化**——成熟的 Harness 让自我改进的研究循环跑得起来，更聪明的模型防止 Harness 被过度设计。同一模型放进不同 Harness 表现出完全不同的能力，这已从少数人的观察变为行业共识；"AI 自进化更现实的工程入口"是下一阶段的竞争重点。
+**Overall judgment**: the Harness does not replace model training; the two **reinforce each other** — a mature Harness lets self-improvement research loops actually run, while smarter models keep the Harness from being over-engineered. The same model in different Harnesses shows completely different capabilities; this has moved from a few people's observation to industry consensus. "The more realistic engineering entry point for AI self-evolution" is the competitive focus of the next stage.
 
 ## 8. Loop Engineering
 
-### 8.1 概念层级
+### 8.1 Conceptual hierarchy
 
 ```
-Harness（单次运行环境）⊂ Loop（+调度+状态+验证）⊂ Loop Engineering（设计+运营）
+Harness (single-run environment) ⊂ Loop (+scheduling+state+verification) ⊂ Loop Engineering (design+operations)
 ```
 
-- **Agent Loop** = 运行机制 = Inner Loop
-- **Loop Engineering** = 系统设计方法论 = Outer Loop
+- **Agent Loop** = the running mechanism = Inner Loop
+- **Loop Engineering** = the system design methodology = Outer Loop
 
-### 8.2 控制论三角色映射
+### 8.2 Cybernetics three-role mapping
 
-| 角色 | 基础设施 | 解决的困难 |
+| Role | Infrastructure | Difficulty solved |
 |---|---|---|
-| **控制器** | Skills + Memory/State | 不知道怎么做 + 不记得做到哪 |
-| **执行器** | Connectors/MCP + Worktrees | 触达不了外部 + 多 Agent 互相覆盖 |
-| **传感器** | **Sub-agents**（独立验证）| 自我检查产生盲区 |
-| **启动器** | Automations | 闭环不会自己跑 |
+| **Controller** | Skills + Memory/State | Not knowing how to do it + not remembering where you got to |
+| **Actuator** | Connectors/MCP + Worktrees | Cannot reach the outside + multiple Agents overwriting each other |
+| **Sensor** | **Sub-agents** (independent verification)| Self-checking creates blind spots |
+| **Initiator** | Automations | The loop will not run by itself |
 
-**核心判断**："Great prompt + weak verification will fail; mediocre prompt + strong verification will converge"
+**Core judgment**: "Great prompt + weak verification will fail; mediocre prompt + strong verification will converge"
 
-### 8.3 三种循环结局
+### 8.3 Three loop outcomes
 
-1. 收敛到正确
-2. **收敛到错误**（传感器撒谎——比发散更糟）
-3. 发散
+1. Converge to correct
+2. **Converge to wrong** (the sensor lies — worse than diverging)
+3. Diverge
 
 ---

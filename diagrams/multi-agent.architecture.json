@@ -2,8 +2,8 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Multi-Agent 编排与通信架构",
-    "locale": "zh-CN",
+    "title": "Multi-Agent Orchestration & Communication Architecture",
+    "locale": "en",
     "quality_profile": "showcase",
     "viewBox": [
       1360,
@@ -15,8 +15,8 @@
     {
       "id": "parent",
       "type": "backend",
-      "label": "父 Agent",
-      "sublabel": "拆解任务 · 汇总结论",
+      "label": "Parent agent",
+      "sublabel": "Decompose tasks · merge findings",
       "pos": [
         560,
         40
@@ -29,7 +29,7 @@
     {
       "id": "spawn",
       "type": "messagebus",
-      "label": "委派入口",
+      "label": "Delegation entry",
       "sublabel": "Task / Actor / subagent",
       "pos": [
         580,
@@ -43,8 +43,8 @@
     {
       "id": "subA",
       "type": "backend",
-      "label": "独立子代理",
-      "sublabel": "独立 context window · 从零开始",
+      "label": "Independent subagent",
+      "sublabel": "Own context window · fresh start",
       "pos": [
         160,
         330
@@ -57,8 +57,8 @@
     {
       "id": "subB",
       "type": "backend",
-      "label": "fork 子代理",
-      "sublabel": "复制父上下文继续跑",
+      "label": "fork subagent",
+      "sublabel": "Copies parent context and runs",
       "pos": [
         585,
         330
@@ -71,8 +71,8 @@
     {
       "id": "subC",
       "type": "backend",
-      "label": "可续子代理",
-      "sublabel": "startContinuable 持久会话",
+      "label": "Continuable subagent",
+      "sublabel": "startContinuable persistent session",
       "pos": [
         1010,
         330
@@ -85,8 +85,8 @@
     {
       "id": "verify",
       "type": "security",
-      "label": "对抗验证器",
-      "sublabel": "maxTurns:1 独立质检",
+      "label": "Adversarial verifier",
+      "sublabel": "maxTurns:1 independent QA",
       "pos": [
         170,
         490
@@ -99,8 +99,8 @@
     {
       "id": "inbox",
       "type": "database",
-      "label": "Inbox 收件箱",
-      "sublabel": "异步消息中转 · 解耦收发",
+      "label": "Inbox mailbox",
+      "sublabel": "Async relay · decouples send/receive",
       "pos": [
         1020,
         490
@@ -113,8 +113,8 @@
     {
       "id": "report",
       "type": "backend",
-      "label": "结构化报告",
-      "sublabel": "一份最终报告回父级",
+      "label": "Structured report",
+      "sublabel": "One final report back to parent",
       "pos": [
         560,
         640
@@ -128,7 +128,7 @@
   "boundaries": [
     {
       "kind": "region",
-      "label": "子代理执行区",
+      "label": "Subagent execution zone",
       "wraps": [
         "subA",
         "subB",
@@ -142,7 +142,7 @@
       "id": "parent-spawn",
       "from": "parent",
       "to": "spawn",
-      "label": "委派任务",
+      "label": "Delegate task",
       "fromSide": "bottom",
       "toSide": "top",
       "variant": "emphasis",
@@ -173,7 +173,7 @@
       "id": "a-verify",
       "from": "subA",
       "to": "verify",
-      "label": "结果送验",
+      "label": "Send for verification",
       "fromSide": "bottom",
       "toSide": "top",
       "variant": "dashed"
@@ -191,7 +191,7 @@
       "id": "verify-report",
       "from": "verify",
       "to": "report",
-      "label": "验证结论",
+      "label": "Verified verdict",
       "fromSide": "right",
       "toSide": "left",
       "variant": "security"
@@ -200,7 +200,7 @@
       "id": "b-report",
       "from": "subB",
       "to": "report",
-      "label": "最终报告",
+      "label": "Final report",
       "fromSide": "bottom",
       "toSide": "top",
       "variant": "emphasis"
@@ -209,7 +209,7 @@
       "id": "inbox-report",
       "from": "inbox",
       "to": "report",
-      "label": "异步送达",
+      "label": "Delivered async",
       "fromSide": "left",
       "toSide": "right",
       "variant": "dashed"
@@ -218,19 +218,19 @@
   "cards": [
     {
       "dot": "cyan",
-      "title": "三种寿命模式",
+      "title": "Three lifespan modes",
       "items": [
-        "fork：复制父上下文，one-shot 跑完即弃",
-        "独立子代理：干净上下文，只回传一份报告",
-        "startContinuable：持久可续，parent 任意时刻追加消息"
+        "fork: copies parent context, one-shot then discarded",
+        "Independent subagent: clean context, returns a single report",
+        "startContinuable: persistent & resumable — parent appends messages anytime"
       ]
     },
     {
       "dot": "rose",
-      "title": "通信两范式",
+      "title": "Two communication paradigms",
       "items": [
-        "结构化报告：父子单向汇报，父看不到子过程",
-        "Inbox 消息：异步中转解耦收发，发完即走"
+        "Structured report: one-way child→parent reporting; the parent never sees the process",
+        "Inbox messages: async relay decouples send/receive — fire and forget"
       ]
     }
   ]
