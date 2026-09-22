@@ -16,7 +16,7 @@ English | [中文](README.zh-CN.md)
 | 2 | **Codex (Rust) source-code supplement** (folded into §1/§3/§4/§5/§6) | Thread/Turn/Item three layers, independent Approval + Sandbox layers, two-stage memory pipeline (stage-1 extraction → stage-2 consolidation + git baseline + subagents), 90%-threshold dual-scope compaction |
 | 3 | **Pi (minimalism) source-code supplement** (folded into §1/§2/§4) | 4 tools + <1000-token system prompt, 25+ hook points, cut-point compaction algorithm, no permission system |
 | 4 | **Master comparison table of the six projects at the end of §1** | language / architecture / loop / tool count / system prompt / compaction / memory / self-evolution / permissions / sandbox / multi-agent / distinctives |
-| 5 | **§4 three major context constraints** | Lost in the Middle (75→35% U-shape), Context Rot, attention budget O(n²) + engineering countermeasures + core formulas |
+| 5 | **§4 three major context constraints** | Lost in the Middle (U-shaped curve: ~75% at beginning/end, significant mid-position drop), Context Rot, attention budget O(n²) + engineering countermeasures + core formulas |
 | 6 | **§3 four multi-agent collaboration patterns** | Workflow/Supervisor/Hierarchical/Swarm decision matrix + two communication paradigms + five-project comparison + misuse signals |
 | 7 | **§7 Agent self-evolution (new chapter)** | Lilian Weng's "Harness Engineering for Self-Improvement" framework: RSI starts from the harness + progressive chain + ACE/MCE + Self-Harness/DGM + Skill/memory/RL paths + six-project comparison + seven RSI bottlenecks |
 | 8 | **§8 Loop Engineering** | Inner/Outer loop conceptual hierarchy + cybernetic three-role mapping + three loop outcomes + phased delegation of authority L1/L2/L3 |
@@ -383,7 +383,7 @@ English | [中文](README.zh-CN.md)
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent communication</td>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">A2A (Agent-to-Agent) protocol</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">The A2A (Agent-to-Agent) protocol released by Google in April 2025 aims to provide a standardized communication standard for AI Agents across vendors and frameworks. Evolution trend: the industry is rapidly moving toward standardized cross-platform collaborative Agents.</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">The A2A (Agent-to-Agent) protocol released by Google in April 2025 aims to provide a standardized communication standard for AI Agents across vendors and frameworks; it was donated to the Linux Foundation as open source in June 2025 and is complementary to MCP (MCP connects tools and data sources, A2A connects Agents). Evolution trend: the industry is rapidly moving toward standardized cross-platform collaborative Agents.</td>
     </tr>
     <!-- Context & Memory Layer - Context System 5 rows -->
     <tr>
@@ -2712,7 +2712,7 @@ Example (context=128K, input=118K, reserved=36K): `usable = 82K`
 #### New context after compaction
 
 ```
-New context = [summary 2K] + [recent conversation verbatim 41K] + [new messages] ~= 43K starting point
+New context = [summary 2K] + [recent conversation verbatim ≤32K] + [new messages] ~= 34K starting point (verbatim = min(usable×50%, 32K): half of an 82K budget would be 41K, capped at 32K; Bocom raised the cap from 8K to 32K and the share from 25% to 50%)
 ```
 
 - 8-section Markdown summary template (Current Focus / Goal / Constraints & Preferences / Progress(Done/In Progress/Blocked) / Key Decisions / Next Steps / Critical Context / Relevant Files)
@@ -2746,7 +2746,7 @@ New context = [summary 2K] + [recent conversation verbatim 41K] + [new messages]
 **Phenomenon**: LLMs recall information in the middle of the context significantly worse than at the beginning or end.
 
 - Stanford experiment: give the LLM 10-20 documents, only one of which contains the correct answer, and vary its position
-- **U-shaped curve**: accuracy is about 75% when the answer is at the beginning or end; it drops to about 35% when buried in the middle
+- **U-shaped curve**: accuracy is about 75% when the answer is at the beginning or end; mid-position placement drops significantly — GPT-3.5-Turbo loses more than 20 percentage points, worst case falling below the closed-book baseline (the deeper the position and the more documents, the steeper the drop)
 - Open-book (documents provided but the answer in the middle) even falls below the closed-book (no documents) baseline of 56.1%
 - Stably reproduced across multiple models such as claude-1.3, gpt-3.5-turbo, mpt-30b-instruct, and longchat-13b
 

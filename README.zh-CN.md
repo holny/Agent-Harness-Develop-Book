@@ -16,7 +16,7 @@ English | 中文
 | 2 | **Codex（Rust）源码补充**（已折叠进 §1/§3/§4/§5/§6） | Thread/Turn/Item 三层、Approval+Sandbox 两层独立、两阶段记忆管线（stage1 抽取→stage2 固化+git 基线+子代理）、90% 阈值双 scope 压缩 |
 | 3 | **Pi（极简主义）源码补充**（已折叠进 §1/§2/§4） | 4 工具 + <1000 token 系统提示、25+ hook 点、切点压缩算法、无权限系统 |
 | 4 | **§1 末尾六项目横向对比总表** | 语言/架构/Loop/工具数/系统提示/压缩/记忆/自进化/权限/沙箱/多 Agent/独特点 |
-| 5 | **§4 Context 三大约束** | Lost in the Middle（75→35% U 型）、Context Rot、Attention Budget O(n²) + 各自工程对策 + 核心公式 |
+| 5 | **§4 Context 三大约束** | Lost in the Middle（首尾约 75%、中段显著下降的 U 型曲线）、Context Rot、Attention Budget O(n²) + 各自工程对策 + 核心公式 |
 | 6 | **§3 Multi-Agent 四大协作模式** | Workflow/Supervisor/Hierarchical/Swarm 决策矩阵 + 通信两范式 + 五项目对比 + 误用信号 |
 | 7 | **§7 Agent 自进化（新章）** | 翁荔《Harness Engineering for Self-Improvement》框架：RSI 从 Harness 开始 + 递进链条 + ACE/MCE + Self-Harness/DGM + Skill/记忆/RL 三路径 + 六项目对比 + RSI 七瓶颈 |
 | 8 | **§8 Loop Engineering** | Inner/Outer Loop 概念层级 + 控制论三角色映射 + 三种循环结局 + 分阶段放权 L1/L2/L3 |
@@ -328,7 +328,7 @@ English | 中文
     <tr>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">Agent 通信</td>
       <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">A2A（Agent-to-Agent）协议</td>
-      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">2025年4月Google发布的A2A（Agent-to-Agent）协议，旨在为跨厂商、跨框架的AI Agent提供标准化通信标准。演进趋势：目前行业正快速走向标准化跨平台协作Agent。</td>
+      <td style="border: 1px solid #aaa; padding: 8px; vertical-align: middle;">2025年4月Google发布的A2A（Agent-to-Agent）协议，旨在为跨厂商、跨框架的AI Agent提供标准化通信标准；2025年6月已捐赠给 Linux 基金会开源，与 MCP 互补（MCP 连接工具与数据源，A2A 连接 Agent）。演进趋势：目前行业正快速走向标准化跨平台协作Agent。</td>
     </tr>
     <!-- 上下文与记忆层 - Context System 5行 -->
     <tr>
@@ -2659,7 +2659,7 @@ maxOutputTokens = min(limit.output, 32K)
 #### 压缩后新上下文
 
 ```
-新上下文 = [摘要 2K] + [近期对话 verbatim 41K] + [新消息] ≈ 43K 起步
+新上下文 = [摘要 2K] + [近期对话 verbatim ≤32K] + [新消息] ≈ 34K 起步（verbatim = min(usable×50%, 32K)：82K 预算下半数为 41K，封顶 32K；Bocom 将上限从 8K 调至 32K、份额从 25% 调至 50%）
 ```
 
 - 摘要 8 段 Markdown 模板（Current Focus / Goal / Constraints & Preferences / Progress(Done/In Progress/Blocked) / Key Decisions / Next Steps / Critical Context / Relevant Files）
@@ -2693,7 +2693,7 @@ maxOutputTokens = min(limit.output, 32K)
 **现象**：LLM 对上下文中间位置的信息召回率显著低于首尾位置。
 
 - Stanford 实验：给 LLM 10~20 个文档，只有一个含正确答案，改变其位置
-- **U 型曲线**：答案在开头或结尾时正确率约 75%；夹在中间时降至约 35%
+- **U 型曲线**：答案在开头或结尾时正确率约 75%；夹在中间显著下降——GPT-3.5-Turbo 降幅超过 20 个百分点，最差可低于闭卷基线（位置越靠中、文档越多，下降越深）
 - 开卷（提供文档但答案在中间）甚至低于闭卷（不给文档）基线 56.1%
 - 在 claude-1.3、gpt-3.5-turbo、mpt-30b-instruct、longchat-13b 等多种模型上稳定复现
 
