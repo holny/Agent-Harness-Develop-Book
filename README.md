@@ -8,6 +8,8 @@
 
 English | [中文](README.zh-CN.md)
 
+**📕 PDF version (viewable online on GitHub):** [Agent Harness Explained (English)](Agent%20Harness%20Explained.pdf) | [Agent Harness详解 (中文)](Agent%20Harness详解.pdf)
+
 > **2026-09 changelog** (based on 20 engineering articles + deep source-code reading of 7 projects):
 
 | # | Added / updated | Highlights |

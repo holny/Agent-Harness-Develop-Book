@@ -1,5 +1,7 @@
 English | 中文
 
+**📕 PDF 版本（GitHub 在线浏览）**：[Agent Harness详解（中文）](Agent%20Harness详解.pdf) | [Agent Harness Explained（英文）](Agent%20Harness%20Explained.pdf)
+
 <div style="display: flex; flex-direction: column; align-items: center;">
   <h1>Agent Harness Dev Book(Agent Harness开发指导手册)</h1>
   <div style="width: 100%; text-align: right;">
